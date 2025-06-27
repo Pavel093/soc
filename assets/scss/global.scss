@@ -1,0 +1,44 @@
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+body{
+    font-family: 'Inter', sans-serif;
+}
+
+.base-bg-color{
+    background-color: #F8F3FF;
+}
+
+.base-bg-color-two{
+    background-color: #F1F4FA;
+}
+
+.dark-text{
+    color: #323749;
+}
+
+.light-text{
+    color: #48596D;
+}
+
+.big-button {
+    border: none;
+    background-color: #008CFF;
+    border-radius: 12.5px;
+    color: white;
+    padding: 12px 20px;
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    cursor: pointer;
+    
+    &:disabled,
+    &[disabled],
+    &--disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
