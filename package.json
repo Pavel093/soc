@@ -3,13 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "deploy": "gh-pages -d dist"
-  },
+  "dev": "nuxt dev",
+  "build": "nuxt build",
+  "start": "node .output/server/index.mjs",  // Добавьте эту строку
+  "generate": "nuxt generate"
+}
   "dependencies": {
     "@pinia/nuxt": "^0.11.1",
     "nuxt": "^3.17.5",
