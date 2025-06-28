@@ -23,9 +23,9 @@ export default {
     '@/assets/scss/global.scss'
   ],
 
-  ssr: false, // Отключаем SSR
+  ssr: false, 
   nitro: {
-    preset: 'static' // Генерируем статический сайт
+    preset: 'static' 
   },
 
   // app: {
