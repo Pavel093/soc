@@ -25,7 +25,7 @@ export default {
 
   ssr: true, 
   nitro: {
-    preset: 'static' 
+    preset: 'node'
   },
 
   // app: {
