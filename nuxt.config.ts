@@ -23,7 +23,7 @@ export default {
     '@/assets/scss/global.scss'
   ],
 
-  ssr: false, 
+  ssr: true, 
   nitro: {
     preset: 'static' 
   },

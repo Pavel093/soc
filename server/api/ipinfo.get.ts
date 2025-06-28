@@ -5,6 +5,9 @@ export default defineEventHandler(async (event) => {
     return data;
   } catch (error) {
     console.error('Error fetching IP info:', error);
-    return { error: 'Failed to fetch IP information' };
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to fetch IP information'
+    });
   }
 });
