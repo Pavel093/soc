@@ -23,9 +23,14 @@ export default {
     '@/assets/scss/global.scss'
   ],
 
-  app: {
-    baseURL: '/soc/'
+  ssr: false, // Отключаем SSR
+  nitro: {
+    preset: 'static' // Генерируем статический сайт
   },
+
+  // app: {
+  //   baseURL: '/soc/'
+  // },
 
   modules: ['@pinia/nuxt'],
 }
