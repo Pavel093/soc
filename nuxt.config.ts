@@ -23,14 +23,25 @@ export default {
     '@/assets/scss/global.scss'
   ],
 
-  ssr: true, 
-  nitro: {
-    preset: 'node-server'
-  },
-
-  // app: {
-  //   baseURL: '/soc/'
+  ssr: false,
+  target: 'static',
+  
+  // nitro: {
+  //   preset: 'node-server'
   // },
 
   modules: ['@pinia/nuxt'],
+  
+  // router: {
+  //   base: '/soc/'
+  // },
+  
+  build: {
+    extractCSS: true,
+    optimization: {
+      splitChunks: {
+        chunks: 'all'
+      }
+    }
+  }
 }
