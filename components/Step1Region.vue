@@ -202,37 +202,57 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <h2>1. Регион проживания</h2>
-    <select v-model="region">
+  <div class="region-step">
+    <h2 class="step-title dark-text">1. Регион проживания</h2>
+    <select v-model="region" class="region-select">
       <option disabled value="">Выберите регион</option>
       <option v-for="(value, key) in pmData" :key="key" :value="key">
         {{ key }} (ПМ: {{ value }} руб.)
       </option>
     </select>
-    <div v-if="isDetectingRegion" class="loading-message">
+    <div v-if="isDetectingRegion" class="loading-message light-text">
       Определяем ваш регион...
     </div>
     <div v-if="geoError" class="error-message">
       {{ geoError }}
     </div>
-    <div v-if="region" class="current-region">
-      Текущий регион: <strong>{{ region }}</strong>
+    <div v-if="region" class="current-region light-text">
+      Текущий регион: <strong class="dark-text">{{ region }}</strong>
     </div>
   </div>
 </template>
 
 <style scoped>
+.region-step {
+  margin-bottom: 20px;
+}
+
+.step-title {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
 .error-message {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #ffebee;
+  border-radius: 6px;
   color: #d32f2f;
-  margin-top: 8px;
+  font-size: 14px;
 }
+
 .loading-message {
-  color: #1976d2;
   margin-top: 8px;
+  font-size: 14px;
 }
+
 .current-region {
   margin-top: 8px;
-  color: #388e3c;
+  font-size: 14px;
+
+  strong {
+    font-weight: 500;
+  }
 }
 </style>
