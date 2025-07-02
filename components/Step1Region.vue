@@ -204,12 +204,14 @@ onMounted(async () => {
 <template>
   <div class="region-step">
     <h2 class="step-title dark-text">1. Регион проживания</h2>
-    <select v-model="region" class="region-select">
-      <option disabled value="">Выберите регион</option>
-      <option v-for="(value, key) in pmData" :key="key" :value="key">
-        {{ key }} (ПМ: {{ value }} руб.)
-      </option>
-    </select>
+    <div class="select-wrapper">
+      <select v-model="region" class="region-select">
+        <option disabled value="">Выберите регион</option>
+        <option v-for="(value, key) in pmData" :key="key" :value="key">
+          {{ key }} (ПМ: {{ value }} руб.)
+        </option>
+      </select>
+    </div>
     <div v-if="isDetectingRegion" class="loading-message light-text">
       Определяем ваш регион...
     </div>
@@ -233,6 +235,11 @@ onMounted(async () => {
   font-weight: 600;
 }
 
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .error-message {
   margin-top: 8px;
   padding: 8px 12px;
@@ -254,5 +261,12 @@ onMounted(async () => {
   strong {
     font-weight: 500;
   }
+}
+
+/* Для мобильных safari  */
+.region-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 </style>
