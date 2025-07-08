@@ -6,15 +6,19 @@ import { ref, onMounted, computed } from 'vue'
 const store = useCalculatorStore()
 const isDetectingRegion = ref(false)
 const geoError = ref(null)
+const isAutoDetected = ref(false)
 
-// Связываем region с store.region напрямую
 const region = computed({
   get: () => store.region,
-  set: val => store.region = val
+  set: val => {
+    store.region = val
+    isAutoDetected.value = false
+  }
 })
 
-// Маппинг для нормализации названий регионов из API
+// Полный маппинг для нормализации названий регионов
 const regionMapping = {
+  // Английские и альтернативные названия
   'Perm Krai': 'Пермский край',
   'Moscow Oblast': 'Московская область',
   'Saint Petersburg': 'Санкт-Петербург',
@@ -22,52 +26,138 @@ const regionMapping = {
   'Permskiy kray': 'Пермский край',
   'Moskva': 'Москва',
   'Sankt-Peterburg': 'Санкт-Петербург',
-  // Добавьте другие маппинги при необходимости
+  'Perm': 'Пермский край',
+  'Moscow': 'Москва',
+  'St. Petersburg': 'Санкт-Петербург',
+  'St Petersburg': 'Санкт-Петербург',
+  'SPb': 'Санкт-Петербург',
+  
+  // Регионы из часовых поясов
+  'Novosibirsk': 'Новосибирская область',
+  'Yekaterinburg': 'Свердловская область',
+  'Krasnoyarsk': 'Красноярский край',
+  'Khabarovsk': 'Хабаровский край',
+  'Vladivostok': 'Приморский край',
+  'Magadan': 'Магаданская область',
+  'Kamchatka': 'Камчатский край',
+  'Sakhalin': 'Сахалинская область',
+  'Irkutsk': 'Иркутская область',
+  
+  // Альтернативные написания республик
+  'Tatarstan': 'Республика Татарстан',
+  'Bashkortostan': 'Республика Башкортостан',
+  'Dagestan': 'Республика Дагестан',
+  'Udmurtia': 'Удмуртская Республика',
+  'Chuvashia': 'Чувашская Республика',
+  'Mordovia': 'Республика Мордовия',
+  'Chechnya': 'Чеченская Республика',
+  'Ingushetia': 'Республика Ингушетия',
+  'North Ossetia': 'Республика Северная Осетия — Алания',
+  'Crimea': 'Республика Крым',
+  'Sakha': 'Республика Саха (Якутия)',
+  'Altai': 'Республика Алтай',
+  'Tyva': 'Республика Тыва',
+  'Karelia': 'Республика Карелия',
+  'Komi': 'Республика Коми',
+  'Mari El': 'Республика Марий Эл',
+  'Khakassia': 'Республика Хакасия',
+  
+  // Города федерального значения
+  'Sevastopol': 'Севастополь',
+  
+  // Автономные округа
+  'Khanty-Mansi': 'Ханты-Мансийский автономный округ — Югра',
+  'Yamalo-Nenets': 'Ямало-Ненецкий автономный округ',
+  'Chukotka': 'Чукотский автономный округ',
+  'Nenets': 'Ненецкий автономный округ',
+  
+  // Новые регионы
+  'Donetsk': 'Донецкая Народная Республика',
+  'Luhansk': 'Луганская Народная Республика',
+  'Kherson': 'Херсонская область',
+  'Zaporizhzhia': 'Запорожская область'
 }
 
-// Нормализация названия региона
 const normalizeRegionName = (region) => {
   if (!region) return null
 
-  // Применяем маппинг
+  // Приводим к нижнему регистру для сравнения
+  const lowerRegion = region.toLowerCase()
+  
+  // Сначала проверяем точное соответствие в маппинге
   if (regionMapping[region]) {
     return regionMapping[region]
   }
 
-  // Если нет в маппинге, пытаемся подобрать подходящее название
-  const normalized = region
-    .replace('г. ', '')
-    .replace('Республика ', '')
-    .replace('область', '')
-    .replace('край', '')
-    .replace('Federal City', '')
+  // Проверяем маппинг без учета регистра
+  for (const key in regionMapping) {
+    if (key.toLowerCase() === lowerRegion) {
+      return regionMapping[key]
+    }
+  }
+
+  // Удаляем лишние слова и приводим к стандартному виду
+  let normalized = region
+    .replace(/г\.?/i, '')
+    .replace(/город/i, '')
+    .replace(/республика/i, '')
+    .replace(/область/i, '')
+    .replace(/край/i, '')
+    .replace(/federal city/i, '')
+    .replace(/city/i, '')
+    .replace(/autonomous okrug/i, '')
+    .replace(/republic/i, '')
+    .replace(/['"]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
 
-  return normalized
-}
+  // Проверяем, есть ли регион в pmData как есть
+  if (pmData[normalized]) {
+    return normalized
+  }
 
-// Поиск точного совпадения или варианта с суффиксом
-const findRegionInData = (regionName) => {
-  if (!regionName) return null
-
-  // Проверяем точное совпадение
-  if (pmData[regionName]) return regionName
-
-  // Попробуем добавить суффиксы
+  // Проверяем варианты с добавлением "область", "край" и т.д.
   const variants = [
-    `${regionName} область`,
-    `${regionName} край`,
-    `Республика ${regionName}`,
-    `г. ${regionName}`
+    `${normalized} область`,
+    `${normalized} край`,
+    `Республика ${normalized}`,
+    `г. ${normalized}`
   ]
 
   for (const variant of variants) {
     if (pmData[variant]) return variant
   }
 
-  // Попробуем найти частичное совпадение
+  return normalized
+}
+
+const findRegionInData = (regionName) => {
+  if (!regionName) return null
+
+  // Проверяем точное совпадение
+  if (pmData[regionName]) return regionName
+
+  // Ищем частичное совпадение
+  const lowerRegionName = regionName.toLowerCase()
+  
+  // Сначала проверяем начало названия
   for (const knownRegion in pmData) {
-    if (knownRegion.includes(regionName) || regionName.includes(knownRegion)) {
+    if (knownRegion.toLowerCase().startsWith(lowerRegionName)) {
+      return knownRegion
+    }
+  }
+  
+  // Затем проверяем вхождение в любом месте названия
+  for (const knownRegion in pmData) {
+    if (knownRegion.toLowerCase().includes(lowerRegionName)) {
+      return knownRegion
+    }
+  }
+
+  // Проверяем обратное вхождение (известный регион в переданном названии)
+  for (const knownRegion in pmData) {
+    const lowerKnownRegion = knownRegion.toLowerCase()
+    if (lowerRegionName.includes(lowerKnownRegion)) {
       return knownRegion
     }
   }
@@ -75,55 +165,65 @@ const findRegionInData = (regionName) => {
   return null
 }
 
-// Определение региона по часовому поясу
 const getRegionByTimezone = () => {
   try {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-    if (timezone.includes('Moscow')) return 'Москва'
-    if (timezone.includes('Saint_Petersburg')) return 'Санкт-Петербург'
-    if (timezone.includes('Asia/Novosibirsk')) return 'Новосибирская область'
-    if (timezone.includes('Asia/Yekaterinburg')) return 'Свердловская область'
-    if (timezone.includes('Asia/Krasnoyarsk')) return 'Красноярский край'
-    return null
+    const timezoneMapping = {
+      'Europe/Moscow': 'Москва',
+      'Europe/Simferopol': 'Республика Крым',
+      'Europe/Kirov': 'Кировская область',
+      'Europe/Volgograd': 'Волгоградская область',
+      'Europe/Saratov': 'Саратовская область',
+      'Europe/Ulyanovsk': 'Ульяновская область',
+      'Europe/Samara': 'Самарская область',
+      'Asia/Yekaterinburg': 'Свердловская область',
+      'Asia/Omsk': 'Омская область',
+      'Asia/Novosibirsk': 'Новосибирская область',
+      'Asia/Barnaul': 'Алтайский край',
+      'Asia/Krasnoyarsk': 'Красноярский край',
+      'Asia/Irkutsk': 'Иркутская область',
+      'Asia/Chita': 'Забайкальский край',
+      'Asia/Yakutsk': 'Республика Саха (Якутия)',
+      'Asia/Vladivostok': 'Приморский край',
+      'Asia/Magadan': 'Магаданская область',
+      'Asia/Sakhalin': 'Сахалинская область',
+      'Asia/Kamchatka': 'Камчатский край',
+      'Asia/Anadyr': 'Чукотский автономный округ'
+    }
+    
+    return timezoneMapping[timezone] || null
   } catch {
     return null
   }
 }
 
-// Список API для определения местоположения по IP
 const ipApiProviders = [
   {
-    name: 'ipapi.co',
-    url: 'https://ipapi.co/json/',
-    regionPath: ['region', 'region_name']
-  },
-  {
-    name: 'ip-api.com',
-    url: 'http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query',
-    regionPath: ['regionName', 'city'],
-    errorPath: ['message']
-  },
-  {
-    name: 'ipinfo.io',
-    url: 'https://ipinfo.io/json?token=free',
+    name: 'ipwhois.io',
+    url: 'https://ipwho.is/',
     regionPath: ['region', 'city'],
     errorPath: ['error']
   },
   {
-    name: 'geolocation-db.com',
-    url: 'https://geolocation-db.com/json/',
-    regionPath: ['state', 'city']
+    name: 'IP-API',
+    url: 'http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city',
+    regionPath: ['regionName', 'city'],
+    errorPath: ['message']
+  },
+  {
+    name: 'FreeGeoIP',
+    url: 'https://freegeoip.app/json/',
+    regionPath: ['region_name', 'city'],
+    errorPath: ['error']
   }
 ]
 
-// Функция для запроса к API
 async function fetchApi(api) {
   try {
     const response = await fetch(api.url)
     if (!response.ok) throw new Error(`HTTP error ${response.status}`)
     const data = await response.json()
     
-    // Проверяем наличие ошибки
     if (api.errorPath && api.errorPath.some(path => data[path])) {
       const errorMsg = api.errorPath.map(path => data[path]).find(Boolean)
       throw new Error(errorMsg || 'Unknown error from API')
@@ -136,7 +236,6 @@ async function fetchApi(api) {
   }
 }
 
-// Функция определения региона через IP или часовой пояс
 async function detectRegion() {
   isDetectingRegion.value = true
   geoError.value = null
@@ -147,20 +246,18 @@ async function detectRegion() {
       const data = await fetchApi(api)
       console.log(`Данные от ${api.name}:`, data)
       
-      // Пробуем разные поля с регионом
-      const possibleRegions = api.regionPath
-        .map(path => {
-          const value = path.split('.').reduce((obj, key) => obj?.[key], data)
-          return value && typeof value === 'string' ? value : null
-        })
-        .filter(Boolean)
-      
-      // Ищем первое подходящее название
-      for (const rawRegion of possibleRegions) {
+      // Проверяем все возможные пути к данным о регионе
+      for (const path of api.regionPath) {
+        const rawRegion = path.split('.').reduce((obj, key) => obj?.[key], data)
+        if (!rawRegion) continue
+        
+        // Нормализуем название региона
         const normalized = normalizeRegionName(rawRegion)
+        // Пытаемся найти в наших данных
         const foundRegion = findRegionInData(normalized)
+        
         if (foundRegion) {
-          console.log(`Регион определен через ${api.name}:`, foundRegion)
+          isAutoDetected.value = true
           return foundRegion
         }
       }
@@ -170,18 +267,19 @@ async function detectRegion() {
     }
   }
   
-  // Если API не вернули регион, пробуем по часовому поясу
+  // Если API не дали результат, пробуем определить по часовому поясу
   try {
     const timezoneRegion = getRegionByTimezone()
     if (timezoneRegion) {
-      console.warn('Используем регион по часовому поясу:', timezoneRegion)
+      isAutoDetected.value = true
       return timezoneRegion
     }
   } catch (error) {
     console.error('Ошибка определения по часовому поясу:', error)
   }
   
-  throw new Error('Не удалось определить регион')
+  // Если ничего не помогло, возвращаем null
+  return null
 }
 
 onMounted(async () => {
@@ -191,6 +289,8 @@ onMounted(async () => {
     const detectedRegion = await detectRegion()
     if (detectedRegion) {
       region.value = detectedRegion
+    } else {
+      geoError.value = 'Не удалось автоматически определить ваш регион. Пожалуйста, выберите вручную.'
     }
   } catch (error) {
     console.error('Ошибка определения региона:', error)
@@ -203,30 +303,44 @@ onMounted(async () => {
 
 <template>
   <div class="region-step">
-    <h2 class="step-title dark-text">1. Регион проживания</h2>
-    <div class="select-wrapper">
+    <h2 class="step-title dark-text">Регион проживания </h2>
+    <div class="base-option">
+      <div class="select-wrapper">
       <select v-model="region" class="region-select">
         <option disabled value="">Выберите регион</option>
         <option v-for="(value, key) in pmData" :key="key" :value="key">
           {{ key }} (ПМ: {{ value }} руб.)
         </option>
       </select>
-    </div>
-    <div v-if="isDetectingRegion" class="loading-message light-text">
-      Определяем ваш регион...
-    </div>
-    <div v-if="geoError" class="error-message">
-      {{ geoError }}
-    </div>
-    <div v-if="region" class="current-region light-text">
-      Текущий регион: <strong class="dark-text">{{ region }}</strong>
+      </div>
+      <div v-if="isDetectingRegion" class="loading-message light-text">
+        Определяем ваш регион...
+      </div>
+      <div v-if="geoError" class="error-message">
+        {{ geoError }}
+      </div>
+      <div v-if="region" class="current-region light-text">
+        Текущий регион: <strong class="dark-text">{{ region }} <span v-if="isAutoDetected">(выбрано автоматически)</span></strong>
+      </div>
     </div>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .region-step {
   margin-bottom: 20px;
+  h2{
+    position: absolute;
+    top: 15px;
+    left: calc(15px + 69px + 15px);
+    font-weight: 300;
+    font-size: 25px;
+    max-width: 90%;
+    letter-spacing: 1.02px;
+  }
+  .base-option{
+    margin-top: 5%;
+  }
 }
 
 .step-title {
@@ -257,13 +371,15 @@ onMounted(async () => {
 .current-region {
   margin-top: 8px;
   font-size: 14px;
-
-  strong {
-    font-weight: 500;
-  }
+  color: #7d838b;
 }
 
-/* Для мобильных safari  */
+.current-region strong {
+  font-weight: 500;
+  color: #7d838b;
+}
+
+/* Для мобильных safari */
 .region-select {
   -webkit-appearance: none;
   -moz-appearance: none;

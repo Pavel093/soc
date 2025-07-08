@@ -6,6 +6,8 @@
 
 body{
     font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
 .base-bg-color{
@@ -66,11 +68,11 @@ body{
 .region-select {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 2px solid #C9D6F1;
+  border-radius: 12.5px;
   background-color: white;
   font-size: 16px;
-  color: #323749;
+  color: #48596D;
   transition: border-color 0.3s;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -100,25 +102,3 @@ body{
   }
 }
 
-.error-message {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background-color: #ffebee;
-  border-radius: 6px;
-  color: #d32f2f;
-  font-size: 14px;
-}
-
-.loading-message {
-  margin-top: 8px;
-  font-size: 14px;
-}
-
-.current-region {
-  margin-top: 8px;
-  font-size: 14px;
-
-  strong {
-    font-weight: 500;
-  }
-}

@@ -51,7 +51,12 @@ const { currentStep, totalSteps, completedSteps, isEligible, benefitAmount } = s
     </div>
     <div class="content base-bg-color-two">
       <div class="progress base-bg-color">
-        Шаг {{ currentStep }} из {{ totalSteps }} | Выполнено: {{ completedSteps }}
+        <div class="progress-numbers">
+          <p class="one">{{ currentStep }}</p>
+          <p class="dop">/</p>
+          <p class="two">{{ totalSteps }}</p>
+        </div>
+        <p class="more">вопрос {{ currentStep }} из {{ totalSteps }}</p>
       </div>
 
       <component :is="currentComponent" />
@@ -117,6 +122,47 @@ const { currentStep, totalSteps, completedSteps, isEligible, benefitAmount } = s
     margin-bottom: 20px;
     flex-grow: 1; 
     overflow-y: auto; 
+    position: relative;
+    .progress {
+      .progress-numbers {
+        display: flex;
+        gap: 2.5px;
+        background-color: white;
+        width: max-content;
+        justify-content: center;
+        align-items: center;
+        height: 47px; 
+        width: 69px;
+        border-radius: 15px;
+        position: relative;
+        &::before {
+          content: '';
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          bottom: 5px;
+          left: 5px;
+          border: 1px solid #9CE1FF; 
+          border-radius: 10px; 
+          pointer-events: none;
+        }
+        p {
+          font-size: 23px;
+          margin: 0;
+          padding: 0;
+          line-height: 1; 
+        }
+
+        .one {
+          color: #00B93E;
+        }
+      }
+      .more{
+        margin-top: 5px;
+        font-size: 15px;
+        color: #A2AAB5;
+      }
+    }
     @media(max-width: 768px) {
       padding: 15px;
     }
