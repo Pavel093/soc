@@ -303,7 +303,7 @@ onMounted(async () => {
 
 <template>
   <div class="region-step">
-    <h2 class="step-title dark-text">Регион проживания </h2>
+    <h2 class="step-title dark-text">регион проживания </h2>
     <div class="base-option">
       <div class="select-wrapper">
       <select v-model="region" class="region-select">
