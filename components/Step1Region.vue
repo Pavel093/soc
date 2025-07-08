@@ -337,6 +337,7 @@ onMounted(async () => {
     font-size: 25px;
     max-width: 90%;
     letter-spacing: 1.02px;
+    line-height: 0.8;
   }
   .base-option{
     margin-top: 5%;
