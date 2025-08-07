@@ -5,7 +5,9 @@ export const useCalculatorStore = defineStore('calculator', {
   state: () => ({
     region: null,
     hasSpouse: false,
-    children: [],
+    childrenCount: 0,       // только дети до 17 лет
+    hasStudents: false,     // флаг наличия студентов
+    studentsCount: 0,    
     income: {
       primary: null,
       reason: '',
@@ -18,7 +20,6 @@ export const useCalculatorStore = defineStore('calculator', {
       carSpecOk: true,
     },
     otherBenefits: false,
-
     currentStep: 1,
   }),
 
@@ -29,7 +30,7 @@ export const useCalculatorStore = defineStore('calculator', {
     completedSteps() {
       let count = 0
       if (this.region) count++
-      if (this.children.length > 0) count++
+      if (this.children.count > 0 || this.children.studentsCount > 0) count++
       if (this.income.primary !== null) count++
       if (this.property.homes >= 0) count++
       if (typeof this.otherBenefits === 'boolean') count++
@@ -39,14 +40,8 @@ export const useCalculatorStore = defineStore('calculator', {
       return this.region ? pmData[this.region] || 0 : 0
     },
     familySize() {
-      // родители + дети, которые не исключены
       const parents = this.hasSpouse ? 2 : 1
-      const validChildren = this.children.filter(
-        child =>
-          (child.age <= 17) ||
-          (child.student && child.age <= 23)
-      )
-      return parents + validChildren.length
+      return parents + this.childrenCount + (this.hasStudents ? this.studentsCount : 0)
     },
     monthlyIncome() {
       const total =
@@ -100,11 +95,6 @@ export const useCalculatorStore = defineStore('calculator', {
         this.currentStep--
       }
     },
-    addChild() {
-      this.children.push({ age: 0, student: false })
-    },
-    removeChild(index) {
-      this.children.splice(index, 1)
-    },
+    // Удалены addChild и removeChild, так как они больше не нужны
   },
 })
