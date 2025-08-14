@@ -1,91 +1,311 @@
 <template>
   <div class="family-step">
-    <h2>Состав семьи</h2>
+    <h2 class="step-title dark-text">2. Состав семьи</h2>
     
-    <div class="children-section">
-      <div class="input-group">
-        <label>Количество детей (до 17 лет):</label>
-        <div class="input-numbers">
-           <button class="minus" @click="decrementChildren" :disabled="childrenCount <= 0">
-              <svg width="15" height="3" viewBox="0 0 15 3" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13.4229 0.258179H1.61236C0.916792 0.258179 0.352936 0.822035 0.352936 1.5176C0.352936 2.21316 0.916792 2.77702 1.61236 2.77702H13.4229C14.1185 2.77702 14.6823 2.21316 14.6823 1.5176C14.6823 0.822035 14.1185 0.258179 13.4229 0.258179Z" fill="white"/>
-              </svg>
+    <!-- Раздел для беременных -->
+    <div class="section" v-if="!hasChildren">
+      <h3 class="section-title">Беременность</h3>
+      
+      <label class="custom-checkbox">
+        <input type="checkbox" v-model="isPregnant" />
+        <span class="checkmark"></span>
+        <span class="checkbox-text">
+          Я беременна и встала на учет в ранние сроки
+          <span class="info-badge">Пособие для беременных</span>
+        </span>
+      </label>
+      
+      <div v-if="isPregnant" class="pregnancy-details">
+        <div class="input-group">
+          <label class="field-label">Срок постановки на учет (недель):</label>
+          <input 
+            type="number" 
+            v-model.number="pregnancyWeeks"
+            min="1"
+            max="40"
+            class="number-input"
+            placeholder="12"
+          />
+        </div>
+        
+        <div v-if="pregnancyWeeks > 12" class="warning-box">
+          ⚠️ Для получения пособия необходимо встать на учет до 12 недель беременности
+        </div>
+        
+        <div v-else-if="pregnancyWeeks >= 6 && pregnancyWeeks <= 12" class="success-box">
+          ✅ Срок соответствует требованиям для получения пособия
+        </div>
+        
+        <div class="info-box">
+          <p><strong>Размер пособия для беременных:</strong></p>
+          <ul>
+            <li>50%, 75% или 100% от прожиточного минимума трудоспособного населения</li>
+            <li>Выплачивается с месяца постановки на учет до месяца родов</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Раздел для детей -->
+    <div class="section">
+      <h3 class="section-title">Дети</h3>
+      
+      <div class="children-section">
+        <div class="input-group">
+          <label class="field-label">Количество детей до 17 лет:</label>
+          <div class="counter-group">
+            <button 
+              class="counter-btn" 
+              @click="decrementChildren" 
+              :disabled="childrenCount <= 0"
+            >
+              -
             </button>
-            <input
-              type="number"
+            <input 
+              type="number" 
               v-model.number="childrenCount"
               min="0"
               max="20"
-              class="number-input"
-              @input="validateChildrenInput"
+              class="counter-input"
+              readonly
             />
-            <button class="plus" @click="incrementChildren" :disabled="childrenCount >= 20">
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13.4229 6.25819H8.77706V1.61233C8.77706 0.916762 8.21321 0.352905 7.51764 0.352905C6.82208 0.352905 6.25822 0.916762 6.25822 1.61233V6.25819H1.61236C0.916793 6.25819 0.352936 6.82205 0.352936 7.51761C0.352936 8.21318 0.916793 8.77703 1.61236 8.77703H6.25822V13.4229C6.25822 14.1185 6.82208 14.6823 7.51764 14.6823C8.21321 14.6823 8.77706 14.1185 8.77706 13.4229V8.77703H13.4229C14.1185 8.77703 14.6823 8.21318 14.6823 7.51761C14.6823 6.82205 14.1185 6.25819 13.4229 6.25819Z" fill="white"/>
-              </svg>
+            <button 
+              class="counter-btn" 
+              @click="incrementChildren" 
+              :disabled="childrenCount >= 20"
+            >
+              +
             </button>
+          </div>
+        </div>
+        
+        <div v-if="childrenCount > 0" class="children-details">
+          <div class="info-box">
+            <p><strong>Единое пособие на детей назначается:</strong></p>
+            <ul>
+              <li>На каждого ребенка от 0 до 17 лет</li>
+              <li>Размер: 50%, 75% или 100% от прожиточного минимума на ребенка</li>
+              <li v-if="childrenCount > 1">У вас {{ childrenCount }} детей - пособие будет на каждого</li>
+            </ul>
+          </div>
+          
+          <!-- Возраст детей для более точного расчета -->
+          <div v-if="childrenCount > 0" class="age-distribution">
+            <h4>Распределение по возрасту (необязательно):</h4>
+            
+            <div class="age-group">
+              <label class="field-label">Дети от 0 до 3 лет:</label>
+              <input 
+                type="number" 
+                v-model.number="childrenAges.under3"
+                min="0"
+                :max="childrenCount"
+                class="small-input"
+                @input="validateAgeDistribution"
+              />
+            </div>
+            
+            <div class="age-group">
+              <label class="field-label">Дети от 3 до 7 лет:</label>
+              <input 
+                type="number" 
+                v-model.number="childrenAges.from3to7"
+                min="0"
+                :max="childrenCount"
+                class="small-input"
+                @input="validateAgeDistribution"
+              />
+            </div>
+            
+            <div class="age-group">
+              <label class="field-label">Дети от 8 до 17 лет:</label>
+              <input 
+                type="number" 
+                v-model.number="childrenAges.from8to17"
+                min="0"
+                :max="childrenCount"
+                class="small-input"
+                @input="validateAgeDistribution"
+              />
+            </div>
+            
+            <p v-if="ageSum !== childrenCount && ageSum > 0" class="error-text">
+              ⚠️ Сумма детей по возрастам ({{ ageSum }}) не равна общему количеству ({{ childrenCount }})
+            </p>
+          </div>
         </div>
       </div>
     </div>
-
-    <div class="students-section">
-      <div class="input-group">
-        <label class="custom-checkbox">
-          <input type="checkbox" v-model="hasStudents" />
-          <span class="checkmark"></span>
-          Есть студент(ы) очного отделения (до 23 лет)
-        </label>
-      </div>
-
-      <div class="input-group two" v-if="hasStudents">
-        <label>Количество студентов:</label>
-        <div class="input-numbers">
-          <button class="minus" @click="decrementStudents" :disabled="studentsCount <= 0">
-            <svg width="15" height="3" viewBox="0 0 15 3" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M13.4229 0.258179H1.61236C0.916792 0.258179 0.352936 0.822035 0.352936 1.5176C0.352936 2.21316 0.916792 2.77702 1.61236 2.77702H13.4229C14.1185 2.77702 14.6823 2.21316 14.6823 1.5176C14.6823 0.822035 14.1185 0.258179 13.4229 0.258179Z" fill="white"/>
-            </svg>
-          </button>
-          <input
-            type="number"
-            v-model.number="studentsCount"
-            min="0"
-            max="20"
-            class="number-input"
-            @input="validateStudentsInput"
-          />
-          <button class="plus" @click="incrementStudents" :disabled="studentsCount >= 20">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M13.4229 6.25819H8.77706V1.61233C8.77706 0.916762 8.21321 0.352905 7.51764 0.352905C6.82208 0.352905 6.25822 0.916762 6.25822 1.61233V6.25819H1.61236C0.916793 6.25819 0.352936 6.82205 0.352936 7.51761C0.352936 8.21318 0.916793 8.77703 1.61236 8.77703H6.25822V13.4229C6.25822 14.1185 6.82208 14.6823 7.51764 14.6823C8.21321 14.6823 8.77706 14.1185 8.77706 13.4229V8.77703H13.4229C14.1185 8.77703 14.6823 8.21318 14.6823 7.51761C14.6823 6.82205 14.1185 6.25819 13.4229 6.25819Z" fill="white"/>
-            </svg>
-          </button>
+    
+    <!-- Раздел для студентов -->
+    <div class="section">
+      <h3 class="section-title">Студенты</h3>
+      
+      <label class="custom-checkbox">
+        <input type="checkbox" v-model="hasStudents" />
+        <span class="checkmark"></span>
+        <span class="checkbox-text">
+          В семье есть дети от 18 до 23 лет, обучающиеся очно
+        </span>
+      </label>
+      
+      <div v-if="hasStudents" class="students-details">
+        <div class="input-group">
+          <label class="field-label">Количество студентов очной формы (18-23 года):</label>
+          <div class="counter-group">
+            <button 
+              class="counter-btn" 
+              @click="studentsCount = Math.max(0, studentsCount - 1)" 
+              :disabled="studentsCount <= 0"
+            >
+              -
+            </button>
+            <input 
+              type="number" 
+              v-model.number="studentsCount"
+              min="0"
+              max="10"
+              class="counter-input"
+              readonly
+            />
+            <button 
+              class="counter-btn" 
+              @click="studentsCount++" 
+              :disabled="studentsCount >= 10"
+            >
+              +
+            </button>
+          </div>
+        </div>
+        
+        <div class="info-box">
+          <p>ℹ️ Студенты 18-23 лет учитываются в составе семьи, но пособие на них не назначается</p>
         </div>
       </div>
     </div>
-
-    <div class="spouse-section">
-      <label class="custom-checkbox"> 
+    
+    <!-- Раздел для супруга -->
+    <div class="section">
+      <h3 class="section-title">Супруг(а)</h3>
+      
+      <label class="custom-checkbox">
         <input type="checkbox" v-model="hasSpouse" />
         <span class="checkmark"></span>
-        Есть супруг(а)
+        <span class="checkbox-text">
+          Состою в зарегистрированном браке
+        </span>
       </label>
+      
+      <div v-if="!hasSpouse && childrenCount > 0" class="single-parent-info">
+        <label class="custom-checkbox">
+          <input type="checkbox" v-model="isSingleParent" />
+          <span class="checkmark"></span>
+          <span class="checkbox-text">
+            Я единственный родитель
+            <span class="info-badge">Повышенное пособие</span>
+          </span>
+        </label>
+        
+        <div v-if="isSingleParent" class="info-box">
+          <p><strong>Единственный родитель - это:</strong></p>
+          <ul>
+            <li>Второй родитель умер, признан безвестно отсутствующим или умершим</li>
+            <li>В свидетельстве о рождении ребенка нет записи об отце</li>
+            <li>Запись об отце сделана со слов матери</li>
+          </ul>
+          <p class="success-text">✅ Размер пособия может быть увеличен</p>
+        </div>
+      </div>
     </div>
-
+    
+    <!-- Итоговая информация о семье -->
+    <div class="family-summary">
+      <h4>Состав вашей семьи для расчета пособия:</h4>
+      
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="label">Взрослые:</span>
+          <span class="value">{{ adultsCount }}</span>
+        </div>
+        
+        <div class="summary-item" v-if="childrenCount > 0">
+          <span class="label">Дети до 17:</span>
+          <span class="value">{{ childrenCount }}</span>
+        </div>
+        
+        <div class="summary-item" v-if="hasStudents">
+          <span class="label">Студенты 18-23:</span>
+          <span class="value">{{ studentsCount }}</span>
+        </div>
+        
+        <div class="summary-item total">
+          <span class="label">Всего членов семьи:</span>
+          <span class="value">{{ totalFamilySize }}</span>
+        </div>
+      </div>
+      
+      <div v-if="isPregnant && !hasChildren" class="special-note">
+        <p>🤰 Вы можете получать пособие для беременных</p>
+      </div>
+      
+      <div v-if="childrenCount > 0" class="special-note">
+        <p>👶 Пособие будет рассчитано на {{ childrenCount }} {{ childrenText }}</p>
+      </div>
+      
+      <div v-if="childrenCount >= 3" class="special-note bonus">
+        <p>🌟 У вас многодетная семья - действуют особые условия по имуществу</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed, watch } from 'vue'
 import { useCalculatorStore } from '../stores/calculatorStore'
-import { storeToRefs } from 'pinia'
 
 const store = useCalculatorStore()
-const { 
-  hasSpouse, 
-  childrenCount, 
-  hasStudents, 
-  studentsCount 
-} = storeToRefs(store)
 
-// Функции для управления количеством детей
+// Состояние компонента
+const isPregnant = ref(false)
+const pregnancyWeeks = ref(0)
+const childrenCount = ref(0)
+const hasStudents = ref(false)
+const studentsCount = ref(0)
+const hasSpouse = ref(false)
+const isSingleParent = ref(false)
+
+// Распределение детей по возрастам
+const childrenAges = ref({
+  under3: 0,
+  from3to7: 0,
+  from8to17: 0
+})
+
+// Вычисляемые свойства
+const hasChildren = computed(() => childrenCount.value > 0)
+
+const adultsCount = computed(() => {
+  return (hasSpouse.value ? 2 : 1)
+})
+
+const totalFamilySize = computed(() => {
+  return adultsCount.value + childrenCount.value + (hasStudents.value ? studentsCount.value : 0)
+})
+
+const ageSum = computed(() => {
+  return childrenAges.value.under3 + 
+         childrenAges.value.from3to7 + 
+         childrenAges.value.from8to17
+})
+
+const childrenText = computed(() => {
+  const count = childrenCount.value
+  if (count === 1) return 'ребенка'
+  if (count >= 2 && count <= 4) return 'детей'
+  return 'детей'
+})
+
+// Методы
 const incrementChildren = () => {
   if (childrenCount.value < 20) {
     childrenCount.value++
@@ -95,38 +315,80 @@ const incrementChildren = () => {
 const decrementChildren = () => {
   if (childrenCount.value > 0) {
     childrenCount.value--
+    // Сбрасываем распределение по возрастам
+    if (childrenCount.value === 0) {
+      childrenAges.value = {
+        under3: 0,
+        from3to7: 0,
+        from8to17: 0
+      }
+    }
   }
 }
 
-const validateChildrenInput = () => {
-  if (childrenCount.value < 0) {
-    childrenCount.value = 0
-  } else if (childrenCount.value > 20) {
-    childrenCount.value = 20
+const validateAgeDistribution = () => {
+  const sum = childrenAges.value.under3 + 
+              childrenAges.value.from3to7 + 
+              childrenAges.value.from8to17
+  
+  if (sum > childrenCount.value) {
+    // Корректируем значения пропорционально
+    const ratio = childrenCount.value / sum
+    childrenAges.value.under3 = Math.floor(childrenAges.value.under3 * ratio)
+    childrenAges.value.from3to7 = Math.floor(childrenAges.value.from3to7 * ratio)
+    childrenAges.value.from8to17 = Math.floor(childrenAges.value.from8to17 * ratio)
   }
 }
 
-// Функции для управления количеством студентов
-const incrementStudents = () => {
-  if (studentsCount.value < 20) {
-    studentsCount.value++
+// Синхронизация с хранилищем
+watch(isPregnant, (value) => {
+  store.isPregnant = value
+  if (!value) {
+    pregnancyWeeks.value = 0
+    store.pregnancyWeeks = 0
   }
-}
+})
 
-const decrementStudents = () => {
-  if (studentsCount.value > 0) {
-    studentsCount.value--
-  }
-}
+watch(pregnancyWeeks, (value) => {
+  store.pregnancyWeeks = value
+})
 
-const validateStudentsInput = () => {
-  if (studentsCount.value < 0) {
+watch(childrenCount, (value) => {
+  store.childrenCount = value
+})
+
+watch(hasStudents, (value) => {
+  store.hasStudents = value
+  if (!value) {
     studentsCount.value = 0
-  } else if (studentsCount.value > 20) {
-    studentsCount.value = 20
+    store.studentsCount = 0
   }
-}
+})
+
+watch(studentsCount, (value) => {
+  store.studentsCount = value
+})
+
+watch(hasSpouse, (value) => {
+  store.hasSpouse = value
+  if (value) {
+    isSingleParent.value = false
+  }
+})
+
+watch(isSingleParent, (value) => {
+  store.isSingleParent = value
+})
+
+// Инициализация из хранилища
+isPregnant.value = store.isPregnant
+pregnancyWeeks.value = store.pregnancyWeeks
+childrenCount.value = store.childrenCount
+hasStudents.value = store.hasStudents
+studentsCount.value = store.studentsCount
+hasSpouse.value = store.hasSpouse
 </script>
+
 
 <style scoped lang="scss">
 .family-step{
@@ -194,7 +456,7 @@ const validateStudentsInput = () => {
           justify-content: center;
           cursor: pointer;
           &:disabled {
-            background-color: #cccccc;
+            background-color: #31a3ff;
             cursor: not-allowed;
           }
         }
