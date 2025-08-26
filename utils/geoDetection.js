@@ -1,6 +1,5 @@
 import { regions } from '../data/regions'
 
-// Маппинг английских названий на коды регионов
 const regionMapping = {
   'Moscow': 'moscow',
   'Moskva': 'moscow',

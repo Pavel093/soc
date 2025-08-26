@@ -1,47 +1,58 @@
-export default {
-  head: {
-    title: 'Мой Nuxt-проект',
-    meta: [
-      { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { 
-        hid: 'description', 
-        name: 'description', 
-        content: 'Мой Nuxt.js проект' 
-      }
-    ],
-    link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-      {
-        rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
-      }
-    ]
+import { regions } from './data/regions.js'
+
+export default defineNuxtConfig({
+  devtools: { enabled: true },
+  
+  css: ['~/assets/scss/global.scss'],
+  
+  nitro: {
+    prerender: {
+      routes: [
+        '/',
+        '/edinoe-posobie',
+        '/edinoe-posobie/calculator',
+        '/edinoe-posobie/calculator/beremennym',
+        '/edinoe-posobie/calculator/detyam',
+        ...regions.flatMap(region => [
+          `/edinoe-posobie/calculator/beremennym/${region.code}`,
+          `/edinoe-posobie/calculator/detyam/${region.code}`
+        ])
+      ]
+    }
   },
 
-  css: [
-    '@/assets/scss/global.scss'
-  ],
-
-  ssr: false,
-  target: 'static',
-  
-  // nitro: {
-  //   preset: 'node-server'
-  // },
-
-  modules: ['@pinia/nuxt'],
-  
-  // router: {
-  //   base: '/soc/'
-  // },
-  
-  build: {
-    extractCSS: true,
-    optimization: {
-      splitChunks: {
-        chunks: 'all'
+  // SEO
+  app: {
+    head: {
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1',
+      htmlAttrs: {
+        lang: 'ru'
       }
     }
+  },
+
+  // Модули
+  modules: [
+    '@nuxtjs/sitemap',
+    '@nuxtjs/robots'
+  ],
+
+  // Настройки sitemap
+  site: {
+    url: 'https://your-domain.ru' 
+  },
+
+  sitemap: {
+    sources: ['/api/sitemap.ts']
+  },
+
+  // Robots.txt
+  robots: {
+    rules: {
+      UserAgent: '*',
+      Allow: '/',
+      Sitemap: 'https://your-domain.ru/sitemap.xml'
+    }
   }
-}
+})

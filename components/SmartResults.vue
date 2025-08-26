@@ -1,3 +1,67 @@
+<script setup>
+import { ref, computed } from 'vue'
+
+const props = defineProps({
+  calculationData: {
+    type: Object,
+    required: true
+  }
+})
+
+const emit = defineEmits(['recalculate'])
+
+const data = computed(() => props.calculationData)
+
+// Проверка наличия проблем с имуществом
+const hasPropertyIssues = computed(() => {
+  const check = data.value.formData.propertyCheck
+  if (!check) return false
+  return check.hasMultipleApartments || check.hasMultipleCars || 
+         check.hasLuxuryCar || check.hasHighSavings
+})
+
+// Проверка особых обстоятельств
+const hasSpecialCircumstances = computed(() => {
+  const special = data.value.formData.special
+  if (!special) return false
+  return special.singleParent || special.hasDisabled || special.mobilized
+})
+
+// Нужна ли проверка нулевого дохода
+const needsZeroIncomeRule = computed(() => {
+  return data.value.calculations.incomePercent < 30
+})
+
+// Форматирование суммы
+const formatAmount = (amount) => {
+  return new Intl.NumberFormat('ru-RU').format(amount)
+}
+
+// Склонение слова "ребенок"
+const getChildrenWord = (count) => {
+  if (count === 1) return 'ребенка'
+  if (count >= 2 && count <= 4) return 'детей'
+  return 'детей'
+}
+
+// Класс для дохода
+const getIncomeClass = () => {
+  const percent = data.value.calculations.incomePercent
+  if (percent <= 100) return 'success'
+  return 'error'
+}
+
+// Пересчет
+const recalculate = () => {
+  emit('recalculate')
+}
+
+// Печать результатов
+const printResults = () => {
+  window.print()
+}
+</script>
+
 <template>
   <div class="results-container">
     <div class="result-card" :class="data.isEligible ? 'success' : 'error'">
@@ -218,70 +282,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed } from 'vue'
-
-const props = defineProps({
-  calculationData: {
-    type: Object,
-    required: true
-  }
-})
-
-const emit = defineEmits(['recalculate'])
-
-const data = computed(() => props.calculationData)
-
-// Проверка наличия проблем с имуществом
-const hasPropertyIssues = computed(() => {
-  const check = data.value.formData.propertyCheck
-  if (!check) return false
-  return check.hasMultipleApartments || check.hasMultipleCars || 
-         check.hasLuxuryCar || check.hasHighSavings
-})
-
-// Проверка особых обстоятельств
-const hasSpecialCircumstances = computed(() => {
-  const special = data.value.formData.special
-  if (!special) return false
-  return special.singleParent || special.hasDisabled || special.mobilized
-})
-
-// Нужна ли проверка нулевого дохода
-const needsZeroIncomeRule = computed(() => {
-  return data.value.calculations.incomePercent < 30
-})
-
-// Форматирование суммы
-const formatAmount = (amount) => {
-  return new Intl.NumberFormat('ru-RU').format(amount)
-}
-
-// Склонение слова "ребенок"
-const getChildrenWord = (count) => {
-  if (count === 1) return 'ребенка'
-  if (count >= 2 && count <= 4) return 'детей'
-  return 'детей'
-}
-
-// Класс для дохода
-const getIncomeClass = () => {
-  const percent = data.value.calculations.incomePercent
-  if (percent <= 100) return 'success'
-  return 'error'
-}
-
-// Пересчет
-const recalculate = () => {
-  emit('recalculate')
-}
-
-// Печать результатов
-const printResults = () => {
-  window.print()
-}
-</script>
 
 <style scoped lang="scss">
 .results-container {
