@@ -1,29 +1,224 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue' // Добавили nextTick
 import { regions, findRegionByCode } from '../data/regions'
 import SmartResults from './SmartResults.vue'
 import { detectRegionByIP } from '../utils/geoDetection'
 
+// Рефы для элементов
+const contentContainer = ref(null)
+const calculatorRef = ref(null)
+const isCalculatorInView = ref(true)
+const isSticky = ref(false)
+
+// Функция для проверки видимости калькулятора
+const checkCalculatorVisibility = () => {
+  if (!calculatorRef.value) return
+  
+  const rect = calculatorRef.value.getBoundingClientRect()
+  const windowHeight = window.innerHeight
+  const windowWidth = window.innerWidth
+  
+  // Более точная проверка видимости
+  isCalculatorInView.value = (
+    rect.top >= -100 && 
+    rect.left >= 0 && 
+    rect.bottom <= windowHeight + 100 && 
+    rect.right <= windowWidth
+  )
+  
+  // Sticky режим, когда калькулятор близко к верху
+  isSticky.value = rect.top < 50 && rect.bottom > windowHeight / 2
+}
+
+// Функция для плавного скролла к калькулятору
+const scrollToCalculator = () => {
+  if (calculatorRef.value) {
+    calculatorRef.value.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
+}
+
+// Модифицированная функция прокрутки к верху
+const scrollToTop = () => {
+  if (contentContainer.value) {
+    contentContainer.value.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+  
+  // Также прокручиваем страницу к калькулятору, если он не в видимой области
+  if (!isCalculatorInView.value) {
+    setTimeout(() => {
+      scrollToCalculator()
+    }, 300)
+  }
+}
+
+// Обработчики скролла
+onMounted(() => {
+  window.addEventListener('scroll', checkCalculatorVisibility, { passive: true })
+  // Первоначальная проверка
+  setTimeout(() => {
+    checkCalculatorVisibility()
+    // Прокручиваем к калькулятору при загрузке, если он не в видимой области
+    if (!isCalculatorInView.value) {
+      setTimeout(() => {
+        scrollToCalculator()
+      }, 1000)
+    }
+  }, 100)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', checkCalculatorVisibility)
+})
+
+// Получение текущей даты для расчета периода
+const currentDate = new Date()
+const currentYear = currentDate.getFullYear()
+const currentMonth = currentDate.getMonth() + 1
+
+// Месяцы для выбора
+const months = [
+  { value: 1, label: 'Январь' },
+  { value: 2, label: 'Февраль' },
+  { value: 3, label: 'Март' },
+  { value: 4, label: 'Апрель' },
+  { value: 5, label: 'Май' },
+  { value: 6, label: 'Июнь' },
+  { value: 7, label: 'Июль' },
+  { value: 8, label: 'Август' },
+  { value: 9, label: 'Сентябрь' },
+  { value: 10, label: 'Октябрь' },
+  { value: 11, label: 'Ноябрь' },
+  { value: 12, label: 'Декабрь' }
+]
+
 // Основные данные формы
 const formData = ref({
   region: '',
-  recipientType: '', // pregnant, parent, both
-  childrenCount: 1,
-  hasSpouse: false,
-  hasOtherAdults: false,
-  otherAdultsCount: 1,
-  totalIncome: 0,
-  hasValidReason: false,
-  propertyCheck: {
-    hasMultipleApartments: false,
-    hasMultipleCars: false,
-    hasLuxuryCar: false,
-    hasHighSavings: false
+  
+  // Период подачи заявления
+  applicationDate: {
+    month: currentMonth,
+    year: currentYear
   },
+  
+  recipientType: '', // pregnant, parent, both
+  
+  // Детальная информация о беременности
+  pregnancy: {
+    weeksSinceRegistration: 6, // недель беременности при постановке на учет
+    registrationWeek: 12, // на какой неделе встала на учет
+    currentWeek: 20 // текущая неделя беременности
+  },
+  
+  childrenCount: 1,
+  studentChildrenCount: 0,
+  hasSpouse: false,
+  totalIncome: 0,
+  
+  // Детализированные доходы для правильного учета
+  detailedIncome: {
+    salary: 0,
+    business: 0,
+    rental: 0,
+    alimony: 0,
+    benefits: 0,
+    pension: 0,
+    scholarship: 0,
+    securities: 0, // доходы от ценных бумаг
+    interest: 0, // проценты по вкладам
+    lottery: 0, // выигрыши в лотереях
+    inheritance: 0, // наследство
+    gifts: 0, // подарки в денежной форме
+    other: 0
+  },
+  
+  // Расширенная проверка транспорта
+  transport: {
+    carsCount: 0,
+    carsYoungerThan5Years: 0,
+    hasLuxuryCar: false, // мощнее 250 л.с. и младше 5 лет
+    motorcyclesCount: 0,
+    hasBoat: false, // катер или моторная лодка мощнее 5 л.с.
+    hasSelfPropelled: false, // самоходная техника младше 5 лет
+    hasTractor: false, // трактор младше 5 лет
+    transportFromSocial: false // транспорт получен через соцзащиту
+  },
+  
+  // Расширенная проверка имущества
+  propertyCheck: {
+    apartmentsCount: 1,
+    totalApartmentArea: 0,
+    housesCount: 0,
+    totalHouseArea: 0,
+    hasCountryHouse: false,
+    garagesCount: 0,
+    landAreaCity: 0,
+    landAreaRural: 0,
+    hasNonResidential: false,
+    hasCommercialProperty: false
+  },
+  
+  // Исключения по имуществу
+  propertyExceptions: {
+    hasUninhabitableHousing: false,
+    hasArrestedProperty: false,
+    hasGuardianshipProperty: false,
+    hasFarEastHectare: false,
+    hasMultifamilySupport: false, // жилье предоставлено как мера поддержки многодетным
+    hasDisabledHousing: false // жилье для инвалида
+  },
+  
+  // Детализированная проверка нулевого дохода
+  adultsIncome: {
+    applicantHasIncome: false,
+    spouseHasIncome: false,
+    // Детализация по месяцам для точного расчета
+    applicantReasons: [], // массив {month: 1, reason: 'childCare'}
+    spouseReasons: [] // массив {month: 1, reason: 'unemployment'}
+  },
+  
+  // Уважительные причины отсутствия дохода
+  validReasons: {
+    childCareUnder3: false, // уход за ребенком до 3 лет
+    childCareForSingle: false, // единственный родитель
+    childCareInLargeFamily: false, // уход в многодетной семье
+    disabledCare: false, // уход за инвалидом
+    elderCare: false, // уход за пожилым 80+
+    fullTimeStudy: false, // очное обучение до 23 лет
+    militaryService: false, // военная служба
+    imprisonment: false, // лишение свободы
+    unemployment: false, // безработица (до 6 месяцев)
+    longTermTreatment: false // длительное лечение (более 3 месяцев)
+  },
+  
+  // Самозанятые
+  selfEmployed: {
+    isSelfEmployed: false,
+    yearlyIncome: 0,
+    monthsActive: 12 // сколько месяцев была активна самозанятость
+  },
+  
+  // Алименты
+  alimony: {
+    receivesAlimony: false,
+    monthlyAmount: 0,
+    childrenCount: 0,
+    hasCourtDecision: false,
+    isVoluntaryAgreement: false
+  },
+  
   special: {
     singleParent: false,
     hasDisabled: false,
-    mobilized: false
+    mobilized: false,
+    refugeeStatus: false, // статус беженца
+    emergencySituation: false // пострадавшие от ЧС
   }
 })
 
@@ -33,9 +228,10 @@ const showResults = ref(false)
 const isDetectingRegion = ref(false)
 const isAutoDetected = ref(false)
 const showIncomeHelp = ref(false)
+const showReasonDetails = ref(false)
 
-// Список вопросов (всего 5!)
-const questions = ['region', 'recipient', 'family', 'income', 'conditions']
+// Список вопросов
+const questions = ['region', 'recipient', 'family', 'income', 'transport', 'property', 'conditions']
 
 // Вычисляемые свойства
 const currentQuestion = computed(() => questions[currentQuestionIndex.value])
@@ -48,27 +244,109 @@ const isLastQuestion = computed(() => currentQuestionIndex.value === questions.l
 const currentRegion = computed(() => findRegionByCode(formData.value.region))
 const currentRegionPM = computed(() => currentRegion.value?.pmValue || 0)
 
+// Расчет периода для доходов
+const calculationPeriod = computed(() => {
+  const appMonth = formData.value.applicationDate.month
+  const appYear = formData.value.applicationDate.year
+  
+  // Расчетный период - 12 месяцев, предшествующих месяцу перед месяцем обращения
+  let startMonth = appMonth - 1 // месяц перед обращением
+  let startYear = appYear
+  
+  if (startMonth <= 0) {
+    startMonth = 12 + startMonth
+    startYear--
+  }
+  
+  // Начало периода - еще 12 месяцев назад
+  let periodStartMonth = startMonth
+  let periodStartYear = startYear - 1
+  
+  // Конец периода - месяц перед месяцем обращения
+  let periodEndMonth = startMonth - 1
+  let periodEndYear = startYear
+  
+  if (periodEndMonth <= 0) {
+    periodEndMonth = 12
+    periodEndYear--
+  }
+  
+  return {
+    startMonth: periodStartMonth,
+    startYear: periodStartYear,
+    endMonth: periodEndMonth,
+    endYear: periodEndYear,
+    displayStart: `${months[periodStartMonth - 1].label} ${periodStartYear}`,
+    displayEnd: `${months[periodEndMonth - 1].label} ${periodEndYear}`
+  }
+})
+
 // Расчет состава семьи
 const totalFamilyMembers = computed(() => {
   let total = 1 // Заявитель
   if (formData.value.hasSpouse) total += 1
-  if (formData.value.hasOtherAdults) total += formData.value.otherAdultsCount
-  if (formData.value.recipientType !== 'pregnant') {
-    total += formData.value.childrenCount
-  }
-  return total
+  
+  total += formData.value.childrenCount
+  total += formData.value.studentChildrenCount
+
+  return Math.max(1, total)
+})
+
+// Расчет общего количества детей
+const totalChildren = computed(() => {
+  return formData.value.childrenCount + formData.value.studentChildrenCount
+})
+
+// Проверка - многодетная семья
+const isLargeFamily = computed(() => {
+  return totalChildren.value >= 3
+})
+
+// Проверка - беременная женщина
+const isPregnantRecipient = computed(() => {
+  return formData.value.recipientType === 'pregnant' || formData.value.recipientType === 'both'
+})
+
+// Расчет общего дохода из детализированных источников
+const calculatedTotalIncome = computed(() => {
+  const detailed = formData.value.detailedIncome
+  return Object.values(detailed).reduce((sum, val) => sum + (val || 0), 0)
 })
 
 // Расчет среднедушевого дохода
 const averageMonthlyIncome = computed(() => {
   if (totalFamilyMembers.value === 0) return 0
-  return Math.round(formData.value.totalIncome / 12 / totalFamilyMembers.value)
+  const totalIncome = formData.value.totalIncome || calculatedTotalIncome.value
+  return Math.round(totalIncome / 12 / totalFamilyMembers.value)
+})
+
+// Проверка освобождения от правила нулевого дохода
+const isExemptFromZeroIncomeRule = computed(() => {
+  return formData.value.special.mobilized ||
+         formData.value.special.singleParent ||
+         isPregnantRecipient.value ||
+         isLargeFamily.value
 })
 
 // Проверка нужна ли проверка нулевого дохода
 const needsZeroIncomeCheck = computed(() => {
+  if (isExemptFromZeroIncomeRule.value) return false
   return averageMonthlyIncome.value < currentRegionPM.value * 0.3
 })
+
+// Детализированная проверка нулевого дохода
+const needsDetailedZeroIncomeCheck = computed(() => {
+  return needsZeroIncomeCheck.value && !isExemptFromZeroIncomeRule.value
+})
+
+// Подсчет месяцев с уважительными причинами
+const calculateValidReasonMonths = (reasons) => {
+  if (!reasons || reasons.length === 0) return 0
+  
+  // Подсчитываем уникальные месяцы с уважительными причинами
+  const uniqueMonths = new Set(reasons.map(r => r.month))
+  return uniqueMonths.size
+}
 
 // Статус дохода
 const getIncomeStatusClass = () => {
@@ -85,7 +363,7 @@ const incomeStatusText = computed(() => {
   return `✗ Доход ${percent}% от ПМ — превышает допустимый уровень`
 })
 
-// Проверка можно ли продолжить
+// Проверка можно ли продолжить  
 const canProceed = computed(() => {
   switch (currentQuestion.value) {
     case 'region':
@@ -93,11 +371,17 @@ const canProceed = computed(() => {
     case 'recipient':
       return !!formData.value.recipientType
     case 'family':
-      return formData.value.recipientType === 'pregnant' || formData.value.childrenCount > 0
+      return formData.value.recipientType === 'pregnant' || 
+             formData.value.childrenCount > 0 || 
+             formData.value.studentChildrenCount > 0
     case 'income':
-      return true // Можно оставить 0
+      return true
+    case 'transport':
+      return true
+    case 'property':
+      return true
     case 'conditions':
-      return true // Все чекбоксы необязательные
+      return true
     default:
       return true
   }
@@ -110,13 +394,20 @@ const nextQuestion = () => {
   } else {
     currentQuestionIndex.value++
   }
+  nextTick(() => {
+    scrollToTop()
+  })
 }
 
 const previousQuestion = () => {
   if (!isFirstQuestion.value) {
     currentQuestionIndex.value--
+    nextTick(() => {
+      scrollToTop()
+    })
   }
 }
+
 
 const resetCalculator = () => {
   currentQuestionIndex.value = 0
@@ -132,14 +423,6 @@ const decrementChildren = () => {
   if (formData.value.childrenCount > 0) formData.value.childrenCount--
 }
 
-const incrementOtherAdults = () => {
-  if (formData.value.otherAdultsCount < 5) formData.value.otherAdultsCount++
-}
-
-const decrementOtherAdults = () => {
-  if (formData.value.otherAdultsCount > 1) formData.value.otherAdultsCount--
-}
-
 // Склонения
 const getFamilyWord = (count) => {
   if (count === 1) return 'человек'
@@ -149,96 +432,274 @@ const getFamilyWord = (count) => {
 
 // Форматирование
 const formatAmount = (amount) => {
-  return new Intl.NumberFormat('ru-RU').format(amount)
+  return new Intl.NumberFormat('ru-RU').format(Math.round(amount))
 }
 
 // Подготовка данных для расчета
 const getCalculationData = () => {
   const region = currentRegion.value
   if (!region) return null
-  
+
   let isEligible = true
   let denialReasons = []
   
-  // Проверка 1: Есть ли дети или беременность
-  if (formData.value.recipientType === 'parent' && formData.value.childrenCount === 0) {
+  // Проверка 1: Есть ли дети для родителя
+  if (formData.value.recipientType === 'parent' && totalChildren.value === 0) {
     isEligible = false
-    denialReasons.push('Необходимо иметь детей до 17 лет')
+    denialReasons.push('Для получения пособия родителем необходимо иметь детей до 17 лет (до дня 17-летия) или студентов-очников до 23 лет.')
   }
-  
-  // Проверка 2: Доход
+
+  // Проверка 2: Для беременных - срок и постановка на учет
+  if (isPregnantRecipient.value) {
+    if (formData.value.pregnancy.currentWeek < 6) {
+      isEligible = false
+      denialReasons.push('Пособие беременным назначается с 6 недели беременности.')
+    }
+    if (formData.value.pregnancy.registrationWeek > 12) {
+      isEligible = false
+      denialReasons.push('Необходимо встать на учет в медицинской организации до 12 недель беременности.')
+    }
+  }
+
+  // Проверка 3: Доход не превышает прожиточный минимум
   if (averageMonthlyIncome.value > currentRegionPM.value) {
     isEligible = false
-    denialReasons.push(`Среднедушевой доход (${formatAmount(averageMonthlyIncome.value)} ₽) превышает прожиточный минимум региона (${formatAmount(currentRegionPM.value)} ₽)`)
+    denialReasons.push(`Среднедушевой доход (${formatAmount(averageMonthlyIncome.value)} ₽) превышает прожиточный минимум региона (${formatAmount(currentRegionPM.value)} ₽).`)
+  }
+
+  // Проверка 4: Правило нулевого дохода
+  if (needsDetailedZeroIncomeCheck.value) {
+    let zeroIncomeIssues = []
+    
+    // Проверка заявителя
+    if (!formData.value.adultsIncome.applicantHasIncome) {
+      const validMonths = calculateValidReasonMonths(formData.value.adultsIncome.applicantReasons)
+      if (validMonths < 10) {
+        zeroIncomeIssues.push(`заявитель (${validMonths} месяцев из 10 требуемых)`)
+      }
+    }
+    
+    // Проверка супруга
+    if (formData.value.hasSpouse && !formData.value.adultsIncome.spouseHasIncome) {
+      const validMonths = calculateValidReasonMonths(formData.value.adultsIncome.spouseReasons)
+      if (validMonths < 10) {
+        zeroIncomeIssues.push(`супруг(а) (${validMonths} месяцев из 10 требуемых)`)
+      }
+    }
+    
+    if (zeroIncomeIssues.length > 0) {
+      isEligible = false
+      denialReasons.push(`Нарушено правило нулевого дохода для: ${zeroIncomeIssues.join(', ')}. Уважительные причины должны покрывать минимум 10 месяцев из 12.`)
+    }
+  }
+
+  // Проверка 5: Транспорт
+  if (!formData.value.transport.transportFromSocial) {
+    const maxCars = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
+    const maxMotorcycles = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
+    
+    // Проверка автомобилей
+    if (formData.value.transport.carsCount > maxCars) {
+      isEligible = false
+      denialReasons.push(`Количество автомобилей (${formData.value.transport.carsCount}) превышает допустимое (${maxCars}).`)
+    }
+    
+    // Проверка мотоциклов
+    if (formData.value.transport.motorcyclesCount > maxMotorcycles) {
+      isEligible = false
+      denialReasons.push(`Количество мотоциклов (${formData.value.transport.motorcyclesCount}) превышает допустимое (${maxMotorcycles}).`)
+    }
+    
+    // Проверка премиум-авто
+    if (formData.value.transport.hasLuxuryCar && totalChildren.value < 4) {
+      isEligible = false
+      denialReasons.push('Наличие автомобиля премиум-класса (мощнее 250 л.с., младше 5 лет). Исключение: семьи с 4 и более детьми.')
+    }
+    
+    // Проверка водного транспорта
+    if (formData.value.transport.hasBoat) {
+      isEligible = false
+      denialReasons.push('Наличие катера или моторной лодки с двигателем мощнее 5 л.с.')
+    }
+    
+    // Проверка самоходной техники
+    if (formData.value.transport.hasSelfPropelled) {
+      isEligible = false
+      denialReasons.push('Наличие самоходной техники младше 5 лет.')
+    }
+    
+    // Проверка тракторов
+    if (formData.value.transport.hasTractor) {
+      isEligible = false
+      denialReasons.push('Наличие трактора или комбайна младше 5 лет.')
+    }
+  }
+
+  // Проверка 6: Имущество
+  if (!formData.value.propertyExceptions.hasArrestedProperty && 
+      !formData.value.propertyExceptions.hasGuardianshipProperty &&
+      !formData.value.propertyExceptions.hasMultifamilySupport) {
+    
+    // Проверка квартир
+    if (!formData.value.propertyExceptions.hasUninhabitableHousing) {
+      if (formData.value.propertyCheck.apartmentsCount === 1) {
+        // Одна квартира любой площади - разрешено
+      } else if (formData.value.propertyCheck.apartmentsCount > 1) {
+        const areaPerPerson = formData.value.propertyCheck.totalApartmentArea / totalFamilyMembers.value
+        if (areaPerPerson > 24) {
+          isEligible = false
+          denialReasons.push(`При наличии нескольких квартир площадь на человека (${formatAmount(areaPerPerson)} кв.м.) превышает норму в 24 кв.м.`)
+        }
+      }
+    }
+
+    // Проверка домов
+    if (!formData.value.propertyExceptions.hasUninhabitableHousing) {
+      if (formData.value.propertyCheck.housesCount === 1) {
+        // Один дом любой площади - разрешено
+      } else if (formData.value.propertyCheck.housesCount > 1) {
+        const areaPerPerson = formData.value.propertyCheck.totalHouseArea / totalFamilyMembers.value
+        if (areaPerPerson > 40) {
+          isEligible = false
+          denialReasons.push(`При наличии нескольких домов площадь на человека (${formatAmount(areaPerPerson)} кв.м.) превышает норму в 40 кв.м.`)
+        }
+      }
+    }
+
+    // Проверка дачи
+    if (formData.value.propertyCheck.hasCountryHouse && formData.value.propertyCheck.housesCount > 0) {
+      isEligible = false
+      denialReasons.push('Семья имеет и жилой дом, и дачу одновременно. Разрешено только одно.')
+    }
+
+    // Проверка гаражей
+    const maxGarages = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
+    if (formData.value.propertyCheck.garagesCount > maxGarages) {
+      isEligible = false
+      denialReasons.push(`Количество гаражей (${formData.value.propertyCheck.garagesCount}) превышает лимит (${maxGarages}).`)
+    }
+
+    // Проверка земельных участков
+    if (!formData.value.propertyExceptions.hasFarEastHectare) {
+      if (formData.value.propertyCheck.landAreaCity > 0.25) {
+        isEligible = false
+        denialReasons.push('Площадь земельных участков в городе превышает 0.25 га.')
+      }
+      if (formData.value.propertyCheck.landAreaRural > 1) {
+        isEligible = false
+        denialReasons.push('Площадь земельных участков в сельской местности превышает 1 га.')
+      }
+    }
+
+    // Проверка нежилых помещений
+    if (formData.value.propertyCheck.hasNonResidential) {
+      isEligible = false
+      denialReasons.push('Семья владеет нежилым помещением (кроме гаражей, хозпостроек на личных подсобных хозяйствах и общего имущества в многоквартирных домах).')
+    }
+    
+    // Проверка коммерческой недвижимости
+    if (formData.value.propertyCheck.hasCommercialProperty) {
+      isEligible = false
+      denialReasons.push('Семья владеет коммерческой недвижимостью.')
+    }
   }
   
-  // Проверка 3: Правило нулевого дохода
-  if (needsZeroIncomeCheck.value && !formData.value.hasValidReason) {
+  // Проверка 7: Проценты по вкладам
+  if (formData.value.detailedIncome.interest > 17733) {
     isEligible = false
-    denialReasons.push('Не указана уважительная причина отсутствия/низкого дохода')
+    denialReasons.push(`Годовой доход от процентов по вкладам (${formatAmount(formData.value.detailedIncome.interest)} ₽) превышает прожиточный минимум по РФ (17 733 ₽).`)
   }
-  
-  // Проверка 4: Имущество
-  if (formData.value.propertyCheck.hasMultipleApartments && !formData.value.special.hasDisabled) {
-    isEligible = false
-    denialReasons.push('Превышен лимит недвижимости (более одной квартиры)')
+
+  // Проверка 8: Самозанятые
+  if (formData.value.selfEmployed?.isSelfEmployed) {
+    const MROT = 22440 // МРОТ на 2025 год
+    const minSelfEmployedIncome = MROT * 2 // 44 880 ₽
+    const requiredIncome = (formData.value.selfEmployed.monthsActive / 12) * minSelfEmployedIncome
+    
+    if (formData.value.selfEmployed.yearlyIncome < requiredIncome) {
+      isEligible = false
+      denialReasons.push(`Доход самозанятого (${formatAmount(formData.value.selfEmployed.yearlyIncome)} ₽) меньше минимального (${formatAmount(requiredIncome)} ₽ за ${formData.value.selfEmployed.monthsActive} месяцев работы).`)
+    }
   }
-  
-  if (formData.value.propertyCheck.hasMultipleCars && !formData.value.special.hasDisabled) {
-    isEligible = false
-    denialReasons.push('Превышен лимит транспорта (более одного автомобиля)')
+
+  // Проверка 9: Алименты
+  if (formData.value.alimony?.receivesAlimony && formData.value.alimony.monthlyAmount > 0) {
+    const MROT = 22440 // МРОТ на 2025 год
+    let minAlimony = 0
+    
+    if (formData.value.alimony.childrenCount === 1) {
+      minAlimony = MROT * 0.25 // 5610 руб
+    } else if (formData.value.alimony.childrenCount === 2) {
+      minAlimony = MROT * (1/3) // ~7480 руб
+    } else if (formData.value.alimony.childrenCount >= 3) {
+      minAlimony = MROT * 0.5 // 11220 руб
+    }
+    
+    if (formData.value.alimony.monthlyAmount < minAlimony && !formData.value.alimony.isVoluntaryAgreement) {
+      isEligible = false
+      denialReasons.push(`Получаемые алименты (${formatAmount(formData.value.alimony.monthlyAmount)} ₽/мес) меньше минимальных (${formatAmount(minAlimony)} ₽/мес на ${formData.value.alimony.childrenCount} детей). Исключение: добровольное соглашение об уплате алиментов.`)
+    }
   }
-  
-  if (formData.value.propertyCheck.hasLuxuryCar) {
-    isEligible = false
-    denialReasons.push('Наличие автомобиля премиум-класса (младше 5 лет, мощнее 250 л.с.)')
-  }
-  
-  if (formData.value.propertyCheck.hasHighSavings) {
-    isEligible = false
-    denialReasons.push('Сбережения превышают годовой прожиточный минимум')
-  }
-  
+
   // Расчет размера пособия
   let benefitAmount = 0
   let benefitDetails = []
   
   if (isEligible) {
     const childPM = region.pmChild
-    const incomePercent = averageMonthlyIncome.value / currentRegionPM.value
-    
-    // Определяем процент выплаты (50%, 75% или 100%)
-    let benefitPercent = 50
-    if (incomePercent <= 0.5) {
-      benefitPercent = 100
-    } else if (incomePercent <= 0.75) {
-      benefitPercent = 75
+    const workingPM = region.pmWorking
+    const familySize = totalFamilyMembers.value
+    const totalYearlyIncome = formData.value.totalIncome || calculatedTotalIncome.value
+
+    let finalBenefitPercent = 0
+
+    // Расчет с 50% пособием
+    let benefitPerChild_50 = childPM * 0.5
+    let pregnantBenefit_50 = isPregnantRecipient.value ? workingPM * 0.5 : 0
+    let totalMonthlyBenefit_50 = (benefitPerChild_50 * totalChildren.value) + pregnantBenefit_50
+    let newAverageIncome_50 = (totalYearlyIncome + (totalMonthlyBenefit_50 * 12)) / 12 / familySize
+
+    if (newAverageIncome_50 > currentRegionPM.value) {
+      finalBenefitPercent = 50
+    } else {
+      // Расчет с 75% пособием
+      let benefitPerChild_75 = childPM * 0.75
+      let pregnantBenefit_75 = isPregnantRecipient.value ? workingPM * 0.75 : 0
+      let totalMonthlyBenefit_75 = (benefitPerChild_75 * totalChildren.value) + pregnantBenefit_75
+      let newAverageIncome_75 = (totalYearlyIncome + (totalMonthlyBenefit_75 * 12)) / 12 / familySize
+
+      if (newAverageIncome_75 > currentRegionPM.value) {
+        finalBenefitPercent = 75
+      } else {
+        finalBenefitPercent = 100
+      }
     }
-    
-    // Пособие на детей
-    if (formData.value.childrenCount > 0) {
-      const benefitPerChild = Math.round(childPM * (benefitPercent / 100))
-      const totalChildBenefit = benefitPerChild * formData.value.childrenCount
+
+    // Начисление пособия на детей
+    if (totalChildren.value > 0) {
+      const benefitPerChild = Math.round(childPM * (finalBenefitPercent / 100))
+      const totalChildBenefit = benefitPerChild * totalChildren.value
       benefitAmount += totalChildBenefit
       
       benefitDetails.push({
         type: 'children',
-        count: formData.value.childrenCount,
+        count: totalChildren.value,
         amountPerChild: benefitPerChild,
         total: totalChildBenefit,
-        percent: benefitPercent
+        percent: finalBenefitPercent
       })
     }
     
-    // Пособие беременным
-    if (formData.value.recipientType === 'pregnant' || formData.value.recipientType === 'both') {
-      const pregnantBenefit = Math.round(currentRegionPM.value * (benefitPercent / 100))
+    // Начисление пособия беременной
+    if (isPregnantRecipient.value) {
+      const pregnantBenefit = Math.round(workingPM * (finalBenefitPercent / 100))
       benefitAmount += pregnantBenefit
       
       benefitDetails.push({
         type: 'pregnancy',
         amount: pregnantBenefit,
-        percent: benefitPercent
+        percent: finalBenefitPercent,
+        paymentPeriod: 'С месяца постановки на учет (но не ранее 6 недель беременности) до месяца родов включительно'
       })
     }
   }
@@ -250,14 +711,17 @@ const getCalculationData = () => {
     benefitDetails,
     formData: formData.value,
     regionData: region,
+    calculationPeriod: calculationPeriod.value,
     calculations: {
       totalFamilyMembers: totalFamilyMembers.value,
-      totalChildren: formData.value.childrenCount,
-      totalYearlyIncome: formData.value.totalIncome,
+      totalChildren: totalChildren.value,
+      totalYearlyIncome: formData.value.totalIncome || calculatedTotalIncome.value,
       averageMonthlyIncome: averageMonthlyIncome.value,
-      incomePercent: Math.round((averageMonthlyIncome.value / currentRegionPM.value) * 100)
+      incomePercent: Math.round((averageMonthlyIncome.value / currentRegionPM.value) * 100),
+      isLargeFamily: isLargeFamily.value,
+      isExemptFromZeroIncome: isExemptFromZeroIncomeRule.value
     }
-  }
+    }
 }
 
 // Автоопределение региона
@@ -278,13 +742,56 @@ onMounted(async () => {
     }
   }
 })
+
+// Добавление/удаление причин отсутствия дохода
+const addValidReason = (person, month, reason) => {
+  const reasons = person === 'applicant' 
+    ? formData.value.adultsIncome.applicantReasons 
+    : formData.value.adultsIncome.spouseReasons
+  
+  const existingIndex = reasons.findIndex(r => r.month === month)
+  if (existingIndex >= 0) {
+    reasons[existingIndex] = { month, reason }
+  } else {
+    reasons.push({ month, reason })
+  }
+}
+
+const removeValidReason = (person, month) => {
+  const reasons = person === 'applicant' 
+    ? formData.value.adultsIncome.applicantReasons 
+    : formData.value.adultsIncome.spouseReasons
+  
+  const index = reasons.findIndex(r => r.month === month)
+  if (index >= 0) {
+    reasons.splice(index, 1)
+  }
+}
+
+// Список уважительных причин для выбора
+const validReasonsList = [
+  { value: 'childCare', label: 'Уход за ребенком до 3 лет' },
+  { value: 'disabledCare', label: 'Уход за инвалидом' },
+  { value: 'elderCare', label: 'Уход за пожилым старше 80 лет' },
+  { value: 'study', label: 'Очное обучение' },
+  { value: 'military', label: 'Военная служба' },
+  { value: 'unemployment', label: 'Официальная безработица (до 6 мес)' },
+  { value: 'treatment', label: 'Длительное лечение (более 3 мес)' },
+  { value: 'imprisonment', label: 'Лишение свободы' }
+]
 </script>
 
 <template>
-  <div class="smart-calculator">
+  <div class="smart-calculator" ref="calculatorRef" :class="{ 'sticky': isSticky }">
+    <div v-if="!isCalculatorInView" class="floating-scroll-button" @click="scrollToCalculator">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M12 20V4M5 11L12 4L19 11" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Вернуться к калькулятору
+    </div>
     <div class="container">
       <!-- Основной контент -->
-      <div class="content base-bg-color-two">
+      <div class="content base-bg-color-two" ref="contentContainer">
         <!-- Прогресс -->
         <div class="progress" v-if="!showResults">
           <div class="progress-numbers">
@@ -303,6 +810,27 @@ onMounted(async () => {
             <p class="step-description light-text">
               От региона зависит размер прожиточного минимума и сумма пособия
             </p>
+            
+            <!-- Выбор месяца подачи заявления -->
+            <div class="date-selection">
+              <h3 class="subsection-title">Когда планируете подать заявление?</h3>
+              <div class="date-inputs">
+                <select v-model="formData.applicationDate.month" class="month-select">
+                  <option v-for="month in months" :key="month.value" :value="month.value">
+                    {{ month.label }}
+                  </option>
+                </select>
+                <select v-model="formData.applicationDate.year" class="year-select">
+                  <option :value="currentYear">{{ currentYear }}</option>
+                  <option :value="currentYear + 1">{{ currentYear + 1 }}</option>
+                </select>
+              </div>
+              <p class="hint-text light-text">
+                Расчетный период для доходов: 
+                <strong>{{ calculationPeriod.displayStart }} — {{ calculationPeriod.displayEnd }}</strong>
+              </p>
+            </div>
+            
             <div class="base-option">
               <div class="select-wrapper">
                 <select v-model="formData.region" class="region-select">
@@ -333,7 +861,12 @@ onMounted(async () => {
               <label class="option-card" :class="{ 'selected': formData.recipientType === 'pregnant' }">
                 <input type="radio" v-model="formData.recipientType" value="pregnant" />
                 <div class="option-content">
-                  <div class="option-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" x="0" y="0" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#f1d0a5" d="m275.758 447.696-3.162 12.331-7.14 27.867-30.029 12.104.329-13.34.649-26.631.433-17.564.422-17.379z" opacity="1" data-original="#f1d0a5"></path><path fill="#f1b986" d="M235.43 429.085h13.934v62.121H235.43z" opacity="1" data-original="#f1b986"></path><path fill="#63afcb" d="M291.69 512h-56.26v-24.108h32.152c13.314 0 24.108 10.794 24.108 24.108z" opacity="1" data-original="#63afcb"></path><path fill="#f1d0a5" d="m245.739 447.696-3.163 12.331-6.82 26.631-.319 1.236-30.03 12.104.979-39.971.855-34.943 29.597 17.379z" opacity="1" data-original="#f1d0a5"></path><path fill="#f1b986" d="M205.408 429.085h13.934v62.121h-13.934z" opacity="1" data-original="#f1b986"></path><path fill="#70c6da" d="M261.667 512h-56.259v-24.108h32.152c13.314 0 24.107 10.794 24.107 24.108z" opacity="1" data-original="#70c6da"></path><path fill="#e27d47" d="M405.345 252.425s-28.773 31.73-100.556 24.673H176.583c-71.793 7.057-100.566-24.673-100.566-24.673 16.957-16.957 16.442-53.435 16.442-118.182S118.152 0 240.681 0s148.222 69.496 148.222 134.243-.514 101.226 16.442 118.182z" opacity="1" data-original="#e27d47"></path><path fill="#dd542e" d="M191.212 132.409v144.689h-14.629c-71.793 7.057-100.566-24.673-100.566-24.673 16.957-16.957 16.442-53.435 16.442-118.182S118.152 0 240.681 0c-56.752 0-49.469 75.08-49.469 132.409z" opacity="1" data-original="#dd542e"></path><path fill="#f1b986" d="m275.758 447.696-3.162 12.331h-66.21l.855-34.943 29.597 17.379.422-17.379z" opacity="1" data-original="#f1b986"></path><path fill="#8078bc" d="M337.816 447.696H172.349s20.552-133.882 5.419-187.297l56.258.536 64.737.618c5.161 11.971 6.336 22.489 5.831 30.895-.803 13.351-5.831 21.366-5.831 21.366s47.79 2.575 59.091 53.961c11.311 51.385-20.038 79.921-20.038 79.921z" opacity="1" data-original="#8078bc"></path><path fill="#5e54ac" d="M275.759 447.696h-103.41s20.552-133.882 5.419-187.297l56.258.536c5.419 8.54 29.401 49.912 9.241 84.743 0-.001-23.641 62.692 32.492 102.018z" opacity="1" data-original="#5e54ac"></path><path fill="#f1b986" d="M303.716 277.882c-37.025 26.455-86.01-14.371-86.01-14.371l-1.319-2.74 82.373.783c2.504 5.81 4.07 11.27 4.956 16.328z" opacity="1" data-original="#f1b986"></path><path fill="#f1d0a5" d="M346.687 206.222c-1.556 30.586-26.033 54.94-56.639 56.382a1049.547 1049.547 0 0 1-72.236.917c-.031 0-.072 0-.103-.01a1020.1 1020.1 0 0 1-26.393-.907c-30.596-1.442-55.074-25.796-56.639-56.382a717.263 717.263 0 0 1-.371-65.386h.01s25.147-1.277 56.897-8.427c28.217-6.346 61.646-17.338 87.267-36.19 0 0 26.723 44.617 68.579 44.617a714.034 714.034 0 0 1-.372 65.386z" opacity="1" data-original="#f1d0a5"></path><path fill="#f1b986" d="M217.708 263.51a1020.1 1020.1 0 0 1-26.393-.907c-30.596-1.442-55.074-25.796-56.639-56.382a717.263 717.263 0 0 1-.371-65.386h.01s25.147-1.277 56.897-8.427v.01c-7.088 60.782.082 130 26.496 131.092z" opacity="1" data-original="#f1b986"></path><path fill="#da4a54" d="M240.684 218.768c-12.21 0-23.482-7.129-28.718-18.161a7.727 7.727 0 0 1 13.961-6.625c2.691 5.67 8.483 9.334 14.757 9.334s12.066-3.664 14.758-9.334a7.726 7.726 0 1 1 13.96 6.626c-5.237 11.032-16.509 18.16-28.718 18.16z" opacity="1" data-original="#da4a54"></path><path fill="#454045" d="M191.217 146.628c-5.353 0-9.708 6.475-9.708 14.433 0 7.959 4.355 14.433 9.708 14.433s9.708-6.475 9.708-14.433c-.001-7.958-4.355-14.433-9.708-14.433zM290.152 146.628c-5.352 0-9.707 6.475-9.707 14.433 0 7.959 4.355 14.433 9.707 14.433 5.353 0 9.708-6.475 9.708-14.433.001-7.958-4.355-14.433-9.708-14.433z" opacity="1" data-original="#454045"></path><ellipse cx="306.801" cy="190.766" fill="#eaac9d" rx="15.759" ry="9.935" opacity="1" data-original="#eaac9d"></ellipse><ellipse cx="174.566" cy="190.766" fill="#eaac9d" rx="15.759" ry="9.935" opacity="1" data-original="#eaac9d"></ellipse><path fill="#f1d0a5" d="M284.392 349.752c-5.139-15.416-39.054-13.36-39.054-13.36-22.123 0-31.49-16.401-32.771-35.66-.576-8.656-6.568-16.151-15.067-17.891-12.232-2.504-23.075 6.788-23.075 18.668v9.296c0 9.889 2.292 19.706 7.103 28.346 19.339 34.726 63.81 28.073 63.81 28.073s44.192-2.056 39.054-17.472z" opacity="1" data-original="#f1d0a5"></path><path fill="#f1b986" d="M283.393 356.242c-7.036 9.529-38.055 10.982-38.055 10.982s-44.474 6.646-63.814-28.075c-4.812-8.64-7.104-18.458-7.104-28.348v-9.293c0-10.034 7.726-18.214 17.492-19.017a18.901 18.901 0 0 0-4.121 11.827v17.42c10.941 57.268 70.907 48.295 70.907 48.295s13.486-.628 24.695-3.791z" opacity="1" data-original="#f1b986"></path><ellipse cx="348.101" cy="344.928" fill="#f1d0a5" rx="14.379" ry="22.32" transform="rotate(-30 348.08 344.94)" opacity="1" data-original="#f1d0a5"></ellipse><path fill="#f1b986" d="M360.033 363.769c-.247.175-.505.34-.773.494-6.882 3.966-17.451-1.473-23.612-12.146s-5.584-22.551 1.288-26.517c3.4-1.968 7.695-1.628 11.919.494-6.15 4.378-6.459 15.762-.536 26.022 3.122 5.41 7.387 9.469 11.714 11.653z" opacity="1" data-original="#f1b986"></path><g fill="#da4a54"><path d="M382 316.407a7.727 7.727 0 0 1-6.619-11.703l12.333-20.555a7.727 7.727 0 0 1 13.252 7.951l-12.333 20.555a7.722 7.722 0 0 1-6.633 3.752zM398.447 340.046a7.729 7.729 0 0 1-2.051-15.177l29.804-8.222a7.724 7.724 0 0 1 9.502 5.394 7.727 7.727 0 0 1-5.393 9.503l-29.804 8.222a7.75 7.75 0 0 1-2.058.28zM419.004 378.085a7.704 7.704 0 0 1-2.749-.508l-21.583-8.222a7.726 7.726 0 1 1 5.501-14.441l21.583 8.222a7.726 7.726 0 0 1-2.752 14.949z" fill="#da4a54" opacity="1" data-original="#da4a54"></path></g><path fill="#5e54ac" d="M304.593 292.448c-.803 13.351-5.831 21.366-5.831 21.366-6.727 15.082-48.357 11.579-48.357 11.579s46.997-18.141 54.177-32.935c.001 0 .001-.01.011-.01z" opacity="1" data-original="#5e54ac"></path></g></svg></div>
+                  <div class="option-icon">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="20" cy="12" r="5" stroke="#008CFF" stroke-width="2"/>
+                      <path d="M15 20C15 20 14 24 14 28C14 32 16 35 20 35C24 35 26 32 26 28C26 24 25 20 25 20" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </div>
                   <div class="option-text">
                     <h3>Беременная женщина</h3>
                     <p>Срок от 6 недель, встала на учет до 12 недель</p>
@@ -344,10 +877,17 @@ onMounted(async () => {
               <label class="option-card" :class="{ 'selected': formData.recipientType === 'parent' }">
                 <input type="radio" v-model="formData.recipientType" value="parent" />
                 <div class="option-content">
-                  <div class="option-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" x="0" y="0" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#ffb983" d="M19.96 435.375s-8.457 61.628 41.293 76.336H205.63c49.75-14.708 41.293-76.336 41.293-76.336L135.57 397.899z" opacity="1" data-original="#ffb983"></path><path fill="#fcd0a3" d="M151.075 397.903h-35.266c-15.795 0-28.599-12.804-28.599-28.599v-42.82h92.465v42.82c0 15.795-12.805 28.599-28.6 28.599z" opacity="1" data-original="#fcd0a3"></path><path fill="#ffb983" d="M242.515 272.409h.153c13.116 0 23.744-10.637 23.744-23.744 0-13.116-10.628-23.753-23.744-23.753-.171 0-.341 0-.512.009H24.728c-.171-.009-.341-.009-.512-.009-13.116 0-23.744 10.637-23.744 23.753 0 13.107 10.628 23.744 23.744 23.744h.153" opacity="1" data-original="#ffb983"></path><path fill="#ec6161" d="M179.675 349.561s67.249 8.455 67.249 40.684v45.13H205.63v76.336H61.253v-76.336H19.96v-45.13c0-32.228 67.249-40.684 67.249-40.684" opacity="1" data-original="#ec6161" class=""></path><path fill="#d63030" d="M93.185 511.714H61.26v-76.336h-41.3v-45.132c0-32.224 67.25-40.682 67.25-40.682h15.484l.742.577C87.21 350.14 65 403.029 93.185 511.714z" opacity="1" data-original="#d63030"></path><path fill="#fcd0a3" d="M179.671 365.762v3.545c0 15.797-12.798 28.596-28.596 28.596h-15.498c-15.787 0-28.596-12.798-28.596-28.596v-2.875c24.227.608 48.464.382 72.69-.67z" opacity="1" data-original="#fcd0a3"></path><path fill="#ffb983" d="M179.674 326.488v39.281l-.01-.01a1062.068 1062.068 0 0 1-72.689.67v2.875c0 15.797 12.809 28.596 28.596 28.596h-19.764c-15.787 0-28.596-12.798-28.596-28.596v-42.816z" opacity="1" data-original="#ffb983"></path><path fill="#fcd0a3" d="M237.053 162.906a1071.173 1071.173 0 0 0-207.222 0c-5.36 42.948-6.939 85.895-4.736 128.843 1.603 31.264 26.621 56.148 57.89 57.625a1069.407 1069.407 0 0 0 100.914 0c31.27-1.476 56.287-26.361 57.89-57.625 2.203-42.947.625-85.895-4.736-128.843z" opacity="1" data-original="#fcd0a3"></path><path fill="#ffb983" d="M29.835 162.899a1072.78 1072.78 0 0 1 103.614-5.018c-17.487 0-34.974 1.69-52.461 5.07a1472.953 1472.953 0 0 0-2.401 130.076c.732 28.534 11.16 51.802 24.845 57.109-6.811-.185-13.633-.443-20.445-.763-31.264-1.474-56.284-26.359-57.892-57.624-2.195-42.95-.618-85.9 4.74-128.85z" opacity="1" data-original="#ffb983"></path><path fill="#e7ab8a" d="M133.442 302.07c-12.413 0-23.874-7.247-29.197-18.464a7.726 7.726 0 0 1 3.667-10.293 7.725 7.725 0 0 1 10.293 3.667c2.779 5.855 8.76 9.637 15.237 9.637 6.478 0 12.458-3.783 15.236-9.637a7.727 7.727 0 0 1 13.961 6.625c-5.323 11.217-16.783 18.465-29.197 18.465z" opacity="1" data-original="#e7ab8a"></path><path fill="#3c5959" d="M241.573 205.676c-22.052 22.062-65.723-22.052-65.723-22.052 1.237 7.986-1.01 15.766-9.666 21.949-6.131 4.379-13.066 6.306-20.249 6.595-28.781 1.154-61.406-24.154-61.406-24.154-5.812 15.983-22.959 15.663-37.169 12.16-13.077-3.225-24.123-11.881-30.43-23.783-10.84-20.456-25.534-55.059-10.551-70.042 21.949-21.949 49.174 0 49.174 0s26.442-9.923 60.19-16.951c.01 0 .031-.01.041-.01 40.384-8.409 91.217-12.695 119.771 9.068 29.471 22.464 28.08 85.168 6.018 107.22z" opacity="1" data-original="#3c5959"></path><path fill="#394949" d="M145.935 212.168c-28.781 1.154-61.406-24.154-61.406-24.154-5.812 15.983-22.959 15.663-37.169 12.16-13.077-3.225-24.123-11.881-30.43-23.783-10.84-20.456-25.534-55.059-10.551-70.042 21.949-21.949 49.174 0 49.174 0s26.442-9.923 60.19-16.951c-43.631 11.459-7.863 109.106 30.192 122.77z" opacity="1" data-original="#394949"></path><path fill="#fcb143" d="M456.653 291.752c47.29 0 48.633 59.287 55.347 78.087 0 0-50.834-8.822-66.71-45.704" opacity="1" data-original="#fcb143"></path><path fill="#ffb983" d="M234.822 435.378s-8.457 61.628 41.293 76.336h144.376c49.75-14.708 41.293-76.336 41.293-76.336l-111.353-37.476z" opacity="1" data-original="#ffb983"></path><path fill="#fcd0a3" d="M365.937 397.905h-35.266c-15.795 0-28.599-12.804-28.599-28.599v-42.82h92.465v42.82c-.001 15.795-12.805 28.599-28.6 28.599z" opacity="1" data-original="#fcd0a3"></path><path fill="#ffb983" d="M457.377 272.412h.153c13.116 0 23.744-10.637 23.744-23.744 0-13.116-10.628-23.753-23.744-23.753-.171 0-.341 0-.512.009H239.59c-.171-.009-.341-.009-.512-.009-13.116 0-23.744 10.637-23.744 23.753 0 13.107 10.628 23.744 23.744 23.744h.153" opacity="1" data-original="#ffb983"></path><path fill="#0a93a3" d="M461.789 390.244v45.132h-41.3v76.336h-144.37v-76.336h-41.3v-45.132c0-32.224 67.25-40.682 67.25-40.682h92.469c.001 0 67.251 8.458 67.251 40.682z" opacity="1" data-original="#0a93a3"></path><path fill="#046b74" d="M308.045 511.713H276.12v-76.336h-41.3v-45.132c0-32.224 67.25-40.682 67.25-40.682h15.484l.742.577c-16.226-.001-38.437 52.889-10.251 161.573z" opacity="1" data-original="#046b74"></path><path fill="#fcd0a3" d="M394.533 365.765v3.545c0 15.797-12.798 28.596-28.596 28.596h-15.498c-15.787 0-28.596-12.798-28.596-28.596v-2.875c24.227.608 48.463.381 72.69-.67z" opacity="1" data-original="#fcd0a3"></path><path fill="#ffb983" d="M394.536 326.49v39.281l-.01-.01a1062.068 1062.068 0 0 1-72.689.67v2.875c0 15.797 12.809 28.596 28.596 28.596h-19.764c-15.787 0-28.596-12.798-28.596-28.596V326.49z" opacity="1" data-original="#ffb983"></path><path fill="#fcd0a3" d="M451.915 162.909a1071.173 1071.173 0 0 0-207.222 0c-5.36 42.948-6.939 85.895-4.736 128.843 1.603 31.264 26.621 56.148 57.89 57.625a1069.407 1069.407 0 0 0 100.914 0c31.27-1.476 56.287-26.361 57.891-57.625 2.202-42.948.623-85.896-4.737-128.843z" opacity="1" data-original="#fcd0a3"></path><path fill="#ffb983" d="M244.697 162.902a1072.78 1072.78 0 0 1 103.614-5.018c-17.487 0-34.974 1.69-52.461 5.07a1472.953 1472.953 0 0 0-2.401 130.076c.732 28.534 11.16 51.802 24.845 57.109-6.811-.185-13.633-.443-20.445-.763-31.264-1.474-56.284-26.359-57.892-57.624-2.195-42.95-.619-85.9 4.74-128.85z" opacity="1" data-original="#ffb983"></path><path fill="#e7ab8a" d="M348.304 302.072c-12.413 0-23.874-7.247-29.197-18.464a7.726 7.726 0 1 1 13.96-6.626c2.779 5.855 8.76 9.637 15.237 9.637s12.458-3.783 15.236-9.637a7.728 7.728 0 0 1 13.961 6.625c-5.323 11.217-16.784 18.465-29.197 18.465z" opacity="1" data-original="#e7ab8a"></path><path fill="#fcb143" d="M456.292 210.108s-78.687-3.658-107.983-52.224c-12.438 20.64-33.799 33.16-54.254 40.734-27.699 10.284-53.729 11.49-53.729 11.49S203.137 89.182 348.31 89.182s107.982 120.926 107.982 120.926z" opacity="1" data-original="#fcb143"></path><path fill="#fa9801" d="M348.31 89.182c-38.117 16.797-52.461 73.761-54.254 109.436-27.699 10.284-53.729 11.49-53.729 11.49S203.137 89.182 348.31 89.182z" opacity="1" data-original="#fa9801"></path><ellipse cx="278.559" cy="274.495" fill="#ec6161" rx="19.639" ry="9.064" opacity="1" data-original="#ec6161" class=""></ellipse><ellipse cx="418.049" cy="274.495" fill="#ec6161" rx="19.639" ry="9.064" opacity="1" data-original="#ec6161" class=""></ellipse><path fill="#ec6161" d="M247.038 139.387C162.477 95.582 151.147 21.632 189.829 3.892c38.259-17.543 57.209 34.637 57.209 34.637s18.945-52.18 57.204-34.637a35.648 35.648 0 0 1 5.754 3.304c.005.005.016.01.026.016.261.182.511.37.761.552 30.483 22.817 15.63 90.502-63.745 131.623z" opacity="1" data-original="#ec6161" class=""></path><path fill="#ffb983" d="M330.47 450.368h.12c10.295 0 18.637-8.349 18.637-18.637 0-10.295-8.342-18.644-18.637-18.644-.134 0-.268 0-.402.007H138.923c-.134-.007-.268-.007-.402-.007-10.295 0-18.637 8.349-18.637 18.644 0 10.288 8.342 18.637 18.637 18.637h.12" opacity="1" data-original="#ffb983"></path><path fill="#fcd0a3" d="M315.881 364.418a840.865 840.865 0 0 0-162.651 0c-4.207 33.71-5.446 67.42-3.718 101.13 1.259 24.539 20.895 44.072 45.439 45.23a839.001 839.001 0 0 0 79.208 0c24.544-1.159 44.18-20.691 45.439-45.23 1.73-33.71.49-67.42-3.717-101.13z" opacity="1" data-original="#fcd0a3"></path><path fill="#ffb983" d="M153.233 364.413a841.946 841.946 0 0 1 81.328-3.939c-13.726 0-27.452 1.326-41.177 3.979a1156.353 1156.353 0 0 0-1.885 102.098c.574 22.396 8.76 40.66 19.501 44.825a819.209 819.209 0 0 1-16.047-.599c-24.54-1.157-44.178-20.69-45.44-45.23-1.723-33.711-.486-67.422 3.72-101.134z" opacity="1" data-original="#ffb983"></path><path fill="#e7ab8a" d="M234.555 473.765c-9.788 0-18.825-5.715-23.023-14.559a6.181 6.181 0 0 1 11.168-5.3c2.162 4.555 6.815 7.498 11.855 7.498s9.693-2.943 11.855-7.498a6.18 6.18 0 1 1 11.168 5.3c-4.198 8.845-13.234 14.559-23.023 14.559z" opacity="1" data-original="#e7ab8a"></path><g fill="#394949"><ellipse cx="82.883" cy="240.324" rx="9.916" ry="14.745" fill="#394949" opacity="1" data-original="#394949"></ellipse><path d="M193.918 240.324c0-8.131-4.448-14.745-9.916-14.745s-9.917 6.615-9.917 14.745 4.449 14.745 9.917 14.745 9.916-6.614 9.916-14.745z" fill="#394949" opacity="1" data-original="#394949"></path><ellipse cx="297.745" cy="240.327" rx="9.916" ry="14.745" fill="#394949" opacity="1" data-original="#394949"></ellipse><path d="M398.863 225.581c-5.468 0-9.917 6.615-9.917 14.745s4.449 14.745 9.917 14.745 9.916-6.615 9.916-14.745-4.448-14.745-9.916-14.745z" fill="#394949" opacity="1" data-original="#394949"></path><ellipse cx="194.871" cy="425.184" rx="7.839" ry="11.629" fill="#394949" opacity="1" data-original="#394949"></ellipse><path d="M274.24 413.555c-4.322 0-7.839 5.217-7.839 11.629s3.517 11.629 7.839 11.629 7.839-5.217 7.839-11.629-3.517-11.629-7.839-11.629z" fill="#394949" opacity="1" data-original="#394949"></path></g><path fill="#d5694c" d="M319.317 401.465s-61.762-2.871-84.757-40.991c-9.763 16.201-26.529 26.028-42.585 31.973-21.741 8.072-42.172 9.018-42.172 9.018s-29.191-94.916 84.757-94.916 84.757 94.916 84.757 94.916z" opacity="1" data-original="#d5694c"></path><path fill="#a64c31" d="M234.56 306.549c-29.918 13.184-41.177 57.896-42.585 85.897-21.741 8.072-42.172 9.018-42.172 9.018s-29.191-94.915 84.757-94.915z" opacity="1" data-original="#a64c31"></path></g></svg></div>
+                  <div class="option-icon">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="16" cy="10" r="4" stroke="#008CFF" stroke-width="2"/>
+                      <circle cx="24" cy="10" r="4" stroke="#008CFF" stroke-width="2"/>
+                      <path d="M10 20C10 20 10 25 16 25C16 25 20 25 20 30" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M30 20C30 20 30 25 24 25C24 25 20 25 20 30" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </div>
                   <div class="option-text">
                     <h3>Родитель с детьми</h3>
-                    <p>Дети до 17 лет</p>
+                    <p>Дети до 17 лет (до дня 17-летия)</p>
                   </div>
                 </div>
               </label>
@@ -355,13 +895,39 @@ onMounted(async () => {
               <label class="option-card" :class="{ 'selected': formData.recipientType === 'both' }">
                 <input type="radio" v-model="formData.recipientType" value="both" />
                 <div class="option-content">
-                  <div class="option-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" x="0" y="0" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g transform="matrix(1.0699999999999998,0,0,1.0699999999999998,-17.91999999999996,-17.92000026702874)"><path fill="#23aae6" d="M384 464.074h-64v-112c0-17.673 14.327-32 32-32h32z" opacity="1" data-original="#23aae6"></path><path fill="#f0915a" d="M392 496.074h-64a8 8 0 0 1-8-8v-24h64c8.837 0 16 7.163 16 16v8a8 8 0 0 1-8 8z" opacity="1" data-original="#f0915a"></path><path fill="#23aae6" d="M256 320.074c-44.183 0-80 35.817-80 80v32h-32v48c0 8.837 7.163 16 16 16h48c35.346 0 64-28.654 64-64v-112z" opacity="1" data-original="#23aae6"></path><path fill="#fab991" d="M72 493.407h8c8.837 0 16-7.163 16-16v-53.333H72a8 8 0 0 0-8 8v53.333a8 8 0 0 0 8 8z" opacity="1" data-original="#fab991" class=""></path><path fill="#5ad7ff" d="M208 320.074c-44.183 0-80 35.817-80 80v24H96v56c0 8.837 7.163 16 16 16h48c35.346 0 64-28.654 64-64h48v32h64v-38.676c28.25-12.347 48-40.522 48-73.324v-32z" opacity="1" data-original="#5ad7ff"></path><path fill="#fab991" d="M344 496.074h-64a8 8 0 0 1-8-8v-24h64c8.837 0 16 7.163 16 16v8a8 8 0 0 1-8 8z" opacity="1" data-original="#fab991" class=""></path><circle cx="352" cy="320.074" r="32" fill="#ffd205" opacity="1" data-original="#ffd205"></circle><path fill="#fab991" d="M320 64.074c-70.693 0-128 57.308-128 128 0 70.692 57.307 128 128 128h48c44.183 0 80-35.817 80-80v-48c0-70.692-57.307-128-128-128z" opacity="1" data-original="#fab991" class=""></path><path fill="#f0915a" d="M288 192.074v80c-22.091 0-40-17.909-40-40s17.909-40 40-40z" opacity="1" data-original="#f0915a"></path><circle cx="348" cy="204.074" r="12" fill="#463c4b" opacity="1" data-original="#463c4b"></circle><circle cx="412" cy="204.074" r="12" fill="#463c4b" opacity="1" data-original="#463c4b"></circle><path fill="#f0915a" d="M389.333 264.074c-5.891 0-10.667-4.776-10.667-10.667v-29.333c11.782 0 21.333 9.551 21.333 21.333v8c.001 5.891-4.775 10.667-10.666 10.667zM344 248.074h-16a8 8 0 0 1 0-16h16a8 8 0 0 1 0 16zM432 240.074a8 8 0 0 0 8 8h7.601c.261-2.631.399-5.298.399-7.998v-8.002h-8a8 8 0 0 0-8 8z" opacity="1" data-original="#f0915a"></path><path fill="#463c4b" d="M361.185 110.741H352a4 4 0 0 1 0-8h9.185c28.02 0 50.815-22.795 50.815-50.815 0-15.439-12.561-28-28-28-11.028 0-20 8.972-20 20 0 6.617 5.383 12 12 12a4 4 0 0 1 0 8c-11.028 0-20-8.972-20-20 0-15.439 12.561-28 28-28 19.851 0 36 16.149 36 36 0 32.431-26.384 58.815-58.815 58.815z" opacity="1" data-original="#463c4b"></path></g></svg></div>
+                  <div class="option-icon">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="20" cy="10" r="4" stroke="#008CFF" stroke-width="2"/>
+                      <path d="M15 18C15 18 14 20 14 24C14 26 15 28 17 28" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M25 18C25 18 26 20 26 24C26 26 25 28 23 28" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
+                      <circle cx="12" cy="30" r="3" stroke="#008CFF" stroke-width="2"/>
+                      <circle cx="28" cy="30" r="3" stroke="#008CFF" stroke-width="2"/>
+                    </svg>
+                  </div>
                   <div class="option-text">
-                    <h3>Беременная с детьми</h3>
+                    <h3>Беременная женщина с детьми</h3>
                     <p>Беременная женщина, у которой уже есть дети</p>
                   </div>
                 </div>
               </label>
+            </div>
+            
+            <!-- Детали для беременных -->
+            <div v-if="formData.recipientType === 'pregnant' || formData.recipientType === 'both'" class="pregnancy-details">
+              <h3 class="subsection-title">Информация о беременности</h3>
+              <div class="pregnancy-inputs">
+                <div class="input-group">
+                  <label>Текущая неделя беременности:</label>
+                  <input type="number" v-model.number="formData.pregnancy.currentWeek" min="6" max="42" class="week-input" />
+                </div>
+                <div class="input-group">
+                  <label>На какой неделе встали на учет:</label>
+                  <input type="number" v-model.number="formData.pregnancy.registrationWeek" min="1" max="42" class="week-input" />
+                </div>
+              </div>
+              <p class="hint-text light-text">
+                ⚠️ Важно: пособие назначается с 6 недели беременности при постановке на учет до 12 недель
+              </p>
             </div>
           </div>
 
@@ -369,66 +935,52 @@ onMounted(async () => {
           <div v-if="currentQuestion === 'family'" class="family-step">
             <h2 class="step-title dark-text">Состав вашей семьи</h2>
             <p class="step-description light-text">
-              Укажите всех членов семьи, проживающих вместе
+              Учитывается заявитель, его супруг(а) и дети. Бабушки, дедушки и другие родственники не включаются.
             </p>
             
             <div class="family-grid">
-              <!-- Дети до 17 лет (если не только беременная) -->
-              <div v-if="formData.recipientType !== 'pregnant'" class="family-block">
-                <h3 class="block-title">Дети до 17 лет</h3>
+              <!-- Дети -->
+              <div class="family-block">
+                <h3 class="block-title">Дети</h3>
                 <div class="counter-row">
-                  <label>Количество детей:</label>
+                  <label>Количество детей до 17 лет:</label>
                   <div class="input-numbers">
-                    <button class="minus" @click="decrementChildren" :disabled="formData.childrenCount <= 0">
-                      <svg width="15" height="3" viewBox="0 0 15 3" fill="none">
-                        <path d="M13.4229 0.258179H1.61236C0.916792 0.258179 0.352936 0.822035 0.352936 1.5176C0.352936 2.21316 0.916792 2.77702 1.61236 2.77702H13.4229C14.1185 2.77702 14.6823 2.21316 14.6823 1.5176C14.6823 0.822035 14.1185 0.258179 13.4229 0.258179Z" fill="white"/>
-                      </svg>
-                    </button>
+                    <button class="minus" @click="decrementChildren" :disabled="formData.childrenCount <= 0">-</button>
                     <input type="number" v-model.number="formData.childrenCount" min="0" max="10" class="number-input" />
-                    <button class="plus" @click="incrementChildren">
-                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                        <path d="M13.4229 6.25819H8.77706V1.61233C8.77706 0.916762 8.21321 0.352905 7.51764 0.352905C6.82208 0.352905 6.25822 0.916762 6.25822 1.61233V6.25819H1.61236C0.916793 6.25819 0.352936 6.82205 0.352936 7.51761C0.352936 8.21318 0.916793 8.77703 1.61236 8.77703H6.25822V13.4229C6.25822 14.1185 6.82208 14.6823 7.51764 14.6823C8.21321 14.6823 8.77706 14.1185 8.77706 13.4229V8.77703H13.4229C14.1185 8.77703 14.6823 8.21318 14.6823 7.51761C14.6823 6.82205 14.1185 6.25819 13.4229 6.25819Z" fill="white"/>
-                      </svg>
-                    </button>
+                    <button class="plus" @click="incrementChildren">+</button>
+                  </div>
+                </div>
+                
+                <div class="counter-row" style="margin-top: 20px;">
+                  <label>Дети-студенты 18-23 лет:</label>
+                  <div class="input-numbers">
+                    <button @click="formData.studentChildrenCount--" :disabled="formData.studentChildrenCount <= 0">-</button>
+                    <input type="number" v-model.number="formData.studentChildrenCount" min="0" max="5" class="number-input" />
+                    <button @click="formData.studentChildrenCount++" :disabled="formData.studentChildrenCount >= 5">+</button>
                   </div>
                 </div>
                 <p class="hint-text light-text">
-                  Пособие назначается на каждого ребенка до 17 лет
+                  Учитываются дети до 23 лет, если они учатся очно и не в браке. Дети до 17 лет учитываются до дня их 17-летия.
                 </p>
               </div>
 
               <!-- Взрослые -->
               <div class="family-block">
-                <h3 class="block-title">Взрослые члены семьи</h3>
-                
+                <h3 class="block-title">Взрослые</h3>
                 <label class="custom-checkbox">
                   <input type="checkbox" v-model="formData.hasSpouse" />
                   <span class="checkmark"></span>
                   <span class="checkbox-text">Есть супруг(а)</span>
                 </label>
-
-                <label class="custom-checkbox">
-                  <input type="checkbox" v-model="formData.hasOtherAdults" />
-                  <span class="checkmark"></span>
-                  <span class="checkbox-text">Другие взрослые (родители, взрослые дети)</span>
-                </label>
                 
-                <div v-if="formData.hasOtherAdults" class="counter-row">
-                  <label>Сколько других взрослых:</label>
-                  <div class="input-numbers">
-                    <button class="minus" @click="decrementOtherAdults" :disabled="formData.otherAdultsCount <= 1">
-                      <svg width="15" height="3" viewBox="0 0 15 3" fill="none">
-                        <path d="M13.4229 0.258179H1.61236C0.916792 0.258179 0.352936 0.822035 0.352936 1.5176C0.352936 2.21316 0.916792 2.77702 1.61236 2.77702H13.4229C14.1185 2.77702 14.6823 2.21316 14.6823 1.5176C14.6823 0.822035 14.1185 0.258179 13.4229 0.258179Z" fill="white"/>
-                      </svg>
-                    </button>
-                    <input type="number" v-model.number="formData.otherAdultsCount" min="1" max="5" class="number-input" />
-                    <button class="plus" @click="incrementOtherAdults" :disabled="formData.otherAdultsCount >= 5">
-                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                        <path d="M13.4229 6.25819H8.77706V1.61233C8.77706 0.916762 8.21321 0.352905 7.51764 0.352905C6.82208 0.352905 6.25822 0.916762 6.25822 1.61233V6.25819H1.61236C0.916793 6.25819 0.352936 6.82205 0.352936 7.51761C0.352936 8.21318 0.916793 8.77703 1.61236 8.77703H6.25822V13.4229C6.25822 14.1185 6.82208 14.6823 7.51764 14.6823C8.21321 14.6823 8.77706 14.1185 8.77706 13.4229V8.77703H13.4229C14.1185 8.77703 14.6823 8.21318 14.6823 7.51761C14.6823 6.82205 14.1185 6.25819 13.4229 6.25819Z" fill="white"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.special.singleParent" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Я единственный родитель</span>
+                </label>
+                <p class="hint-text light-text" v-if="formData.special.singleParent">
+                  Единственный родитель освобождается от правила нулевого дохода
+                </p>
               </div>
             </div>
 
@@ -438,20 +990,24 @@ onMounted(async () => {
                 <strong>Всего в семье: {{ totalFamilyMembers }} {{ getFamilyWord(totalFamilyMembers) }}</strong>
               </p>
               <p class="hint-text light-text">
-                Доход будет делиться на {{ totalFamilyMembers }} для расчета среднедушевого дохода
+                Доход будет делиться на {{ totalFamilyMembers }} для расчета среднедушевого дохода.
               </p>
+              <div v-if="isLargeFamily" class="info-badge success">
+                ✓ Многодетная семья (освобождение от правила нулевого дохода)
+              </div>
             </div>
           </div>
 
-          <!-- Шаг 4: Доход семьи (упрощенный) -->
+          <!-- Шаг 4: Доход семьи -->
           <div v-if="currentQuestion === 'income'" class="income-step">
-            <h2 class="step-title dark-text">Общий доход вашей семьи</h2>
+            <h2 class="step-title dark-text">Доходы вашей семьи</h2>
             <p class="step-description light-text">
-              Укажите суммарный доход всех членов семьи за последние 12 месяцев
+              Укажите доходы всех членов семьи за период: <strong>{{ calculationPeriod.displayStart }} — {{ calculationPeriod.displayEnd }}</strong>
             </p>
             
+            <!-- Быстрый ввод общей суммы -->
             <div class="income-input-block">
-              <label>Общий доход за год (все источники):</label>
+              <label>Общий доход семьи за расчетный период:</label>
               <div class="big-input-wrapper">
                 <input 
                   type="number" 
@@ -461,9 +1017,75 @@ onMounted(async () => {
                 />
                 <span class="currency">₽</span>
               </div>
-              <p class="hint-text light-text">
-                Включите: зарплаты, пенсии, пособия, алименты, доходы от бизнеса и аренды
-              </p>
+            </div>
+
+            <!-- Детализация доходов -->
+            <details class="income-details-section">
+              <summary class="details-toggle">Детализировать доходы по источникам</summary>
+              <div class="detailed-income-grid">
+                <div class="income-item">
+                  <label>Зарплаты:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.salary" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Доходы от бизнеса:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.business" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Доходы от аренды:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.rental" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Алименты получаемые:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.alimony" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Пособия и выплаты:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.benefits" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Пенсии:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.pension" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Стипендии:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.scholarship" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Доходы от ценных бумаг:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.securities" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Проценты по вкладам:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.interest" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Выигрыши в лотереях:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.lottery" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Денежные подарки/наследство:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.gifts" placeholder="0" />
+                </div>
+                <div class="income-item">
+                  <label>Прочие доходы:</label>
+                  <input type="number" v-model.number="formData.detailedIncome.other" placeholder="0" />
+                </div>
+              </div>
+              <div class="total-calculated">
+                Итого из детализации: <strong>{{ formatAmount(calculatedTotalIncome) }} ₽</strong>
+              </div>
+            </details>
+
+            <div class="important-info">
+              <strong>💡 Важная информация:</strong>
+              <ul>
+                <li>Не включайте выплаты мобилизованным членам семьи</li>
+                <li>Не включайте единовременные выплаты в связи с ЧС</li>
+                <li>Не включайте региональный материнский капитал</li>
+                <li>Не включайте налоговые вычеты</li>
+                <li>Включайте зарплаты до вычета налогов</li>
+              </ul>
             </div>
 
             <!-- Быстрый расчет -->
@@ -482,97 +1104,411 @@ onMounted(async () => {
                 {{ incomeStatusText }}
               </div>
             </div>
+          </div>
 
-            <!-- Помощь с расчетом -->
-            <div class="help-block">
-              <button @click="showIncomeHelp = !showIncomeHelp" class="help-toggle">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="7.5" stroke="#008CFF"/>
-                  <path d="M8 12V12.01M8 4C7 4 6 4.5 6 6C6 7.5 8 7.5 8 9" stroke="#008CFF" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                Как посчитать доход?
-              </button>
-              
-              <div v-if="showIncomeHelp" class="help-content">
-                <h4>Что включать в доход:</h4>
-                <ul>
-                  <li>Зарплаты до вычета налогов</li>
-                  <li>Премии, отпускные, больничные</li>
-                  <li>Пенсии и социальные выплаты</li>
-                  <li>Стипендии</li>
-                  <li>Алименты полученные</li>
-                  <li>Доходы от предпринимательства</li>
-                  <li>Доходы от сдачи имущества в аренду</li>
-                </ul>
-                <h4>Что НЕ включать:</h4>
-                <ul>
-                  <li>Единовременные выплаты в связи с ЧС</li>
-                  <li>Региональный маткапитал</li>
-                  <li>Налоговые вычеты</li>
-                  <li>Компенсации за вред здоровью</li>
-                </ul>
+          <!-- Шаг 5: Транспорт -->
+          <div v-if="currentQuestion === 'transport'" class="transport-step">
+            <h2 class="step-title dark-text">Транспортные средства семьи</h2>
+            <p class="step-description light-text">
+              Укажите все транспортные средства в собственности членов семьи
+            </p>
+            
+            <div class="transport-grid">
+              <!-- Автомобили -->
+              <div class="transport-block">
+                <h3 class="block-title">🚗 Автомобили</h3>
+                <div class="counter-row">
+                  <label>Количество автомобилей:</label>
+                  <div class="input-numbers">
+                    <button @click="formData.transport.carsCount > 0 && formData.transport.carsCount--">-</button>
+                    <input type="number" v-model.number="formData.transport.carsCount" min="0" class="number-input" />
+                    <button @click="formData.transport.carsCount++">+</button>
+                  </div>
+                </div>
+                
+                <div v-if="formData.transport.carsCount > 0" class="additional-checks">
+                  <label class="custom-checkbox">
+                    <input type="checkbox" v-model="formData.transport.hasLuxuryCar" />
+                    <span class="checkmark"></span>
+                    <span class="checkbox-text">
+                      Есть автомобиль мощнее 250 л.с. младше 5 лет
+                    </span>
+                  </label>
+                </div>
+                <p class="hint-text light-text">
+                  Лимит: 1 автомобиль (2 для многодетных или семей с инвалидом)
+                </p>
               </div>
+
+              <!-- Мотоциклы -->
+              <div class="transport-block">
+                <h3 class="block-title">🏍️ Мотоциклы</h3>
+                <div class="counter-row">
+                  <label>Количество мотоциклов:</label>
+                  <div class="input-numbers">
+                    <button @click="formData.transport.motorcyclesCount > 0 && formData.transport.motorcyclesCount--">-</button>
+                    <input type="number" v-model.number="formData.transport.motorcyclesCount" min="0" class="number-input" />
+                    <button @click="formData.transport.motorcyclesCount++">+</button>
+                  </div>
+                </div>
+                <p class="hint-text light-text">
+                  Лимит: 1 мотоцикл (2 для многодетных или семей с инвалидом)
+                </p>
+              </div>
+
+              <!-- Водный транспорт -->
+              <div class="transport-block">
+                <h3 class="block-title">🚤 Водный транспорт</h3>
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.transport.hasBoat" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">
+                    Есть катер или моторная лодка мощнее 5 л.с.
+                  </span>
+                </label>
+              </div>
+
+              <!-- Спецтехника -->
+              <div class="transport-block">
+                <h3 class="block-title">🚜 Спецтехника</h3>
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.transport.hasSelfPropelled" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">
+                    Есть самоходная техника младше 5 лет
+                  </span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.transport.hasTractor" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">
+                    Есть трактор или комбайн младше 5 лет
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Исключения -->
+            <div class="exception-block">
+              <p class="exception-title">Не учитывается:</p>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.transport.transportFromSocial" />
+                <span class="checkmark"></span>
+                <span class="checkbox-text">
+                  Транспорт получен через органы соцзащиты
+                </span>
+              </label>
             </div>
           </div>
 
-          <!-- Шаг 5: Основные условия -->
+          <!-- Шаг 6: Имущество -->
+          <div v-if="currentQuestion === 'property'" class="property-step">
+            <h2 class="step-title dark-text">Недвижимость и земельные участки</h2>
+            <p class="step-description light-text">
+              Укажите всю недвижимость в собственности членов семьи
+            </p>
+            
+            <div class="property-grid">
+              <!-- Квартиры -->
+              <div class="property-block">
+                <h3 class="block-title">🏢 Квартиры</h3>
+                <div class="counter-row">
+                  <label>Количество квартир:</label>
+                  <div class="input-numbers">
+                    <button @click="formData.propertyCheck.apartmentsCount > 0 && formData.propertyCheck.apartmentsCount--">-</button>
+                    <input type="number" v-model.number="formData.propertyCheck.apartmentsCount" min="0" class="number-input" />
+                    <button @click="formData.propertyCheck.apartmentsCount++">+</button>
+                  </div>
+                </div>
+                <div v-if="formData.propertyCheck.apartmentsCount > 1" class="area-input">
+                  <label>Общая площадь всех квартир (кв.м.):</label>
+                  <input type="number" v-model.number="formData.propertyCheck.totalApartmentArea" placeholder="Например: 75" />
+                  <p class="hint-text light-text">
+                    При нескольких квартирах: не более 24 кв.м. на человека
+                  </p>
+                </div>
+                <p class="hint-text light-text" v-if="formData.propertyCheck.apartmentsCount === 1">
+                  ✓ Одна квартира любой площади разрешена
+                </p>
+              </div>
+
+              <!-- Дома -->
+              <div class="property-block">
+                <h3 class="block-title">🏠 Жилые дома</h3>
+                <div class="counter-row">
+                  <label>Количество домов:</label>
+                  <div class="input-numbers">
+                    <button @click="formData.propertyCheck.housesCount > 0 && formData.propertyCheck.housesCount--">-</button>
+                    <input type="number" v-model.number="formData.propertyCheck.housesCount" min="0" class="number-input" />
+                    <button @click="formData.propertyCheck.housesCount++">+</button>
+                  </div>
+                </div>
+                <div v-if="formData.propertyCheck.housesCount > 1" class="area-input">
+                  <label>Общая площадь всех домов (кв.м.):</label>
+                  <input type="number" v-model.number="formData.propertyCheck.totalHouseArea" placeholder="Например: 120" />
+                  <p class="hint-text light-text">
+                    При нескольких домах: не более 40 кв.м. на человека
+                  </p>
+                </div>
+                <p class="hint-text light-text" v-if="formData.propertyCheck.housesCount === 1">
+                  ✓ Один дом любой площади разрешен
+                </p>
+                
+                <label class="custom-checkbox" style="margin-top: 15px;">
+                  <input type="checkbox" v-model="formData.propertyCheck.hasCountryHouse" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Есть дача или садовый дом</span>
+                </label>
+                <p class="hint-text light-text" v-if="formData.propertyCheck.hasCountryHouse">
+                  ⚠️ Нельзя иметь одновременно жилой дом и дачу
+                </p>
+              </div>
+
+              <!-- Гаражи -->
+              <div class="property-block">
+                <h3 class="block-title">🚗 Гаражи и машино-места</h3>
+                <div class="counter-row">
+                  <label>Количество гаражей:</label>
+                  <div class="input-numbers">
+                    <button @click="formData.propertyCheck.garagesCount > 0 && formData.propertyCheck.garagesCount--">-</button>
+                    <input type="number" v-model.number="formData.propertyCheck.garagesCount" min="0" class="number-input" />
+                    <button @click="formData.propertyCheck.garagesCount++">+</button>
+                  </div>
+                </div>
+                <p class="hint-text light-text">
+                  Лимит: 1 гараж (2 для многодетных или семей с инвалидом)
+                </p>
+              </div>
+
+              <!-- Земельные участки -->
+              <div class="property-block">
+                <h3 class="block-title">🌍 Земельные участки</h3>
+                <div class="area-input">
+                  <label>Площадь участков в городе (га):</label>
+                  <input type="number" step="0.01" v-model.number="formData.propertyCheck.landAreaCity" placeholder="Максимум 0.25" />
+                </div>
+                <div class="area-input" style="margin-top: 15px;">
+                  <label>Площадь участков в селе (га):</label>
+                  <input type="number" step="0.01" v-model.number="formData.propertyCheck.landAreaRural" placeholder="Максимум 1" />
+                </div>
+                <p class="hint-text light-text">
+                  Лимиты: в городе до 0.25 га, в селе до 1 га
+                </p>
+              </div>
+
+              <!-- Нежилые помещения -->
+              <div class="property-block">
+                <h3 class="block-title">🏢 Нежилые помещения</h3>
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.propertyCheck.hasNonResidential" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">
+                    Есть нежилое помещение (кроме гаражей, хозпостроек на ЛПХ)
+                  </span>
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.propertyCheck.hasCommercialProperty" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">
+                    Есть коммерческая недвижимость
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Исключения по имуществу -->
+            <div class="exception-block">
+              <p class="exception-title">Не учитывается при оценке имущества:</p>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.propertyExceptions.hasUninhabitableHousing" />
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Жилье признано непригодным для проживания</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.propertyExceptions.hasArrestedProperty" />
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Имущество под арестом</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.propertyExceptions.hasGuardianshipProperty" />
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Имущество детей под опекой</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.propertyExceptions.hasFarEastHectare" />
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Дальневосточный гектар</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.propertyExceptions.hasMultifamilySupport" />
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Жилье предоставлено многодетной семье как мера поддержки</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.propertyExceptions.hasDisabledHousing" />
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Жилье для члена семьи с инвалидностью</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Шаг 7: Дополнительные условия -->
           <div v-if="currentQuestion === 'conditions'" class="conditions-step">
             <h2 class="step-title dark-text">Проверка дополнительных условий</h2>
             <p class="step-description light-text">
-              Ответьте на вопросы для точного расчета
+              Ответьте на вопросы для точного расчета пособия
             </p>
             
             <div class="conditions-list">
               <!-- Правило нулевого дохода -->
               <div class="condition-block" v-if="needsZeroIncomeCheck">
                 <h3 class="condition-title">
-                  ⚠️ Обнаружен низкий доход
+                  ⚠️ Правило нулевого дохода
                 </h3>
                 <p class="condition-desc light-text">
-                  Все трудоспособные члены семьи должны иметь доход или уважительную причину его отсутствия
-                </p>
-                <label class="custom-checkbox">
-                  <input type="checkbox" v-model="formData.hasValidReason" />
-                  <span class="checkmark"></span>
-                  <span class="checkbox-text">
-                    Есть уважительная причина отсутствия дохода
-                    <span class="hint-inline">(уход за ребенком до 3 лет, инвалидом, учеба, беременность, безработица до 6 мес.)</span>
-                  </span>
-                </label>
-              </div>
-
-              <!-- Имущество -->
-              <div class="condition-block">
-                <h3 class="condition-title">
-                  🏠 Проверка имущества
-                </h3>
-                <p class="condition-desc light-text">
-                  Семья должна соответствовать имущественным критериям
+                  Ваш доход ниже 30% от прожиточного минимума. Необходимо подтвердить уважительные причины отсутствия дохода.
                 </p>
                 
-                <label class="custom-checkbox">
-                  <input type="checkbox" v-model="formData.propertyCheck.hasMultipleApartments" />
-                  <span class="checkmark"></span>
-                  <span class="checkbox-text">У семьи более одной квартиры</span>
-                </label>
+                <div v-if="isExemptFromZeroIncomeRule" class="info-badge success">
+                  ✓ Вы освобождены от правила нулевого дохода:
+                  <ul style="margin: 5px 0 0 20px;">
+                    <li v-if="isPregnantRecipient">Беременная женщина</li>
+                    <li v-if="isLargeFamily">Многодетная семья</li>
+                    <li v-if="formData.special.singleParent">Единственный родитель</li>
+                    <li v-if="formData.special.mobilized">Член семьи мобилизован</li>
+                  </ul>
+                </div>
+                
+                <div v-else class="zero-income-details">
+                  <!-- Заявитель -->
+                  <div class="person-income-block">
+                    <h4>Заявитель</h4>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" v-model="formData.adultsIncome.applicantHasIncome" />
+                      <span class="checkmark"></span>
+                      <span class="checkbox-text">Был доход в расчетном периоде</span>
+                    </label>
+                    
+                    <div v-if="!formData.adultsIncome.applicantHasIncome" class="reasons-selector">
+                      <p class="hint-text">Укажите месяцы и причины отсутствия дохода (минимум 10 из 12):</p>
+                      <button @click="showReasonDetails = !showReasonDetails" class="toggle-reasons-btn">
+                        {{ showReasonDetails ? 'Скрыть' : 'Показать' }} помесячную детализацию
+                      </button>
+                      
+                      <div v-if="showReasonDetails" class="months-grid">
+                        <div v-for="month in 12" :key="month" class="month-reason">
+                          <label>Месяц {{ month }}:</label>
+                          <select @change="(e) => e.target.value && addValidReason('applicant', month, e.target.value)">
+                            <option value="">Был доход</option>
+                            <option v-for="reason in validReasonsList" :key="reason.value" :value="reason.value">
+                              {{ reason.label }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div class="reason-summary">
+                        Месяцев с уважительной причиной: 
+                        <strong>{{ calculateValidReasonMonths(formData.adultsIncome.applicantReasons) }} из 10 требуемых</strong>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Супруг(а) -->
+                  <div v-if="formData.hasSpouse" class="person-income-block">
+                    <h4>Супруг(а)</h4>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" v-model="formData.adultsIncome.spouseHasIncome" />
+                      <span class="checkmark"></span>
+                      <span class="checkbox-text">Был доход в расчетном периоде</span>
+                    </label>
+                    
+                    <div v-if="!formData.adultsIncome.spouseHasIncome" class="reasons-selector">
+                      <p class="hint-text">Укажите месяцы и причины отсутствия дохода (минимум 10 из 12):</p>
+                      
+                      <div class="reason-summary">
+                        Месяцев с уважительной причиной: 
+                        <strong>{{ calculateValidReasonMonths(formData.adultsIncome.spouseReasons) }} из 10 требуемых</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
+              <!-- Самозанятые -->
+              <div class="condition-block">
+                <h3 class="condition-title">
+                  💼 Самозанятость и ИП
+                </h3>
                 <label class="custom-checkbox">
-                  <input type="checkbox" v-model="formData.propertyCheck.hasMultipleCars" />
+                  <input type="checkbox" v-model="formData.selfEmployed.isSelfEmployed" />
                   <span class="checkmark"></span>
-                  <span class="checkbox-text">У семьи более одного автомобиля</span>
+                  <span class="checkbox-text">В семье есть самозанятые или ИП</span>
                 </label>
+                
+                <div v-if="formData.selfEmployed.isSelfEmployed" class="self-employed-details">
+                  <div class="counter-row">
+                    <label>Месяцев работы в расчетном периоде:</label>
+                    <div class="input-numbers">
+                      <button @click="formData.selfEmployed.monthsActive > 1 && formData.selfEmployed.monthsActive--">-</button>
+                      <input type="number" v-model.number="formData.selfEmployed.monthsActive" min="1" max="12" class="number-input" />
+                      <button @click="formData.selfEmployed.monthsActive < 12 && formData.selfEmployed.monthsActive++">+</button>
+                    </div>
+                  </div>
+                  
+                  <div class="income-input-block" style="margin-top: 15px;">
+                    <label>Доход за период работы:</label>
+                    <div class="big-input-wrapper">
+                      <input type="number" v-model.number="formData.selfEmployed.yearlyIncome" :placeholder="`Минимум ${Math.round(44880 * formData.selfEmployed.monthsActive / 12)} ₽`" class="big-income-input" style="font-size: 18px; padding: 12px;"/>
+                      <span class="currency">₽</span>
+                    </div>
+                    <p class="hint-text light-text">
+                      Минимум 2 МРОТ за год работы (пропорционально месяцам)
+                    </p>
+                  </div>
+                </div>
+              </div>
 
+              <!-- Алименты -->
+              <div class="condition-block">
+                <h3 class="condition-title">
+                  💰 Алименты
+                </h3>
                 <label class="custom-checkbox">
-                  <input type="checkbox" v-model="formData.propertyCheck.hasLuxuryCar" />
+                  <input type="checkbox" v-model="formData.alimony.receivesAlimony" />
                   <span class="checkmark"></span>
-                  <span class="checkbox-text">Есть автомобиль младше 5 лет мощнее 250 л.с.</span>
+                  <span class="checkbox-text">Семья получает алименты</span>
                 </label>
-
-                <label class="custom-checkbox">
-                  <input type="checkbox" v-model="formData.propertyCheck.hasHighSavings" />
-                  <span class="checkmark"></span>
-                  <span class="checkbox-text">Вклады превышают годовой прожиточный минимум</span>
-                </label>
+                
+                <div v-if="formData.alimony.receivesAlimony" class="alimony-details">
+                  <div class="counter-row">
+                    <label>На скольких детей:</label>
+                    <div class="input-numbers">
+                      <button @click="formData.alimony.childrenCount > 1 && formData.alimony.childrenCount--">-</button>
+                      <input type="number" v-model.number="formData.alimony.childrenCount" min="1" max="10" class="number-input" />
+                      <button @click="formData.alimony.childrenCount < 10 && formData.alimony.childrenCount++">+</button>
+                    </div>
+                  </div>
+                  
+                  <div class="income-input-block" style="margin-top: 15px;">
+                    <label>Сумма алиментов в месяц:</label>
+                    <div class="big-input-wrapper">
+                      <input type="number" v-model.number="formData.alimony.monthlyAmount" placeholder="Например: 7500" class="big-income-input" style="font-size: 18px; padding: 12px;"/>
+                      <span class="currency">₽</span>
+                    </div>
+                    <p class="hint-text light-text">
+                      Минимум от МРОТ: 1 ребенок - 5 610 ₽, 2 детей - 7 480 ₽, 3+ детей - 11 220 ₽
+                    </p>
+                  </div>
+                  
+                  <label class="custom-checkbox" style="margin-top: 15px;">
+                    <input type="checkbox" v-model="formData.alimony.isVoluntaryAgreement" />
+                    <span class="checkmark"></span>
+                    <span class="checkbox-text">
+                      Алименты по добровольному соглашению (сумма может быть любой)
+                    </span>
+                  </label>
+                </div>
               </div>
 
               <!-- Особые обстоятельства -->
@@ -585,12 +1521,6 @@ onMounted(async () => {
                 </p>
                 
                 <label class="custom-checkbox">
-                  <input type="checkbox" v-model="formData.special.singleParent" />
-                  <span class="checkmark"></span>
-                  <span class="checkbox-text">Единственный родитель</span>
-                </label>
-
-                <label class="custom-checkbox">
                   <input type="checkbox" v-model="formData.special.hasDisabled" />
                   <span class="checkmark"></span>
                   <span class="checkbox-text">В семье есть инвалид</span>
@@ -600,6 +1530,76 @@ onMounted(async () => {
                   <input type="checkbox" v-model="formData.special.mobilized" />
                   <span class="checkmark"></span>
                   <span class="checkbox-text">Член семьи мобилизован</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.special.refugeeStatus" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Семья имеет статус беженцев</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.special.emergencySituation" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Пострадавшие от чрезвычайной ситуации</span>
+                </label>
+              </div>
+
+              <!-- Уважительные причины (если нужны) -->
+              <div class="condition-block" v-if="!isExemptFromZeroIncomeRule">
+                <h3 class="condition-title">
+                  📋 Уважительные причины отсутствия дохода
+                </h3>
+                <p class="condition-desc light-text">
+                  Отметьте применимые причины для взрослых членов семьи
+                </p>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.childCareUnder3" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Уход за ребенком до 3 лет</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.disabledCare" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Уход за инвалидом или ребенком-инвалидом</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.elderCare" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Уход за пожилым человеком старше 80 лет</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.fullTimeStudy" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Очное обучение (до 23 лет)</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.unemployment" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Официальная безработица (не более 6 месяцев)</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.longTermTreatment" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Длительное лечение (более 3 месяцев)</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.militaryService" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Военная служба по призыву</span>
+                </label>
+                
+                <label class="custom-checkbox">
+                  <input type="checkbox" v-model="formData.validReasons.imprisonment" />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">Лишение свободы или нахождение под стражей</span>
                 </label>
               </div>
             </div>
@@ -615,7 +1615,7 @@ onMounted(async () => {
       </div>
 
       <!-- Кнопки управления -->
-      <div class="controls base-bg-color-two" v-if="!showResults">
+      <div class="controls base-bg-color-two" v-if="!showResults" :class="{ 'hidden': !isCalculatorInView }">
         <button 
           class="big-button" 
           @click="previousQuestion"
@@ -642,153 +1642,219 @@ onMounted(async () => {
   max-width: 100%;
 }
 
+.smart-calculator.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-height: 100vh;
+  overflow-y: auto;
+  
+  // Убираем скругления углов в sticky режиме
+  .container {
+    border-radius: 0;
+  }
+  
+  .content {
+    border-radius: 0;
+  }
+}
+
+.floating-scroll-button {
+  position: fixed;
+  bottom: 100px; // Выше, чтобы не мешать навигации
+  right: 20px;
+  background: #008CFF;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  z-index: 10000; // Очень высокий z-index
+  box-shadow: 0 4px 12px rgba(0, 140, 255, 0.3);
+  transition: all 0.3s ease;
+  font-size: 14px;
+  
+  &:hover {
+    background: #0070CC;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 140, 255, 0.4);
+  }
+}
+
+
 .container {
   max-width: 700px;
   margin: 0 auto;
-  padding: 20px;
-  min-height: 100vh;
+  padding: 0;
+  min-height: 80vh;
   display: flex;
   flex-direction: column;
-  
-  @media(max-width: 768px) {
-    padding: 10px;
-  }
-}
-
-.header {
-  padding: 20px;
-  border-radius: 14.5px;
-  margin-bottom: 20px;
-  
-  h1 {
-    font-size: 22px;
-    margin: 0;
-    line-height: 1.4;
-    font-weight: 600;
-  }
 }
 
 .content {
-  padding: 20px;
-  border-radius: 14.5px;
-  margin-bottom: 20px;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
   flex-grow: 1;
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 // Прогресс бар
 .progress {
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   
   .progress-numbers {
     display: flex;
-    gap: 2.5px;
-    background-color: white;
-    justify-content: center;
     align-items: center;
-    height: 47px;
-    width: 69px;
-    border-radius: 15px;
-    position: relative;
-    -webkit-box-shadow: 0px 0px 3px 1px rgba(0, 97, 206, 0.06);
-    -moz-box-shadow: 0px 0px 3px 1px rgba(0, 97, 206, 0.06);
-    box-shadow: 0px 0px 3px 1px rgba(0, 97, 206, 0.06);
-    &::before {
-      content: '';
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      bottom: 5px;
-      left: 5px;
-      border: 1px solid #9CE1FF;
-      border-radius: 10px;
-    }
-    
-    p {
-      font-size: 23px;
-      margin: 0;
-      line-height: 1;
-    }
+    gap: 0.25rem;
+    font-size: 1.5rem;
+    font-weight: 600;
     
     .one {
-      color: #00B93E;
+      color: #008CFF;
+    }
+    
+    .dop {
+      color: #A2AAB5;
+    }
+    
+    .two {
+      color: #E8EAED;
     }
   }
   
   .more {
-    margin-top: 5px;
-    font-size: 15px;
     color: #A2AAB5;
+    font-size: 0.9rem;
   }
 }
 
-// Заголовки шагов
+// Заголовки
 .step-title {
-  font-weight: 300;
-  font-size: 26px;
-  letter-spacing: 1.02px;
-  line-height: 1.2;
-  margin-bottom: 10px;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1A1D1F;
 }
 
 .step-description {
-  font-size: 16px;
+  color: #6F767E;
+  margin-bottom: 2rem;
   line-height: 1.5;
-  margin-bottom: 25px;
-  opacity: 0.8;
 }
 
-// Селект региона
+.subsection-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  color: #1A1D1F;
+}
+
+// Выбор даты
+.date-selection {
+  background: #F6F7F9;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  
+  .date-inputs {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    
+    select {
+      padding: 0.75rem;
+      border: 1.5px solid #E8EAED;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2348596D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 40px;
+      
+      // Фикс для IE
+      &::-ms-expand {
+        display: none;
+      }
+      
+      // Фикс для Firefox
+      @-moz-document url-prefix() {
+        text-indent: 0.01px;
+        text-overflow: '';
+        padding-right: 40px;
+      }
+      
+      &:focus {
+        outline: none;
+        border-color: #008CFF;
+      }
+    }
+  }
+}
+
+// Селекты
 .select-wrapper {
   position: relative;
   width: 100%;
-  margin-bottom: 10px;
 }
 
 .region-select {
   width: 100%;
-  padding: 14px 40px 14px 14px;
-  border: 1px solid #C4C2FF;
+  padding: 0.875rem;
+  border: 1.5px solid #E8EAED;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 0.95rem;
   background: white;
   cursor: pointer;
   -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23008CFF' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%236F767E' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   
   &:focus {
     outline: none;
     border-color: #008CFF;
-    box-shadow: 0 0 0 3px rgba(0, 140, 255, 0.1);
   }
 }
 
-// Карточки выбора получателя
+// Карточки выбора
 .recipient-options {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 0.75rem;
 }
 
 .option-card {
   display: block;
-  padding: 20px;
-  border: 2px solid #e0e0e0;
+  padding: 1.25rem;
+  border: 2px solid #F0F2F5;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   
   &:hover {
     border-color: #008CFF;
-    background: #f8fbff;
+    background: #F8FBFF;
   }
   
   &.selected {
     border-color: #008CFF;
-    background: #e3f2fd;
+    background: #F0F7FF;
   }
   
   input[type="radio"] {
@@ -797,7 +1863,7 @@ onMounted(async () => {
   
   .option-content {
     display: flex;
-    gap: 15px;
+    gap: 1rem;
     align-items: center;
   }
   
@@ -805,23 +1871,56 @@ onMounted(async () => {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    svg{
-      width: 40px;
-      height: 40px;
-    }
+    justify-content: center;
+    width: 40px;
+    height: 40px;
   }
   
   .option-text {
     h3 {
-      margin: 0 0 5px 0;
-      font-size: 18px;
-      color: #2C3E50;
+      margin: 0 0 0.25rem 0;
+      font-size: 1rem;
+      color: #1A1D1F;
     }
     
     p {
       margin: 0;
-      font-size: 14px;
-      color: #7d838b;
+      font-size: 0.875rem;
+      color: #6F767E;
+    }
+  }
+}
+
+// Детали беременности
+.pregnancy-details {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: #FFF9E6;
+  border-radius: 12px;
+  border: 1px solid #FFD166;
+  
+  .pregnancy-inputs {
+    display: grid;
+    gap: 1rem;
+    
+    .input-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      
+      label {
+        font-size: 0.9rem;
+        color: #1A1D1F;
+      }
+      
+      .week-input {
+        width: 80px;
+        padding: 0.5rem;
+        border: 1.5px solid #E8EAED;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 0.95rem;
+      }
     }
   }
 }
@@ -829,20 +1928,20 @@ onMounted(async () => {
 // Блоки семьи
 .family-grid {
   display: grid;
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .family-block {
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 10px;
+  padding: 1.5rem;
+  background: #F6F7F9;
+  border-radius: 12px;
   
   .block-title {
-    font-size: 18px;
+    font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 15px;
-    color: #2C3E50;
+    margin-bottom: 1rem;
+    color: #1A1D1F;
   }
 }
 
@@ -850,11 +1949,13 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 15px 0;
+  gap: 1rem;
+  margin-bottom: 1rem;
   
   label {
-    font-size: 16px;
-    color: #2C3E50;
+    font-size: 0.95rem;
+    color: #1A1D1F;
+    flex: 1;
   }
 }
 
@@ -862,17 +1963,16 @@ onMounted(async () => {
 .input-numbers {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   
   .number-input {
     width: 60px;
-    height: 38px;
-    border: 1px solid #C4C2FF;
-    border-radius: 5px;
+    height: 40px;
+    border: 1.5px solid #E8EAED;
+    border-radius: 6px;
     text-align: center;
-    font-size: 17px;
+    font-size: 1rem;
     -moz-appearance: textfield;
-    appearance: textfield;
     
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
@@ -886,24 +1986,26 @@ onMounted(async () => {
     }
   }
   
-  .minus, .plus {
-    width: 32px;
-    height: 32px;
+  button {
+    width: 36px;
+    height: 36px;
     background-color: #008CFF;
-    display: flex;
+    color: white;
     border: none;
-    border-radius: 7px;
+    border-radius: 6px;
+    display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: background-color 0.2s;
+    font-size: 1.1rem;
     
     &:hover:not(:disabled) {
-      background-color: #0070d2;
+      background-color: #0070CC;
     }
     
     &:disabled {
-      background-color: #cccccc;
+      background-color: #E8EAED;
       cursor: not-allowed;
     }
   }
@@ -914,50 +2016,87 @@ onMounted(async () => {
   display: flex;
   align-items: flex-start;
   cursor: pointer;
-  font-size: 16px;
-  margin-bottom: 15px;
-  padding-left: 25px;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  padding-left: 2rem;
   position: relative;
+  line-height: 1.4;
   
-  .checkbox-text {
-    line-height: 1.4;
-    margin-left: 5px;
-    .hint-inline {
-      display: block;
-      font-size: 14px;
-      color: #7d838b;
-      margin-top: 5px;
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    
+    &:checked ~ .checkmark {
+      background-color: #008CFF;
+      border-color: #008CFF;
+      
+      &:after {
+        display: block;
+      }
+    }
+  }
+  
+  .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: white;
+    border: 1.5px solid #E8EAED;
+    border-radius: 4px;
+    
+    &:after {
+      content: "";
+      position: absolute;
+      display: none;
+      left: 6px;
+      top: 2px;
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
     }
   }
 }
 
 // Итог семьи
 .family-summary {
-  padding: 15px;
-  background: #e3f2fd;
-  border-radius: 8px;
+  padding: 1.25rem;
+  background: #F0F7FF;
+  border-radius: 12px;
   text-align: center;
   
   .summary-text {
-    margin: 0 0 5px 0;
-    font-size: 18px;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
   }
+}
+
+// Бейджи
+.info-badge {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
   
-  .hint-text {
-    margin: 0;
-    font-size: 14px;
+  &.success {
+    background: #ECFDF3;
+    color: #047857;
+    border: 1px solid #A7F3D0;
   }
 }
 
 // Ввод дохода
 .income-input-block {
-  margin-bottom: 25px;
+  margin-bottom: 1.5rem;
   
   label {
     display: block;
-    margin-bottom: 10px;
-    font-size: 16px;
-    color: #2C3E50;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    color: #1A1D1F;
   }
 }
 
@@ -966,124 +2105,238 @@ onMounted(async () => {
   
   .big-income-input {
     width: 100%;
-    padding: 16px 40px 16px 16px;
-    border: 2px solid #C4C2FF;
-    border-radius: 10px;
-    font-size: 24px;
+    padding: 1rem;
+    border: 2px solid #E8EAED;
+    border-radius: 8px;
+    font-size: 1.5rem;
     font-weight: 600;
-    color: #2C3E50;
+    color: #1A1D1F;
     
     &:focus {
       outline: none;
       border-color: #008CFF;
-      box-shadow: 0 0 0 3px rgba(0, 140, 255, 0.1);
     }
   }
   
   .currency {
     position: absolute;
-    right: 16px;
+    right: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 24px;
-    color: #7d838b;
+    font-size: 1.5rem;
+    color: #6F767E;
+  }
+}
+
+// Детализация доходов
+.income-details-section {
+  margin-top: 1.5rem;
+  
+  .details-toggle {
+    width: 100%;
+    padding: 0.875rem;
+    background: white;
+    border: 1.5px solid #E8EAED;
+    border-radius: 8px;
+    color: #008CFF;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 1.5rem;
+    &:hover {
+      background: #F6F7F9;
+    }
+  }
+  
+  .detailed-income-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #F6F7F9;
+    border-radius: 12px;
+    margin-top: 1rem;
+    
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+    
+    .income-item {
+      label {
+        display: block;
+        font-size: 0.875rem;
+        color: #6F767E;
+        margin-bottom: 0.5rem;
+      }
+      
+      input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1.5px solid #E8EAED;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        
+        &:focus {
+          outline: none;
+          border-color: #008CFF;
+        }
+      }
+    }
+  }
+  
+  .total-calculated {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #F0F7FF;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1rem;
+    
+    strong {
+      color: #008CFF;
+    }
+  }
+}
+
+// Важная информация
+.important-info {
+  background: #F0F7FF;
+  padding: 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  
+  strong {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    
+    li {
+      margin-bottom: 0.25rem;
+    }
   }
 }
 
 .hint-text {
-  font-size: 14px;
-  margin-top: 8px;
-  opacity: 0.8;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  color: #6F767E;
 }
 
 // Предпросмотр расчета
 .income-calculator-preview {
-  padding: 20px;
-  background: linear-gradient(135deg, #f0f4ff, #fff);
-  border-radius: 10px;
-  border: 1px solid #C4C2FF;
-  margin-bottom: 20px;
+  padding: 1.5rem;
+  background: #F6F7F9;
+  border-radius: 12px;
+  border: 1.5px solid #E8EAED;
+  margin-bottom: 1.5rem;
   
   .calc-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 0.75rem;
     
     .calc-value {
       font-weight: 600;
       
       &.success {
-        color: #00B93E;
+        color: #10B981;
       }
       
       &.error {
-        color: #FF4444;
+        color: #EF4444;
       }
     }
   }
   
   .income-status {
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 6px;
+    margin-top: 1rem;
+    padding: 0.875rem;
+    border-radius: 8px;
     text-align: center;
     font-weight: 500;
     
     &.success {
-      background: #00B93E20;
-      color: #00B93E;
+      background: #ECFDF3;
+      color: #047857;
     }
     
     &.error {
-      background: #FF444420;
-      color: #FF4444;
+      background: #FEF2F2;
+      color: #DC2626;
     }
   }
 }
 
-// Блок помощи
-.help-block {
-  margin-top: 20px;
+// Транспорт и недвижимость
+.transport-grid,
+.property-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
   
-  .help-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 15px;
-    background: white;
-    border: 1px solid #C4C2FF;
-    border-radius: 8px;
-    color: #008CFF;
-    font-size: 15px;
-    cursor: pointer;
-    
-    &:hover {
-      background: #f8fbff;
-    }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.transport-block,
+.property-block {
+  padding: 1.5rem;
+  background: #F6F7F9;
+  border-radius: 12px;
+  
+  .block-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1A1D1F;
+  }
+}
+
+// Поля ввода площади
+.area-input {
+  margin-top: 1rem;
+  
+  label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6F767E;
+    margin-bottom: 0.5rem;
   }
   
-  .help-content {
-    margin-top: 15px;
-    padding: 20px;
-    background: #f8f9fa;
+  input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px solid #E8EAED;
     border-radius: 8px;
+    font-size: 0.95rem;
     
-    h4 {
-      font-size: 16px;
-      margin-bottom: 10px;
-      color: #2C3E50;
+    &:focus {
+      outline: none;
+      border-color: #008CFF;
     }
-    
-    ul {
-      margin: 0 0 15px 0;
-      padding-left: 20px;
-      
-      li {
-        margin-bottom: 5px;
-        font-size: 14px;
-        color: #7d838b;
-      }
-    }
+  }
+}
+
+// Блок исключений
+.exception-block {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: #F0F7FF;
+  border-radius: 12px;
+  
+  .exception-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #008CFF;
+    margin-bottom: 1rem;
   }
 }
 
@@ -1091,81 +2344,58 @@ onMounted(async () => {
 .conditions-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.5rem;
 }
 
 .condition-block {
-  padding: 20px;
-  background: #fafbfc;
-  border-radius: 10px;
+  padding: 1.5rem;
+  background: #F6F7F9;
+  border-radius: 12px;
   
   .condition-title {
-    font-size: 18px;
+    font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 8px;
-    color: #2C3E50;
+    margin-bottom: 0.5rem;
+    color: #1A1D1F;
   }
   
   .condition-desc {
-    font-size: 14px;
-    margin-bottom: 15px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: #6F767E;
   }
-}
-
-// Сообщения
-.loading-message {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  font-size: 14px;
-  
-  .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #C4C2FF;
-    border-top-color: #008CFF;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.success-message {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #e8f5e9;
-  border-radius: 6px;
-  color: #2e7d32;
-  font-size: 14px;
 }
 
 // Кнопки управления
 .controls {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  padding: 20px;
-  border-radius: 14.5px;
-  width: 100%;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  &.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+  }
 }
 
 .big-button {
-  padding: 14px 28px;
+  padding: 1rem 2rem;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s;
-  background: #f5f5f5;
-  color: #333;
+  transition: all 0.2s;
+  background: #F6F7F9;
+  color: #6F767E;
   
   &:hover:not(:disabled) {
-    background: #e0e0e0;
+    background: #E8EAED;
   }
   
   &:disabled {
@@ -1178,36 +2408,399 @@ onMounted(async () => {
     color: white;
     
     &:hover:not(:disabled) {
-      background: #0070d2;
+      background: #0070CC;
     }
   }
 }
 
-// Адаптивность
-@media (max-width: 768px) {
-  .step-title {
-    font-size: 22px;
-  }
+// Анимации
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6F767E;
   
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #E8EAED;
+    border-top-color: #008CFF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+.success-message {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: #ECFDF3;
+  border-radius: 8px;
+  color: #047857;
+  font-size: 0.875rem;
+}
+
+// МОБИЛЬНАЯ ВЕРСИЯ - КОМПАКТНАЯ
+@media (max-width: 768px) {
+  .smart-calculator {
+    font-size: 14px;
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #F6F7F9;
+  }
+
+  .container {
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content {
+    padding: 1rem;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  // Уменьшаем все большие заголовки
+  .step-title {
+    font-size: 1.3rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-description {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .subsection-title {
+    font-size: 1rem;
+    margin: 1rem 0 0.75rem 0;
+  }
+
+  // Уменьшаем отступы в блоках
+  .family-block,
+  .transport-block,
+  .property-block,
+  .condition-block,
+  .date-selection,
+  .pregnancy-details,
+  .exception-block {
+    padding: 1rem !important;
+    margin-bottom: 1rem;
+  }
+
+  // Делаем сетки одноколоночными
+  .transport-grid,
+  .property-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem;
+  }
+
+  // Уменьшаем элементы форм
+  input[type="number"],
+  input[type="text"],
+  select {
+    padding: 0.5rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  // Компактные кнопки счетчиков
+  .input-numbers {
+    button {
+      width: 32px !important;
+      height: 32px !important;
+      font-size: 1rem !important;
+    }
+    .number-input {
+      width: 50px !important;
+      height: 32px !important;
+      font-size: 0.9rem !important;
+    }
+  }
+
+  // Уменьшаем большие поля ввода
+  .big-input-wrapper .big-income-input {
+    font-size: 1.2rem !important;
+    padding: 0.75rem !important;
+  }
+
+  .big-input-wrapper .currency {
+    font-size: 1.2rem !important;
+    right: 0.75rem;
+  }
+
+  // Компактные карточки выбора
   .recipient-options {
-    .option-icon {
-      font-size: 28px;
+    gap: 0.5rem;
+  }
+
+  .option-card {
+    padding: 0.875rem !important;
+    margin-bottom: 0.5rem;
+
+    .option-content {
+      gap: 0.5rem;
+    }
+
+    .option-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .option-text h3 {
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .option-text p {
+      font-size: 0.75rem;
+    }
+  }
+
+  // Уменьшаем чекбоксы
+  .custom-checkbox {
+    font-size: 0.85rem;
+    margin-bottom: 0.6rem;
+    padding-left: 1.5rem;
+
+    .checkmark {
+      width: 16px;
+      height: 16px;
+      top: 0.1rem;
+
+      &:after {
+        left: 4px;
+        top: 0;
+        width: 4px;
+        height: 8px;
+      }
+    }
+  }
+
+  // Компактный прогресс-бар
+  .progress {
+    margin-bottom: 1.25rem;
+
+    .progress-numbers {
+      font-size: 1.1rem;
+      gap: 0.2rem;
+    }
+
+    .more {
+      font-size: 0.75rem;
+    }
+  }
+
+  // Выбор даты в колонку
+  .date-selection .date-inputs {
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    select {
+      width: 100%;
+    }
+  }
+
+  // Счетчики в колонку
+  .counter-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    
+    .input-numbers {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+
+  // Детализация доходов компактная
+  .income-details-section {
+    .detailed-income-grid {
+      grid-template-columns: 1fr !important;
+      padding: 1rem !important;
+      gap: 0.75rem;
     }
     
-    .option-text h3 {
-      font-size: 16px;
+    .income-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      
+      label {
+        flex: 1;
+        margin-bottom: 0 !important;
+        font-size: 0.8rem !important;
+      }
+      
+      input {
+        width: 40% !important;
+        min-width: 70px;
+        padding: 0.4rem !important;
+      }
     }
   }
+
+  // Фиксированная панель управления
+  .controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    border-radius: 0;
+    
+    .big-button {
+      padding: 0.75rem;
+      font-size: 0.9rem;
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  // Уменьшаем информационные блоки
+  .important-info,
+  .family-summary,
+  .income-calculator-preview {
+    padding: 1rem !important;
+    font-size: 0.85rem;
+  }
+
+  .info-badge {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    
+    ul {
+      margin: 0.25rem 0 0 1rem;
+      
+      li {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  // Уменьшаем подсказки
+  .hint-text {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+
+  // Детали беременности компактные
+  .pregnancy-details .pregnancy-inputs .input-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    
+    .week-input {
+      width: 100%;
+      max-width: 80px;
+    }
+  }
+
+  // Улучшаем отображение длинных списков условий
+  .conditions-list {
+    gap: 1rem;
+    
+    .condition-block {
+      padding: 1rem;
+      
+      .condition-title {
+        font-size: 1rem;
+      }
+      
+      .condition-desc {
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+// Еще более компактная версия для очень маленьких экранов
+@media (max-width: 360px) {
+  .smart-calculator {
+    font-size: 13px;
+  }
   
-  .big-income-input {
-    font-size: 20px !important;
+  .content {
+    padding: 0.75rem;
+    padding-bottom: 70px;
+  }
+  
+  .step-title {
+    font-size: 1.2rem !important;
   }
   
   .controls {
-    flex-direction: column;
+    padding: 0.5rem;
     
     .big-button {
-      width: 100%;
+      padding: 0.6rem;
+      font-size: 0.85rem;
+    }
+  }
+  
+  .option-card {
+    padding: 0.75rem !important;
+    
+    .option-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-scroll-button {
+    bottom: 80px; // Выше мобильных контролов
+    right: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  
+  .smart-calculator.sticky {
+    position: relative;
+    top: 0;
+    box-shadow: none;
+    
+    .container {
+      border-radius: 0;
+    }
+    
+    .content {
+      border-radius: 0;
+    }
+  }
+}
+
+// Для очень маленьких экранов
+@media (max-width: 360px) {
+  .floating-scroll-button {
+    bottom: 70px;
+    right: 5px;
+    padding: 8px 12px;
+    font-size: 11px;
+    
+    svg {
+      width: 16px;
+      height: 16px;
     }
   }
 }

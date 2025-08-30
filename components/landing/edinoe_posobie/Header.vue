@@ -1,5 +1,5 @@
 <template>
-  <header class="header">
+  <header class="header" :class="{ 'post': isScrolled }">
     <div class="header__container">
       <div class="header__logo">
         <img :src="Logo" alt="logo-image">
@@ -75,6 +75,8 @@ import IconWidget from './icons/IconWidget.vue'
 
 const isMenuOpen = ref(false)
 
+const isScrolled = ref(false) 
+
 const menuItems = ref([
   {
     href: '#main',
@@ -112,6 +114,21 @@ const closeMenu = () => {
   isMenuOpen.value = false
   document.body.style.overflow = ''
 }
+
+// Функция для обработки скролла
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 50 // Добавляем класс, когда прокрутка больше 50px
+}
+
+// Навешиваем обработчик события скролла при монтировании компонента
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+// Убираем обработчик при размонтировании компонента
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -123,7 +140,11 @@ const closeMenu = () => {
   z-index: 100;
   background: rgba(255, 255, 255, 0);
   backdrop-filter: blur(10px);
+  transition: background 0.3s;
   // box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  &.post{
+    background-color: rgba(255, 255, 255, 0.63);
+  }
 
   &__container {
     margin: 0 auto;
@@ -276,12 +297,11 @@ const closeMenu = () => {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
     z-index: 998;
-
+    height: 100vh;
     &--active {
       opacity: 1;
       visibility: visible;

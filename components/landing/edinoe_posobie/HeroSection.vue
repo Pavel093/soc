@@ -180,8 +180,8 @@
     background: #1775F6;
     color: #ffffff;
     border: 2px solid #97C3FF;
-    padding: clamp(16px, 2.5vw, 24px) clamp(32px, 4vw, 48px);
-    font-size: clamp(20px, 3vw, 32px);
+    padding: 23.5px 50px;
+    font-size: clamp(20px, 3vw, 30px);
     font-weight: 500;
     border-radius: 15px;
     cursor: pointer;
@@ -286,8 +286,8 @@
     }
     
     &__title {
-      font-size: 24px;
-      line-height: 1.3;
+      font-size: 35px;
+      line-height: 1.1;
       margin-bottom: 20px;
       
       &-accent {
@@ -306,8 +306,8 @@
     &__button {
       width: calc(100% - 24px);
       max-width: none;
-      padding: 14px 24px;
-      font-size: 18px;
+      padding: 18px 24px;
+      font-size: 20px;
       border-radius: 12px;
     }
     
@@ -320,7 +320,7 @@
   // Очень маленькие экраны
   @media (max-width: 360px) {
     &__title {
-      font-size: 22px;
+      font-size: 35px;
     }
     
     &__description {
@@ -337,7 +337,6 @@
     }
   }
 
-  // Высокие экраны (для правильного центрирования)
   @media (min-height: 900px) {
     &__content {
       padding: 60px 20px;
