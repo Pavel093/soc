@@ -1,4 +1,5 @@
 import { regions } from '~/data/regions.js'
+import { getCalculatorPagesForSitemap } from '~/data/calculatorPages.js'
 
 export default defineSitemapEventHandler(() => {
   const routes = []
@@ -12,7 +13,7 @@ export default defineSitemapEventHandler(() => {
   
   routes.push({
     loc: '/edinoe-posobie',
-    changefreq: 'weekly', 
+    changefreq: 'weekly',
     priority: 0.9
   })
   
@@ -49,6 +50,9 @@ export default defineSitemapEventHandler(() => {
       priority: 0.7
     })
   })
+  
+  // Новые тематические страницы
+  routes.push(...getCalculatorPagesForSitemap())
   
   return routes
 })

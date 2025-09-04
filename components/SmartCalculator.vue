@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue' // Добавили nextTick
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { regions, findRegionByCode } from '../data/regions'
 import SmartResults from './SmartResults.vue'
 import { detectRegionByIP } from '../utils/geoDetection'
@@ -7,74 +7,123 @@ import { detectRegionByIP } from '../utils/geoDetection'
 // Рефы для элементов
 const contentContainer = ref(null)
 const calculatorRef = ref(null)
-const isCalculatorInView = ref(true)
-const isSticky = ref(false)
+const isCalculatorInView = ref(false)
+const isMobile = ref(false)
 
-// Функция для проверки видимости калькулятора
-const checkCalculatorVisibility = () => {
-  if (!calculatorRef.value) return
-  
-  const rect = calculatorRef.value.getBoundingClientRect()
-  const windowHeight = window.innerHeight
-  const windowWidth = window.innerWidth
-  
-  // Более точная проверка видимости
-  isCalculatorInView.value = (
-    rect.top >= -100 && 
-    rect.left >= 0 && 
-    rect.bottom <= windowHeight + 100 && 
-    rect.right <= windowWidth
-  )
-  
-  // Sticky режим, когда калькулятор близко к верху
-  isSticky.value = rect.top < 50 && rect.bottom > windowHeight / 2
-}
+// Переменные для отслеживания скролла
+let scrollTimeout = null
+let lastScrollY = 0
+let isScrollingDown = false
+let touchStartY = 0
 
 // Функция для плавного скролла к калькулятору
 const scrollToCalculator = () => {
   if (calculatorRef.value) {
-    calculatorRef.value.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    })
+    const element = calculatorRef.value;
+    const offsetTop = element.getBoundingClientRect().top + window.pageYOffset;
+    
+    window.scrollTo({
+      top: offsetTop - 20,
+      behavior: 'smooth'
+    });
   }
 }
 
-// Модифицированная функция прокрутки к верху
 const scrollToTop = () => {
-  if (contentContainer.value) {
-    contentContainer.value.scrollTo({
-      top: 0,
+  if (calculatorRef.value) {
+    const element = calculatorRef.value;
+    const offsetTop = element.getBoundingClientRect().top + window.pageYOffset;
+    
+    window.scrollTo({
+      top: offsetTop - 100, // Небольшой отступ сверху
       behavior: 'smooth'
-    })
-  }
-  
-  // Также прокручиваем страницу к калькулятору, если он не в видимой области
-  if (!isCalculatorInView.value) {
-    setTimeout(() => {
-      scrollToCalculator()
-    }, 300)
+    });
   }
 }
 
 // Обработчики скролла
-onMounted(() => {
-  window.addEventListener('scroll', checkCalculatorVisibility, { passive: true })
-  // Первоначальная проверка
-  setTimeout(() => {
-    checkCalculatorVisibility()
-    // Прокручиваем к калькулятору при загрузке, если он не в видимой области
-    if (!isCalculatorInView.value) {
-      setTimeout(() => {
-        scrollToCalculator()
-      }, 1000)
-    }
-  }, 100)
-})
+const handleScroll = () => {
+  // На ПК всегда показываем контролы
+  if (window.innerWidth > 768) {
+    isCalculatorInView.value = true
+    return
+  }
+  
+  // Определяем направление скролла
+  const currentScrollY = window.scrollY
+  isScrollingDown = currentScrollY > lastScrollY
+  lastScrollY = currentScrollY
+  
+  // Проверяем видимость с небольшой задержкой для стабильности
+  if (scrollTimeout) clearTimeout(scrollTimeout)
+  scrollTimeout = setTimeout(checkCalculatorVisibility, 50)
+}
 
-onUnmounted(() => {
-  window.removeEventListener('scroll', checkCalculatorVisibility)
-})
+const checkCalculatorVisibility = () => {
+  if (!calculatorRef.value || !contentContainer.value) return;
+  
+  // Всегда показываем контролы на ПК
+  if (window.innerWidth > 768) {
+    isCalculatorInView.value = true;
+    return;
+  }
+  
+  const calculatorRect = calculatorRef.value.getBoundingClientRect();
+  const contentRect = contentContainer.value.getBoundingClientRect();
+  const windowHeight = window.innerHeight;
+  
+  // Проверяем, находится ли контент калькулятора в видимой области
+  const contentInView = contentRect.top < windowHeight * 0.8 && contentRect.bottom > windowHeight * 0.2;
+  
+  // Проверяем, не скролим ли мы внутри самого контента
+  const isInternalScroll = contentRect.top <= 0 && contentRect.bottom >= windowHeight;
+  
+  // Показываем контролы если:
+  // 1. Контент калькулятора видим
+  // 2. Или мы находимся внутри калькулятора (внутренняя прокрутка)
+  // 3. Или калькулятор занимает большую часть экрана
+  isCalculatorInView.value = contentInView || isInternalScroll || 
+    (calculatorRect.top < windowHeight * 0.5 && calculatorRect.bottom > windowHeight * 0.5);
+  
+  // Дополнительная проверка: если скроллим вверх и калькулятор близко, показываем контролы
+  if (!isScrollingDown && calculatorRect.bottom > 0 && calculatorRect.top < windowHeight) {
+    isCalculatorInView.value = true;
+  }
+}
+
+// Обработчики касаний для мобильных
+const handleTouchStart = (e) => {
+  if (window.innerWidth > 768) return;
+  touchStartY = e.touches[0].clientY;
+}
+
+const handleTouchMove = (e) => {
+  if (window.innerWidth > 768) return;
+  
+  const touchY = e.touches[0].clientY;
+  const deltaY = touchStartY - touchY;
+  
+  // Если это небольшое движение (возможно внутренний скролл), не скрываем контролы
+  if (Math.abs(deltaY) < 10) {
+    return;
+  }
+  
+  // Проверяем, не является ли это скроллом внутри контента калькулятора
+  if (contentContainer.value) {
+    const contentRect = contentContainer.value.getBoundingClientRect();
+    if (touchY >= contentRect.top && touchY <= contentRect.bottom) {
+      // Касание внутри контента - не скрываем контролы
+      isCalculatorInView.value = true;
+      return;
+    }
+  }
+}
+
+// Обработчик ресайза
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+  checkCalculatorVisibility()
+}
 
 // Получение текущей даты для расчета периода
 const currentDate = new Date()
@@ -111,9 +160,9 @@ const formData = ref({
   
   // Детальная информация о беременности
   pregnancy: {
-    weeksSinceRegistration: 6, // недель беременности при постановке на учет
-    registrationWeek: 12, // на какой неделе встала на учет
-    currentWeek: 20 // текущая неделя беременности
+    weeksSinceRegistration: 6,
+    registrationWeek: 12,
+    currentWeek: 20
   },
   
   childrenCount: 1,
@@ -121,7 +170,7 @@ const formData = ref({
   hasSpouse: false,
   totalIncome: 0,
   
-  // Детализированные доходы для правильного учета
+  // Детализированные доходы
   detailedIncome: {
     salary: 0,
     business: 0,
@@ -130,11 +179,11 @@ const formData = ref({
     benefits: 0,
     pension: 0,
     scholarship: 0,
-    securities: 0, // доходы от ценных бумаг
-    interest: 0, // проценты по вкладам
-    lottery: 0, // выигрыши в лотереях
-    inheritance: 0, // наследство
-    gifts: 0, // подарки в денежной форме
+    securities: 0,
+    interest: 0,
+    lottery: 0,
+    inheritance: 0,
+    gifts: 0,
     other: 0
   },
   
@@ -142,12 +191,12 @@ const formData = ref({
   transport: {
     carsCount: 0,
     carsYoungerThan5Years: 0,
-    hasLuxuryCar: false, // мощнее 250 л.с. и младше 5 лет
+    hasLuxuryCar: false,
     motorcyclesCount: 0,
-    hasBoat: false, // катер или моторная лодка мощнее 5 л.с.
-    hasSelfPropelled: false, // самоходная техника младше 5 лет
-    hasTractor: false, // трактор младше 5 лет
-    transportFromSocial: false // транспорт получен через соцзащиту
+    hasBoat: false,
+    hasSelfPropelled: false,
+    hasTractor: false,
+    transportFromSocial: false
   },
   
   // Расширенная проверка имущества
@@ -170,38 +219,37 @@ const formData = ref({
     hasArrestedProperty: false,
     hasGuardianshipProperty: false,
     hasFarEastHectare: false,
-    hasMultifamilySupport: false, // жилье предоставлено как мера поддержки многодетным
-    hasDisabledHousing: false // жилье для инвалида
+    hasMultifamilySupport: false,
+    hasDisabledHousing: false
   },
   
   // Детализированная проверка нулевого дохода
   adultsIncome: {
     applicantHasIncome: false,
     spouseHasIncome: false,
-    // Детализация по месяцам для точного расчета
-    applicantReasons: [], // массив {month: 1, reason: 'childCare'}
-    spouseReasons: [] // массив {month: 1, reason: 'unemployment'}
+    applicantReasons: [],
+    spouseReasons: []
   },
   
   // Уважительные причины отсутствия дохода
   validReasons: {
-    childCareUnder3: false, // уход за ребенком до 3 лет
-    childCareForSingle: false, // единственный родитель
-    childCareInLargeFamily: false, // уход в многодетной семье
-    disabledCare: false, // уход за инвалидом
-    elderCare: false, // уход за пожилым 80+
-    fullTimeStudy: false, // очное обучение до 23 лет
-    militaryService: false, // военная служба
-    imprisonment: false, // лишение свободы
-    unemployment: false, // безработица (до 6 месяцев)
-    longTermTreatment: false // длительное лечение (более 3 месяцев)
+    childCareUnder3: false,
+    childCareForSingle: false,
+    childCareInLargeFamily: false,
+    disabledCare: false,
+    elderCare: false,
+    fullTimeStudy: false,
+    militaryService: false,
+    imprisonment: false,
+    unemployment: false,
+    longTermTreatment: false
   },
   
   // Самозанятые
   selfEmployed: {
     isSelfEmployed: false,
     yearlyIncome: 0,
-    monthsActive: 12 // сколько месяцев была активна самозанятость
+    monthsActive: 12
   },
   
   // Алименты
@@ -217,8 +265,8 @@ const formData = ref({
     singleParent: false,
     hasDisabled: false,
     mobilized: false,
-    refugeeStatus: false, // статус беженца
-    emergencySituation: false // пострадавшие от ЧС
+    refugeeStatus: false,
+    emergencySituation: false
   }
 })
 
@@ -249,8 +297,7 @@ const calculationPeriod = computed(() => {
   const appMonth = formData.value.applicationDate.month
   const appYear = formData.value.applicationDate.year
   
-  // Расчетный период - 12 месяцев, предшествующих месяцу перед месяцем обращения
-  let startMonth = appMonth - 1 // месяц перед обращением
+  let startMonth = appMonth - 1
   let startYear = appYear
   
   if (startMonth <= 0) {
@@ -258,11 +305,9 @@ const calculationPeriod = computed(() => {
     startYear--
   }
   
-  // Начало периода - еще 12 месяцев назад
   let periodStartMonth = startMonth
   let periodStartYear = startYear - 1
   
-  // Конец периода - месяц перед месяцем обращения
   let periodEndMonth = startMonth - 1
   let periodEndYear = startYear
   
@@ -342,8 +387,6 @@ const needsDetailedZeroIncomeCheck = computed(() => {
 // Подсчет месяцев с уважительными причинами
 const calculateValidReasonMonths = (reasons) => {
   if (!reasons || reasons.length === 0) return 0
-  
-  // Подсчитываем уникальные месяцы с уважительными причинами
   const uniqueMonths = new Set(reasons.map(r => r.month))
   return uniqueMonths.size
 }
@@ -408,10 +451,12 @@ const previousQuestion = () => {
   }
 }
 
-
 const resetCalculator = () => {
   currentQuestionIndex.value = 0
   showResults.value = false
+  nextTick(() => {
+    scrollToTop() // Добавляем прокрутку к верху после сброса
+  })
 }
 
 // Управление счетчиками
@@ -435,7 +480,7 @@ const formatAmount = (amount) => {
   return new Intl.NumberFormat('ru-RU').format(Math.round(amount))
 }
 
-// Подготовка данных для расчета
+// Подготовка данных для расчета (продолжение функции getCalculationData)
 const getCalculationData = () => {
   const region = currentRegion.value
   if (!region) return null
@@ -471,7 +516,6 @@ const getCalculationData = () => {
   if (needsDetailedZeroIncomeCheck.value) {
     let zeroIncomeIssues = []
     
-    // Проверка заявителя
     if (!formData.value.adultsIncome.applicantHasIncome) {
       const validMonths = calculateValidReasonMonths(formData.value.adultsIncome.applicantReasons)
       if (validMonths < 10) {
@@ -479,7 +523,6 @@ const getCalculationData = () => {
       }
     }
     
-    // Проверка супруга
     if (formData.value.hasSpouse && !formData.value.adultsIncome.spouseHasIncome) {
       const validMonths = calculateValidReasonMonths(formData.value.adultsIncome.spouseReasons)
       if (validMonths < 10) {
@@ -498,37 +541,31 @@ const getCalculationData = () => {
     const maxCars = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
     const maxMotorcycles = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
     
-    // Проверка автомобилей
     if (formData.value.transport.carsCount > maxCars) {
       isEligible = false
       denialReasons.push(`Количество автомобилей (${formData.value.transport.carsCount}) превышает допустимое (${maxCars}).`)
     }
     
-    // Проверка мотоциклов
     if (formData.value.transport.motorcyclesCount > maxMotorcycles) {
       isEligible = false
       denialReasons.push(`Количество мотоциклов (${formData.value.transport.motorcyclesCount}) превышает допустимое (${maxMotorcycles}).`)
     }
     
-    // Проверка премиум-авто
     if (formData.value.transport.hasLuxuryCar && totalChildren.value < 4) {
       isEligible = false
       denialReasons.push('Наличие автомобиля премиум-класса (мощнее 250 л.с., младше 5 лет). Исключение: семьи с 4 и более детьми.')
     }
     
-    // Проверка водного транспорта
     if (formData.value.transport.hasBoat) {
       isEligible = false
       denialReasons.push('Наличие катера или моторной лодки с двигателем мощнее 5 л.с.')
     }
     
-    // Проверка самоходной техники
     if (formData.value.transport.hasSelfPropelled) {
       isEligible = false
       denialReasons.push('Наличие самоходной техники младше 5 лет.')
     }
     
-    // Проверка тракторов
     if (formData.value.transport.hasTractor) {
       isEligible = false
       denialReasons.push('Наличие трактора или комбайна младше 5 лет.')
@@ -540,11 +577,8 @@ const getCalculationData = () => {
       !formData.value.propertyExceptions.hasGuardianshipProperty &&
       !formData.value.propertyExceptions.hasMultifamilySupport) {
     
-    // Проверка квартир
     if (!formData.value.propertyExceptions.hasUninhabitableHousing) {
-      if (formData.value.propertyCheck.apartmentsCount === 1) {
-        // Одна квартира любой площади - разрешено
-      } else if (formData.value.propertyCheck.apartmentsCount > 1) {
+      if (formData.value.propertyCheck.apartmentsCount > 1) {
         const areaPerPerson = formData.value.propertyCheck.totalApartmentArea / totalFamilyMembers.value
         if (areaPerPerson > 24) {
           isEligible = false
@@ -553,11 +587,8 @@ const getCalculationData = () => {
       }
     }
 
-    // Проверка домов
     if (!formData.value.propertyExceptions.hasUninhabitableHousing) {
-      if (formData.value.propertyCheck.housesCount === 1) {
-        // Один дом любой площади - разрешено
-      } else if (formData.value.propertyCheck.housesCount > 1) {
+      if (formData.value.propertyCheck.housesCount > 1) {
         const areaPerPerson = formData.value.propertyCheck.totalHouseArea / totalFamilyMembers.value
         if (areaPerPerson > 40) {
           isEligible = false
@@ -566,20 +597,17 @@ const getCalculationData = () => {
       }
     }
 
-    // Проверка дачи
     if (formData.value.propertyCheck.hasCountryHouse && formData.value.propertyCheck.housesCount > 0) {
       isEligible = false
       denialReasons.push('Семья имеет и жилой дом, и дачу одновременно. Разрешено только одно.')
     }
 
-    // Проверка гаражей
     const maxGarages = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
     if (formData.value.propertyCheck.garagesCount > maxGarages) {
       isEligible = false
       denialReasons.push(`Количество гаражей (${formData.value.propertyCheck.garagesCount}) превышает лимит (${maxGarages}).`)
     }
 
-    // Проверка земельных участков
     if (!formData.value.propertyExceptions.hasFarEastHectare) {
       if (formData.value.propertyCheck.landAreaCity > 0.25) {
         isEligible = false
@@ -591,13 +619,11 @@ const getCalculationData = () => {
       }
     }
 
-    // Проверка нежилых помещений
     if (formData.value.propertyCheck.hasNonResidential) {
       isEligible = false
       denialReasons.push('Семья владеет нежилым помещением (кроме гаражей, хозпостроек на личных подсобных хозяйствах и общего имущества в многоквартирных домах).')
     }
     
-    // Проверка коммерческой недвижимости
     if (formData.value.propertyCheck.hasCommercialProperty) {
       isEligible = false
       denialReasons.push('Семья владеет коммерческой недвижимостью.')
@@ -612,8 +638,8 @@ const getCalculationData = () => {
 
   // Проверка 8: Самозанятые
   if (formData.value.selfEmployed?.isSelfEmployed) {
-    const MROT = 22440 // МРОТ на 2025 год
-    const minSelfEmployedIncome = MROT * 2 // 44 880 ₽
+    const MROT = 22440
+    const minSelfEmployedIncome = MROT * 2
     const requiredIncome = (formData.value.selfEmployed.monthsActive / 12) * minSelfEmployedIncome
     
     if (formData.value.selfEmployed.yearlyIncome < requiredIncome) {
@@ -624,15 +650,15 @@ const getCalculationData = () => {
 
   // Проверка 9: Алименты
   if (formData.value.alimony?.receivesAlimony && formData.value.alimony.monthlyAmount > 0) {
-    const MROT = 22440 // МРОТ на 2025 год
+    const MROT = 22440
     let minAlimony = 0
     
     if (formData.value.alimony.childrenCount === 1) {
-      minAlimony = MROT * 0.25 // 5610 руб
+      minAlimony = MROT * 0.25
     } else if (formData.value.alimony.childrenCount === 2) {
-      minAlimony = MROT * (1/3) // ~7480 руб
+      minAlimony = MROT * (1/3)
     } else if (formData.value.alimony.childrenCount >= 3) {
-      minAlimony = MROT * 0.5 // 11220 руб
+      minAlimony = MROT * 0.5
     }
     
     if (formData.value.alimony.monthlyAmount < minAlimony && !formData.value.alimony.isVoluntaryAgreement) {
@@ -681,7 +707,7 @@ const getCalculationData = () => {
       const totalChildBenefit = benefitPerChild * totalChildren.value
       benefitAmount += totalChildBenefit
       
-      benefitDetails.push({
+benefitDetails.push({
         type: 'children',
         count: totalChildren.value,
         amountPerChild: benefitPerChild,
@@ -721,27 +747,8 @@ const getCalculationData = () => {
       isLargeFamily: isLargeFamily.value,
       isExemptFromZeroIncome: isExemptFromZeroIncomeRule.value
     }
-    }
-}
-
-// Автоопределение региона
-onMounted(async () => {
-  if (!formData.value.region) {
-    isDetectingRegion.value = true
-    
-    try {
-      const detectedRegion = await detectRegionByIP()
-      if (detectedRegion) {
-        formData.value.region = detectedRegion
-        isAutoDetected.value = true
-      }
-    } catch (error) {
-      console.error('Ошибка определения региона:', error)
-    } finally {
-      isDetectingRegion.value = false
-    }
   }
-})
+}
 
 // Добавление/удаление причин отсутствия дохода
 const addValidReason = (person, month, reason) => {
@@ -779,12 +786,55 @@ const validReasonsList = [
   { value: 'treatment', label: 'Длительное лечение (более 3 мес)' },
   { value: 'imprisonment', label: 'Лишение свободы' }
 ]
+
+// Монтирование и размонтирование
+onMounted(async () => {
+  // Добавляем слушатели событий
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  window.addEventListener('resize', handleResize)
+  window.addEventListener('touchstart', handleTouchStart, { passive: true })
+  window.addEventListener('touchmove', handleTouchMove, { passive: true })
+  
+  // Инициализируем значения
+  isMobile.value = window.innerWidth <= 768
+  lastScrollY = window.scrollY
+  
+  // Проверяем видимость калькулятора
+  nextTick(() => {
+    checkCalculatorVisibility()
+  })
+  
+  // Автоопределение региона
+  if (!formData.value.region) {
+    isDetectingRegion.value = true
+    
+    try {
+      const detectedRegion = await detectRegionByIP()
+      if (detectedRegion) {
+        formData.value.region = detectedRegion
+        isAutoDetected.value = true
+      }
+    } catch (error) {
+      console.error('Ошибка определения региона:', error)
+    } finally {
+      isDetectingRegion.value = false
+    }
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('touchstart', handleTouchStart)
+  window.removeEventListener('touchmove', handleTouchMove)
+  if (scrollTimeout) clearTimeout(scrollTimeout)
+})
 </script>
 
+
 <template>
-  <div class="smart-calculator" ref="calculatorRef" :class="{ 'sticky': isSticky }">
-    <div v-if="!isCalculatorInView" class="floating-scroll-button" @click="scrollToCalculator">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <div class="smart-calculator" ref="calculatorRef">
+    <div style="display: none;" v-if="!isCalculatorInView && isMobile" class="floating-scroll-button" @click="scrollToCalculator">  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
         <path d="M12 20V4M5 11L12 4L19 11" stroke="white" stroke-width="2" stroke-linecap="round"/>
       </svg>
       Вернуться к калькулятору
@@ -792,14 +842,18 @@ const validReasonsList = [
     <div class="container">
       <!-- Основной контент -->
       <div class="content base-bg-color-two" ref="contentContainer">
+        <span style="transform: translateY(-100px); position: absolute; top: 0;" id="calculator"></span>
         <!-- Прогресс -->
-        <div class="progress" v-if="!showResults">
-          <div class="progress-numbers">
-            <p class="one">{{ currentQuestionNumber }}</p>
-            <p class="dop">/</p>
-            <p class="two">{{ totalQuestions }}</p>
+        <div class="progress-container" v-if="!showResults">
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              :style="{ width: `${(currentQuestionNumber / totalQuestions) * 100}%` }"
+            ></div>
           </div>
-          <p class="more">вопрос {{ currentQuestionNumber }} из {{ totalQuestions }}</p>
+          <p class="progress-text">
+            Вопрос <strong>{{ currentQuestionNumber }}</strong> из <strong>{{ totalQuestions }}</strong>
+          </p>
         </div>
 
         <!-- Вопросы -->
@@ -811,6 +865,24 @@ const validReasonsList = [
               От региона зависит размер прожиточного минимума и сумма пособия
             </p>
             
+            <div class="base-option">
+              <div class="select-wrapper">
+                <select v-model="formData.region" class="region-select">
+                  <option disabled value="">Выберите регион</option>
+                  <option v-for="region in regions" :key="region.code" :value="region.code">
+                    {{ region.name }} (ПМ: {{ formatAmount(region.pmValue) }} ₽)
+                  </option>
+                </select>
+              </div>
+              <div v-if="isDetectingRegion" class="loading-message light-text">
+                <div class="spinner"></div>
+                Определяем ваш регион...
+              </div>
+              <div v-if="formData.region && isAutoDetected" class="success-message">
+                ✓ Регион определен автоматически
+              </div>
+            </div>
+
             <!-- Выбор месяца подачи заявления -->
             <div class="date-selection">
               <h3 class="subsection-title">Когда планируете подать заявление?</h3>
@@ -829,24 +901,6 @@ const validReasonsList = [
                 Расчетный период для доходов: 
                 <strong>{{ calculationPeriod.displayStart }} — {{ calculationPeriod.displayEnd }}</strong>
               </p>
-            </div>
-            
-            <div class="base-option">
-              <div class="select-wrapper">
-                <select v-model="formData.region" class="region-select">
-                  <option disabled value="">Выберите регион</option>
-                  <option v-for="region in regions" :key="region.code" :value="region.code">
-                    {{ region.name }} (ПМ: {{ formatAmount(region.pmValue) }} ₽)
-                  </option>
-                </select>
-              </div>
-              <div v-if="isDetectingRegion" class="loading-message light-text">
-                <div class="spinner"></div>
-                Определяем ваш регион...
-              </div>
-              <div v-if="formData.region && isAutoDetected" class="success-message">
-                ✓ Регион определен автоматически
-              </div>
             </div>
           </div>
 
@@ -1637,52 +1691,664 @@ const validReasonsList = [
 </template>
 
 <style scoped lang="scss">
+$primary: #4361EE;
+$primary-hover: #3A56D4;
+$success: #10B981;
+$error: #EF4444;
+$warning: #F59E0B;
+
+$text-dark: #1E293B;
+$text-light: #64748B;
+$text-lighter: #94A3B8;
+
+$bg-light: #F8FAFC;
+$bg-lighter: #FFFFFF;
+$border-color: #E2E8F0;
+$shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+$shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+
+// ===== ОСНОВНЫЕ СТИЛИ =====
 .smart-calculator {
   width: 100%;
   max-width: 100%;
+  background: linear-gradient(135deg, $bg-light 0%, #F1F5F9 100%);
+  border-radius: 24px;
+  padding: 2rem;
+  margin: 1rem auto;
+  box-shadow: $shadow;
 }
 
-.smart-calculator.sticky {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  max-height: 100vh;
-  overflow-y: auto;
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.content {
+  padding: 2.5rem;
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  background: $bg-lighter;
+  box-shadow: $shadow;
+  position: relative;
+  overflow: hidden;
   
-  // Убираем скругления углов в sticky режиме
-  .container {
-    border-radius: 0;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $primary, #8B5CF6);
+    border-radius: 2px 2px 0 0;
+  }
+}
+
+// ===== ПРОГРЕСС-БАР =====
+.progress-container {
+  margin-bottom: 2.5rem;
+  text-align: center;
+  
+  .progress-bar {
+    height: 8px;
+    background-color: #E2E8F0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, $primary, #8B5CF6);
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 20px rgba(67, 97, 238, 0.3);
+  }
+  
+  .progress-text {
+    font-size: 0.9rem;
+    color: $text-light;
+    font-weight: 500;
+    
+    strong {
+      color: $primary;
+      font-weight: 600;
+    }
+  }
+}
+
+// ===== ЗАГОЛОВКИ =====
+.step-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: $text-dark;
+  text-align: center;
+  background: linear-gradient(135deg, $text-dark 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.step-description {
+  color: $text-light;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.subsection-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 2rem 0 1.25rem 0;
+  color: $text-dark;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: $primary;
+    border-radius: 50%;
+    display: inline-block;
+  }
+}
+
+// ===== КАРТОЧКИ =====
+.new-card-style {
+  background: $bg-lighter;
+  border-radius: 16px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid $border-color;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
+  
+  &:hover {
+    box-shadow: $shadow-hover;
+    transform: translateY(-2px);
+  }
+  
+  .block-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    color: $text-dark;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+// ===== КНОПКИ =====
+.new-primary-button {
+  background: linear-gradient(135deg, $primary 0%, #6172F3 100%);
+  color: white;
+  padding: 1.125rem 2.5rem;
+  border-radius: 50px;
+  border: none;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(67, 97, 238, 0.35);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    background: #CBD5E1;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+    
+    &::before {
+      display: none;
+    }
+  }
+}
+
+.secondary-button {
+  background: transparent;
+  color: $text-light;
+  padding: 1.125rem 2rem;
+  border-radius: 50px;
+  border: 2px solid $border-color;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover:not(:disabled) {
+    border-color: $primary;
+    color: $primary;
+    background: rgba(67, 97, 238, 0.05);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ===== ПОЛЯ ВВОДА И СЕЛЕКТЫ =====
+.new-input-style {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid $border-color;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: $bg-lighter;
+  font-family: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  &::placeholder {
+    color: $text-lighter;
+  }
+}
+
+// ===== КАРТОЧКИ ВЫБОРА =====
+.option-card {
+  display: block;
+  padding: 1.5rem;
+  border: 2px solid $border-color;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: $bg-lighter;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background 0.3s ease;
+  }
+  
+  &:hover {
+    border-color: $primary;
+    transform: translateY(-2px);
+    box-shadow: $shadow;
+    
+    &::before {
+      background: $primary;
+    }
+  }
+  
+  &.selected {
+    border-color: $primary;
+    background: linear-gradient(135deg, #F0F5FF 0%, #EBF4FF 100%);
+    
+    &::before {
+      background: $primary;
+    }
+    
+    .option-icon {
+      background: rgba(67, 97, 238, 0.1);
+      transform: scale(1.1);
+    }
+  }
+  
+  .option-content {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+  }
+  
+  .option-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: $bg-light;
+    border-radius: 14px;
+    transition: all 0.3s ease;
+    
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+  }
+  
+  .option-text {
+    h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.1rem;
+      color: $text-dark;
+      font-weight: 600;
+    }
+    
+    p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: $text-light;
+      line-height: 1.5;
+    }
+  }
+}
+
+// ===== СЧЕТЧИКИ =====
+.counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  
+  label {
+    font-size: 1rem;
+    color: $text-dark;
+    flex: 1;
+    font-weight: 500;
+  }
+}
+
+.input-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  .number-input {
+    width: 80px;
+    height: 48px;
+    border: 2px solid $border-color;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: $text-dark;
+    -moz-appearance: textfield;
+    
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    }
+  }
+  
+  .counter-btn {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, $primary 0%, #6172F3 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.25rem;
+    font-weight: 600;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+    
+    &:disabled {
+      background: #CBD5E1;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ===== ЧЕКБОКСЫ =====
+.fancy-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 2.5rem;
+  position: relative;
+  line-height: 1.5;
+  color: $text-dark;
+  font-weight: 500;
+  
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    
+    &:checked ~ .checkmark {
+      background: $primary;
+      border-color: $primary;
+      
+      &::after {
+        transform: scale(1);
+      }
+    }
+  }
+  
+  .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 24px;
+    width: 24px;
+    background: $bg-lighter;
+    border: 2px solid $border-color;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    
+    &::after {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 3px;
+      width: 6px;
+      height: 12px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) scale(0);
+      transition: transform 0.2s ease;
+    }
+  }
+  
+  &:hover .checkmark {
+    border-color: $primary;
+  }
+}
+
+// ===== АНИМАЦИИ ПЕРЕХОДОВ =====
+.fade-slide-leave-active,
+.fade-slide-enter-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+// ===== ИНФО-БЕЙДЖИ =====
+.info-badge {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border-left: 4px solid;
+  
+  &.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+    border-left-color: #10B981;
+  }
+  
+  &.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #B45309;
+    border-left-color: #F59E0B;
+  }
+  
+  &.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #B91C1C;
+    border-left-color: #EF4444;
+  }
+}
+
+// ===== КОНТРОЛЫ =====
+.controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 0 0 0;
+  background: transparent;
+  
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: $bg-lighter;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border-radius: 20px 20px 0 0;
+    
+    transition: all 0.3s ease;
+    
+    &.hidden {
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+}
+
+// ===== МОБИЛЬНАЯ ВЕРСИЯ =====
+@media (max-width: 768px) {
+  .smart-calculator {
+    padding: 1rem;
+    border-radius: 20px;
+    margin: 0.5rem auto;
   }
   
   .content {
-    border-radius: 0;
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+  
+  .step-title {
+    font-size: 1.5rem;
+  }
+  
+  .step-description {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .new-card-style {
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .option-card {
+    padding: 1.25rem;
+    
+    .option-icon {
+      width: 48px;
+      height: 48px;
+      
+      svg {
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+  
+  .counter-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .input-numbers {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 
+// ===== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ =====
 .floating-scroll-button {
   position: fixed;
-  bottom: 100px; // Выше, чтобы не мешать навигации
+  bottom: 100px;
   right: 20px;
-  background: #008CFF;
+  background: linear-gradient(135deg, $primary 0%, #6172F3 100%);
   color: white;
-  padding: 12px 16px;
-  border-radius: 25px;
+  padding: 1rem 1.5rem;
+  border-radius: 50px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.75rem;
   cursor: pointer;
-  z-index: 10000; // Очень высокий z-index
-  box-shadow: 0 4px 12px rgba(0, 140, 255, 0.3);
+  z-index: 1001;
+  box-shadow: 0 8px 25px rgba(67, 97, 238, 0.35);
   transition: all 0.3s ease;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
   
   &:hover {
-    background: #0070CC;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 140, 255, 0.4);
+    box-shadow: 0 12px 30px rgba(67, 97, 238, 0.4);
   }
+  
+  @media (max-width: 768px) {
+    bottom: 90px;
+    right: 15px;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+.hint-text {
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  color: $text-light;
+  line-height: 1.5;
+}
+
+.loading-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: $text-light;
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid $border-color;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 
@@ -1690,7 +2356,7 @@ const validReasonsList = [
   max-width: 700px;
   margin: 0 auto;
   padding: 0;
-  min-height: 80vh;
+  min-height: auto !important;
   display: flex;
   flex-direction: column;
 }
@@ -1763,7 +2429,7 @@ const validReasonsList = [
   background: #F6F7F9;
   padding: 1.5rem;
   border-radius: 12px;
-  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
   
   .date-inputs {
     display: flex;
@@ -2375,11 +3041,16 @@ const validReasonsList = [
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
-  &.hidden {
-    opacity: 0;
-    transform: translateY(20px);
-    pointer-events: none;
+  
+  // Скрываем контролы только на мобильных при скролле
+  @media (max-width: 768px) {
+    transition: all 0.3s ease;
+    
+    &.hidden {
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+    }
   }
 }
 
@@ -2443,6 +3114,54 @@ const validReasonsList = [
   border-radius: 8px;
   color: #047857;
   font-size: 0.875rem;
+}
+
+.progress-container {
+  margin-bottom: 2.5rem;
+  text-align: center;
+  
+  .progress-bar {
+    height: 8px;
+    background-color: #E2E8F0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4361EE, #8B5CF6);
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 20px rgba(67, 97, 238, 0.3);
+  }
+  
+  .progress-text {
+    font-size: 0.9rem;
+    color: #64748B;
+    font-weight: 500;
+    
+    strong {
+      color: #4361EE;
+      font-weight: 600;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .progress-container {
+    margin-bottom: 1.25rem;
+    
+    .progress-bar {
+      height: 6px;
+      margin-bottom: 0.75rem;
+    }
+    
+    .progress-text {
+      font-size: 0.8rem;
+    }
+  }
 }
 
 // МОБИЛЬНАЯ ВЕРСИЯ - КОМПАКТНАЯ
@@ -2734,15 +3453,32 @@ const validReasonsList = [
 }
 
 // Еще более компактная версия для очень маленьких экранов
-@media (max-width: 360px) {
+@media (max-width: 768px) {
   .smart-calculator {
-    font-size: 13px;
+    min-height: unset !important; // Убираем минимальную высоту
+    height: auto !important;
+    padding: 0 !important; // Убираем отступы
+    margin: 0 !important; // Убираем внешние отступы
+    background: #F6F7F9;
+    border-radius: 0;
   }
-  
+
+  .container {
+    padding: 0;
+    min-height: unset !important;
+    height: auto;
+  }
+
   .content {
-    padding: 0.75rem;
-    padding-bottom: 70px;
+    padding: 1rem;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    min-height: unset !important;
+    overflow: visible;
+    padding-bottom: 80px;
   }
+
   
   .step-title {
     font-size: 1.2rem !important;
@@ -2790,6 +3526,20 @@ const validReasonsList = [
   }
 }
 
+@media (max-width: 768px) {
+  .controls {
+    transition: all 0.3s ease;
+    transform: translateY(0);
+    opacity: 1;
+    
+    &.hidden {
+      opacity: 0;
+      transform: translateY(100%);
+      pointer-events: none;
+    }
+  }
+}
+
 // Для очень маленьких экранов
 @media (max-width: 360px) {
   .floating-scroll-button {
@@ -2802,6 +3552,230 @@ const validReasonsList = [
       width: 16px;
       height: 16px;
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .smart-calculator {
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+    background: #F6F7F9;
+  }
+
+  .container {
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .content {
+    overflow: visible;
+    padding-bottom: 80px;
+    min-height: calc(100vh - 80px);
+  }
+
+  .controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    
+    &.hidden {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    
+    &:not(.hidden) {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+/* Убираем все трансформации и неправильные позиционирования */
+.floating-scroll-button {
+  position: fixed;
+  bottom: 90px;
+  right: 15px;
+  z-index: 1001;
+  transition: all 0.3s ease;
+}
+
+/* Исправляем z-index для предотвращения наложения */
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.controls {
+  z-index: 2;
+}
+
+// Стили для помесячной детализации
+.toggle-reasons-btn {
+  width: 100%;
+  padding: 0.875rem;
+  background: white;
+  border: 1.5px solid #E8EAED;
+  border-radius: 8px;
+  color: #008CFF;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: center;
+  margin: 1rem 0;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #F6F7F9;
+    border-color: #008CFF;
+  }
+}
+
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #F8FBFF;
+  border-radius: 12px;
+  border: 1px solid #E0F0FF;
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.month-reason {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+  }
+  
+  select {
+    padding: 0.5rem;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: #008CFF;
+      box-shadow: 0 0 0 2px rgba(0, 140, 255, 0.1);
+    }
+    
+    &:hover {
+      border-color: #CBD5E1;
+    }
+  }
+}
+
+.reason-summary {
+  padding: 1rem;
+  background: #F0F9FF;
+  border-radius: 8px;
+  border: 1px solid #BAE6FD;
+  text-align: center;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  
+  strong {
+    color: #008CFF;
+    font-weight: 600;
+  }
+}
+
+.zero-income-details {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #E2E8F0;
+}
+
+.person-income-block {
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: #F8FAFC;
+  border-radius: 12px;
+  border: 1px solid #F1F5F9;
+  
+  h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #1E293B;
+    font-weight: 600;
+  }
+}
+
+.reasons-selector {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #F1F5F9;
+}
+
+// Анимация появления
+.months-grid {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Адаптивность для мобильных устройств
+@media (max-width: 768px) {
+  .months-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .month-reason {
+    label {
+      font-size: 0.75rem;
+    }
+    
+    select {
+      padding: 0.4rem;
+      font-size: 0.8rem;
+    }
+  }
+  
+  .toggle-reasons-btn {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .person-income-block {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .months-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .reason-summary {
+    padding: 0.75rem;
+    font-size: 0.85rem;
   }
 }
 </style>

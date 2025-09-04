@@ -62,9 +62,9 @@
           <span class="hero__description-break">онлайн — бесплатно и без регистрации.</span>
         </p>
         
-        <button class="hero__button" type="button">
+        <a href="#calculator" class="hero__button" type="button">
           рассчитать
-        </button>
+        </a>
         
         <p class="hero__note">
           Актуальные правила 2025 года
@@ -188,7 +188,7 @@
     transition: all 0.3s ease;
     text-transform: capitalize;
     min-width: 200px;
-    
+    text-decoration: none;
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(23, 117, 246, 0.3);
@@ -259,11 +259,13 @@
     }
   }
 
+  @media (max-width: 780px) {
+    min-height: 100vh !important;
+  }
   // Мобильные устройства
   @media (max-width: 480px) {
     padding-top: 40px;
-    min-height: calc(100vh - 40px);
-    min-height: calc(100dvh - 40px);
+    min-height: 100vh !important;
     
     &__container {
       padding: 0 12px;

@@ -1,7 +1,13 @@
 import { regions } from './data/regions.js'
+import { getAllSlugs } from './data/calculatorPages.js'
 
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false },
+  
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000
+  },
   
   css: ['~/assets/scss/global.scss'],
   
@@ -13,15 +19,19 @@ export default defineNuxtConfig({
         '/edinoe-posobie/calculator',
         '/edinoe-posobie/calculator/beremennym',
         '/edinoe-posobie/calculator/detyam',
+        
+        // Страницы для регионов
         ...regions.flatMap(region => [
           `/edinoe-posobie/calculator/beremennym/${region.code}`,
           `/edinoe-posobie/calculator/detyam/${region.code}`
-        ])
+        ]),
+        
+        // Все новые тематические страницы
+        ...getAllSlugs().map(slug => `/edinoe-posobie/calculator/${slug}`)
       ]
     }
   },
 
-  // SEO
   app: {
     head: {
       charset: 'utf-8',
@@ -32,27 +42,24 @@ export default defineNuxtConfig({
     }
   },
 
-  // Модули
   modules: [
     '@nuxtjs/sitemap',
     '@nuxtjs/robots'
   ],
 
-  // Настройки sitemap
   site: {
-    url: 'https://your-domain.ru' 
+    url: 'https://your-domain.ru' // ЗАМЕНИТЕ на ваш реальный домен
   },
 
   sitemap: {
-    sources: ['/api/sitemap.ts']
+    sources: ['/api/sitemap']
   },
 
-  // Robots.txt
   robots: {
     rules: {
       UserAgent: '*',
       Allow: '/',
-      Sitemap: 'https://your-domain.ru/sitemap.xml'
+      Sitemap: 'https://your-domain.ru/sitemap.xml' // ЗАМЕНИТЕ на ваш реальный домен
     }
   }
 })

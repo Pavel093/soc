@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --host 0.0.0.0 --port 3000",
+    "dev:network": "HOST=0.0.0.0 PORT=3000 nuxt dev",
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate"

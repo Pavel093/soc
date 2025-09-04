@@ -10,7 +10,7 @@ export const regions = [
     pmValue: 14896,
     pmWorking: 16237,
     pmPensioner: 12811,
-    pmChild: 14896
+    pmChild: 14449
   },
   {
     code: 'bryansk',
@@ -18,7 +18,7 @@ export const regions = [
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
-    pmChild: 16314
+    pmChild: 15825
   },
   {
     code: 'vladimir',
@@ -26,7 +26,7 @@ export const regions = [
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
-    pmChild: 17201
+    pmChild: 16685
   },
   {
     code: 'voronezh',
@@ -34,7 +34,7 @@ export const regions = [
     pmValue: 15605,
     pmWorking: 17009,
     pmPensioner: 13420,
-    pmChild: 15605
+    pmChild: 15137
   },
   {
     code: 'ivanovo',
@@ -42,7 +42,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'kaluga',
@@ -50,7 +50,7 @@ export const regions = [
     pmValue: 17024,
     pmWorking: 18556,
     pmPensioner: 14641,
-    pmChild: 17024
+    pmChild: 16513
   },
   {
     code: 'kostroma',
@@ -58,7 +58,7 @@ export const regions = [
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
-    pmChild: 16314
+    pmChild: 15825
   },
   {
     code: 'kursk',
@@ -66,7 +66,7 @@ export const regions = [
     pmValue: 15428,
     pmWorking: 16817,
     pmPensioner: 13268,
-    pmChild: 15428
+    pmChild: 14965
   },
   {
     code: 'lipetsk',
@@ -74,7 +74,7 @@ export const regions = [
     pmValue: 14718,
     pmWorking: 16043,
     pmPensioner: 12657,
-    pmChild: 14718
+    pmChild: 14276
   },
   {
     code: 'moscow_obl',
@@ -82,7 +82,7 @@ export const regions = [
     pmValue: 19302,
     pmWorking: 21039,
     pmPensioner: 16600,
-    pmChild: 19302
+    pmChild: 18723
   },
   {
     code: 'orel',
@@ -90,7 +90,7 @@ export const regions = [
     pmValue: 16492,
     pmWorking: 17976,
     pmPensioner: 14183,
-    pmChild: 16492
+    pmChild: 15997
   },
   {
     code: 'ryazan',
@@ -98,7 +98,7 @@ export const regions = [
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
-    pmChild: 15782
+    pmChild: 15309
   },
   {
     code: 'smolensk',
@@ -106,7 +106,7 @@ export const regions = [
     pmValue: 17556,
     pmWorking: 19136,
     pmPensioner: 15098,
-    pmChild: 17556
+    pmChild: 17029
   },
   {
     code: 'tambov',
@@ -114,7 +114,7 @@ export const regions = [
     pmValue: 14718,
     pmWorking: 16043,
     pmPensioner: 12784,
-    pmChild: 14718
+    pmChild: 14276
   },
   {
     code: 'tver',
@@ -122,7 +122,7 @@ export const regions = [
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
-    pmChild: 17378
+    pmChild: 16857
   },
   {
     code: 'tula',
@@ -130,7 +130,7 @@ export const regions = [
     pmValue: 17733,
     pmWorking: 19329,
     pmPensioner: 15250,
-    pmChild: 17733
+    pmChild: 17201
   },
   {
     code: 'yaroslavl',
@@ -138,7 +138,7 @@ export const regions = [
     pmValue: 17733,
     pmWorking: 19329,
     pmPensioner: 15250,
-    pmChild: 17733
+    pmChild: 17201
   },
   {
     code: 'moscow',
@@ -156,7 +156,7 @@ export const regions = [
     pmValue: 19684,
     pmWorking: 21456,
     pmPensioner: 16928,
-    pmChild: 19684
+    pmChild: 19093
   },
   {
     code: 'komi',
@@ -164,7 +164,7 @@ export const regions = [
     pmValue: 20393,
     pmWorking: 22228,
     pmPensioner: 17538,
-    pmChild: 20393
+    pmChild: 19781
   },
   {
     code: 'arkhangelsk',
@@ -172,7 +172,7 @@ export const regions = [
     pmValue: 20570,
     pmWorking: 22421,
     pmPensioner: 17690,
-    pmChild: 20570
+    pmChild: 19953
   },
   {
     code: 'vologda',
@@ -180,7 +180,7 @@ export const regions = [
     pmValue: 17910,
     pmWorking: 19522,
     pmPensioner: 15403,
-    pmChild: 17910
+    pmChild: 17373
   },
   {
     code: 'kaliningrad',
@@ -188,7 +188,7 @@ export const regions = [
     pmValue: 18265,
     pmWorking: 19909,
     pmPensioner: 15708,
-    pmChild: 18265
+    pmChild: 17717
   },
   {
     code: 'leningrad',
@@ -196,7 +196,7 @@ export const regions = [
     pmValue: 18974,
     pmWorking: 20682,
     pmPensioner: 16318,
-    pmChild: 18974
+    pmChild: 18405
   },
   {
     code: 'murmansk',
@@ -204,7 +204,7 @@ export const regions = [
     pmValue: 25390,
     pmWorking: 27675,
     pmPensioner: 21835,
-    pmChild: 25390
+    pmChild: 24628
   },
   {
     code: 'novgorod',
@@ -212,7 +212,7 @@ export const regions = [
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
-    pmChild: 17378
+    pmChild: 16857
   },
   {
     code: 'pskov',
@@ -220,7 +220,7 @@ export const regions = [
     pmValue: 17556,
     pmWorking: 19136,
     pmPensioner: 15098,
-    pmChild: 17556
+    pmChild: 17029
   },
   {
     code: 'spb',
@@ -228,7 +228,7 @@ export const regions = [
     pmValue: 19329,
     pmWorking: 21069,
     pmPensioner: 16623,
-    pmChild: 19329
+    pmChild: 18749
   },
   {
     code: 'nenets',
@@ -236,7 +236,7 @@ export const regions = [
     pmValue: 29389,
     pmWorking: 32034,
     pmPensioner: 25275,
-    pmChild: 29389
+    pmChild: 30706
   },
 
   // ЮЖНЫЙ ФЕДЕРАЛЬНЫЙ ОКРУГ
@@ -246,7 +246,7 @@ export const regions = [
     pmValue: 15250,
     pmWorking: 16623,
     pmPensioner: 13115,
-    pmChild: 15250
+    pmChild: 14793
   },
   {
     code: 'kalmykia',
@@ -254,7 +254,7 @@ export const regions = [
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
-    pmChild: 17378
+    pmChild: 16857
   },
   {
     code: 'krasnodar',
@@ -262,7 +262,7 @@ export const regions = [
     pmValue: 17024,
     pmWorking: 18556,
     pmPensioner: 14641,
-    pmChild: 17024
+    pmChild: 16513
   },
   {
     code: 'astrakhan',
@@ -270,7 +270,7 @@ export const regions = [
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
-    pmChild: 17201
+    pmChild: 16685
   },
   {
     code: 'volgograd',
@@ -278,7 +278,7 @@ export const regions = [
     pmValue: 15250,
     pmWorking: 16623,
     pmPensioner: 13115,
-    pmChild: 15250
+    pmChild: 14793
   },
   {
     code: 'rostov',
@@ -286,7 +286,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'crimea',
@@ -294,7 +294,7 @@ export const regions = [
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
-    pmChild: 17201
+    pmChild: 16685
   },
   {
     code: 'sevastopol',
@@ -302,7 +302,7 @@ export const regions = [
     pmValue: 18088,
     pmWorking: 19716,
     pmPensioner: 15556,
-    pmChild: 18088
+    pmChild: 17545
   },
 
   // СЕВЕРО-КАВКАЗСКИЙ ФЕДЕРАЛЬНЫЙ ОКРУГ
@@ -312,7 +312,7 @@ export const regions = [
     pmValue: 16137,
     pmWorking: 17589,
     pmPensioner: 13878,
-    pmChild: 16137
+    pmChild: 15653
   },
   {
     code: 'ingushetia',
@@ -320,7 +320,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'kbr',
@@ -328,7 +328,7 @@ export const regions = [
     pmValue: 18974,
     pmWorking: 20682,
     pmPensioner: 16318,
-    pmChild: 18974
+    pmChild: 18405
   },
   {
     code: 'kchr',
@@ -336,7 +336,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'osetia',
@@ -344,7 +344,7 @@ export const regions = [
     pmValue: 15960,
     pmWorking: 17396,
     pmPensioner: 13726,
-    pmChild: 15960
+    pmChild: 15481
   },
   {
     code: 'chechnya',
@@ -352,7 +352,7 @@ export const regions = [
     pmValue: 17024,
     pmWorking: 18556,
     pmPensioner: 14641,
-    pmChild: 17024
+    pmChild: 16513
   },
   {
     code: 'stavropol',
@@ -360,7 +360,7 @@ export const regions = [
     pmValue: 15960,
     pmWorking: 17396,
     pmPensioner: 13726,
-    pmChild: 15960
+    pmChild: 15481
   },
 
   // ПРИВОЛЖСКИЙ ФЕДЕРАЛЬНЫЙ ОКРУГ
@@ -370,7 +370,7 @@ export const regions = [
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
-    pmChild: 15782
+    pmChild: 15309
   },
   {
     code: 'mari_el',
@@ -378,7 +378,7 @@ export const regions = [
     pmValue: 15605,
     pmWorking: 17009,
     pmPensioner: 13420,
-    pmChild: 15605
+    pmChild: 15137
   },
   {
     code: 'mordovia',
@@ -386,7 +386,7 @@ export const regions = [
     pmValue: 15073,
     pmWorking: 16430,
     pmPensioner: 12963,
-    pmChild: 15073
+    pmChild: 14621
   },
   {
     code: 'tatarstan',
@@ -394,7 +394,7 @@ export const regions = [
     pmValue: 15073,
     pmWorking: 16430,
     pmPensioner: 12963,
-    pmChild: 15073
+    pmChild: 14621
   },
   {
     code: 'udmurtia',
@@ -402,7 +402,7 @@ export const regions = [
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
-    pmChild: 15782
+    pmChild: 15309
   },
   {
     code: 'chuvashia',
@@ -410,7 +410,7 @@ export const regions = [
     pmValue: 15428,
     pmWorking: 16817,
     pmPensioner: 13268,
-    pmChild: 15428
+    pmChild: 14965
   },
   {
     code: 'perm',
@@ -418,7 +418,7 @@ export const regions = [
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
-    pmChild: 16314
+    pmChild: 15825
   },
   {
     code: 'kirov',
@@ -426,7 +426,7 @@ export const regions = [
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
-    pmChild: 15782
+    pmChild: 15309
   },
   {
     code: 'nizhny',
@@ -434,7 +434,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'orenburg',
@@ -442,7 +442,7 @@ export const regions = [
     pmValue: 15428,
     pmWorking: 16817,
     pmPensioner: 13268,
-    pmChild: 15428
+    pmChild: 14965
   },
   {
     code: 'penza',
@@ -450,7 +450,7 @@ export const regions = [
     pmValue: 14896,
     pmWorking: 16237,
     pmPensioner: 12811,
-    pmChild: 14896
+    pmChild: 14449
   },
   {
     code: 'samara',
@@ -458,7 +458,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'saratov',
@@ -466,7 +466,7 @@ export const regions = [
     pmValue: 14896,
     pmWorking: 16237,
     pmPensioner: 12811,
-    pmChild: 14896
+    pmChild: 14449
   },
   {
     code: 'ulyanovsk',
@@ -474,7 +474,7 @@ export const regions = [
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
-    pmChild: 15782
+    pmChild: 15309
   },
 
   // УРАЛЬСКИЙ ФЕДЕРАЛЬНЫЙ ОКРУГ
@@ -484,7 +484,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'sverdlovsk',
@@ -492,7 +492,7 @@ export const regions = [
     pmValue: 17556,
     pmWorking: 19136,
     pmPensioner: 15098,
-    pmChild: 17556
+    pmChild: 17029
   },
   {
     code: 'tyumen',
@@ -500,7 +500,7 @@ export const regions = [
     pmValue: 17733,
     pmWorking: 19329,
     pmPensioner: 15250,
-    pmChild: 17733
+    pmChild: 17201
   },
   {
     code: 'chelyabinsk',
@@ -508,7 +508,7 @@ export const regions = [
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
-    pmChild: 16314
+    pmChild: 15825
   },
   {
     code: 'khanty_mansi',
@@ -516,7 +516,7 @@ export const regions = [
     pmValue: 21252,
     pmWorking: 23165,
     pmPensioner: 18334,
-    pmChild: 21252
+    pmChild: 21286
   },
   {
     code: 'yamal',
@@ -524,7 +524,7 @@ export const regions = [
     pmValue: 24294,
     pmWorking: 26480,
     pmPensioner: 20893,
-    pmChild: 24294
+    pmChild: 23565
   },
 
   // СИБИРСКИЙ ФЕДЕРАЛЬНЫЙ ОКРУГ
@@ -534,7 +534,7 @@ export const regions = [
     pmValue: 16846,
     pmWorking: 18362,
     pmPensioner: 14488,
-    pmChild: 16846
+    pmChild: 16341
   },
   {
     code: 'buryatia',
@@ -542,7 +542,7 @@ export const regions = [
     pmValue: 19329,
     pmWorking: 21069,
     pmPensioner: 16623,
-    pmChild: 19329
+    pmChild: 18749
   },
   {
     code: 'tuva',
@@ -550,7 +550,7 @@ export const regions = [
     pmValue: 17910,
     pmWorking: 19522,
     pmPensioner: 15403,
-    pmChild: 17910
+    pmChild: 17373
   },
   {
     code: 'khakassia',
@@ -558,7 +558,7 @@ export const regions = [
     pmValue: 18088,
     pmWorking: 19716,
     pmPensioner: 15556,
-    pmChild: 18088
+    pmChild: 17545
   },
   {
     code: 'altai_krai',
@@ -566,7 +566,7 @@ export const regions = [
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
-    pmChild: 15782
+    pmChild: 15309
   },
   {
     code: 'zabaykalsk',
@@ -574,7 +574,7 @@ export const regions = [
     pmValue: 20748,
     pmWorking: 22615,
     pmPensioner: 17843,
-    pmChild: 20748
+    pmChild: 20126
   },
   {
     code: 'krasnoyarsk',
@@ -582,7 +582,7 @@ export const regions = [
     pmValue: 19684,
     pmWorking: 21456,
     pmPensioner: 16928,
-    pmChild: 19684
+    pmChild: 19093
   },
   {
     code: 'irkutsk',
@@ -590,7 +590,7 @@ export const regions = [
     pmValue: 18797,
     pmWorking: 20489,
     pmPensioner: 16165,
-    pmChild: 18797
+    pmChild: 18233
   },
   {
     code: 'kemerovo',
@@ -598,7 +598,7 @@ export const regions = [
     pmValue: 16137,
     pmWorking: 17589,
     pmPensioner: 13878,
-    pmChild: 16137
+    pmChild: 15653
   },
   {
     code: 'novosibirsk',
@@ -606,7 +606,7 @@ export const regions = [
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
-    pmChild: 17378
+    pmChild: 16857
   },
   {
     code: 'omsk',
@@ -614,7 +614,7 @@ export const regions = [
     pmValue: 15428,
     pmWorking: 16816,
     pmPensioner: 13268,
-    pmChild: 15428
+    pmChild: 14965
   },
   {
     code: 'tomsk',
@@ -622,7 +622,7 @@ export const regions = [
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
-    pmChild: 17378
+    pmChild: 16857
   },
 
   // ДАЛЬНЕВОСТОЧНЫЙ ФЕДЕРАЛЬНЫЙ ОКРУГ
@@ -632,7 +632,7 @@ export const regions = [
     pmValue: 26777,
     pmWorking: 29187,
     pmPensioner: 23028,
-    pmChild: 26777
+    pmChild: 25974
   },
   {
     code: 'kamchatka',
@@ -640,7 +640,7 @@ export const regions = [
     pmValue: 31210,
     pmWorking: 34019,
     pmPensioner: 26841,
-    pmChild: 31210
+    pmChild: 30692
   },
   {
     code: 'primorye',
@@ -648,7 +648,7 @@ export const regions = [
     pmValue: 21102,
     pmWorking: 23001,
     pmPensioner: 18148,
-    pmChild: 21102
+    pmChild: 20469
   },
   {
     code: 'khabarovsk',
@@ -656,7 +656,7 @@ export const regions = [
     pmValue: 21634,
     pmWorking: 23581,
     pmPensioner: 18605,
-    pmChild: 21634
+    pmChild: 22844
   },
   {
     code: 'amur',
@@ -664,7 +664,7 @@ export const regions = [
     pmValue: 20393,
     pmWorking: 22228,
     pmPensioner: 17538,
-    pmChild: 20393
+    pmChild: 20090
   },
   {
     code: 'magadan',
@@ -672,7 +672,7 @@ export const regions = [
     pmValue: 30855,
     pmWorking: 33632,
     pmPensioner: 26535,
-    pmChild: 30855
+    pmChild: 30681
   },
   {
     code: 'sakhalin',
@@ -680,7 +680,7 @@ export const regions = [
     pmValue: 24117,
     pmWorking: 26288,
     pmPensioner: 20741,
-    pmChild: 24117
+    pmChild: 23393
   },
   {
     code: 'jewish',
@@ -688,7 +688,7 @@ export const regions = [
     pmValue: 22166,
     pmWorking: 24161,
     pmPensioner: 19063,
-    pmChild: 22166
+    pmChild: 21501
   },
   {
     code: 'chukotka',
@@ -696,7 +696,7 @@ export const regions = [
     pmValue: 46283,
     pmWorking: 50448,
     pmPensioner: 39803,
-    pmChild: 46283
+    pmChild: 44895
   },
 
   // НОВЫЕ ТЕРРИТОРИИ (вошедшие в состав РФ в 2022 году)
@@ -706,7 +706,7 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'lugansk',
@@ -714,15 +714,15 @@ export const regions = [
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
-    pmChild: 16669
+    pmChild: 16169
   },
   {
     code: 'zaporozhye',
     name: 'Запорожская область',
-    pmValue: 17733,
+    pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
-    pmChild: 17201  // Исправлено - добавлено значение
+    pmChild: 16685
   },
   {
     code: 'kherson',
@@ -730,7 +730,7 @@ export const regions = [
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
-    pmChild: 17201
+    pmChild: 16685
   }
 ]
 

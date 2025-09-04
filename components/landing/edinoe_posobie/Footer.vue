@@ -39,6 +39,33 @@
       <!-- Разделитель -->
       <div class="footer-divider"></div>
 
+      <!-- Контактная информация -->
+      <div class="footer-contacts">
+        <div class="contact-item">
+          <p class="contact-text">
+            Нашли ошибку или хотите оставить пожелание? 
+            <a href="mailto:support@vseposobiya.ru" class="contact-link">support@vseposobiya.ru</a>
+          </p>
+        </div>
+        
+        <div class="contact-item">
+          <p class="contact-text">
+            По поводу сотрудничества и рекламы: 
+            <a href="https://t.me/username" target="_blank" class="contact-link">@username</a>
+          </p>
+        </div>
+        
+        <div class="contact-item">
+          <p class="contact-text">
+            По поводу виджетов калькулятора: 
+            <a href="mailto:widgets@vseposobiya.ru" class="contact-link">widgets@vseposobiya.ru</a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Разделитель -->
+      <div class="footer-divider"></div>
+
       <!-- Нижняя часть футера -->
       <div class="footer-bottom">
         <div class="disclaimers">
@@ -101,7 +128,42 @@ const navigation = [
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 35px;
-    text-align: left; /* Изменено с center на left */
+    text-align: left;
+  }
+}
+
+.footer-contacts {
+  margin: 30px 0;
+  
+  .contact-item {
+    margin-bottom: 15px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .contact-text {
+    color: #b4b4b4;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    
+    @media (max-width: 768px) {
+      font-size: 13px;
+    }
+  }
+  
+  .contact-link {
+    color: #2b7bf6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: #4a90e2;
+      text-decoration: underline;
+    }
   }
 }
 
@@ -112,9 +174,9 @@ const navigation = [
     gap: 16px;
     
     @media (max-width: 768px) {
-      flex-direction: row; /* Изменено с column на row */
-      align-items: flex-start; /* Изменено с center на flex-start */
-      text-align: left; /* Изменено с center на left */
+      flex-direction: row;
+      align-items: flex-start;
+      text-align: left;
     }
     
     @media (max-width: 480px) {
@@ -308,7 +370,7 @@ const navigation = [
     
     @media (max-width: 768px) {
       font-size: 12px;
-      text-align: left; /* Изменено */
+      text-align: left;
     }
   }
   
@@ -330,7 +392,7 @@ const navigation = [
     font-weight: 500;
     
     @media (max-width: 768px) {
-      text-align: left; /* Изменено с center на left */
+      text-align: left;
       font-size: 12px;
     }
   }
@@ -352,6 +414,10 @@ const navigation = [
   animation: slideIn 0.6s ease-out;
 }
 
+.footer-contacts {
+  animation: slideIn 0.6s ease-out 0.1s both;
+}
+
 .footer-bottom {
   animation: slideIn 0.6s ease-out 0.2s both;
 }
@@ -363,7 +429,7 @@ const navigation = [
     
     .footer-brand {
       grid-column: 1 / -1;
-      text-align: left; /* Изменено с center на left */
+      text-align: left;
     }
   }
 }
@@ -378,7 +444,7 @@ const navigation = [
   }
   
   .logo {
-    align-items: flex-start; /* Изменено */
+    align-items: flex-start;
     
     .logo-text {
       font-size: 22px;
@@ -409,7 +475,7 @@ const navigation = [
   }
   
   .copyright p {
-    text-align: center; /* Только копирайт по центру на самых маленьких экранах */
+    text-align: center;
   }
 }
 </style>

@@ -139,11 +139,12 @@ onUnmounted(() => {
   right: 0;
   z-index: 100;
   background: rgba(255, 255, 255, 0);
-  backdrop-filter: blur(10px);
+  //backdrop-filter: blur(10px);
   transition: background 0.3s;
   // box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   &.post{
-    background-color: rgba(255, 255, 255, 0.63);
+    background-color: rgb(255, 255, 255);
+    border-bottom: 1px solid rgba(117, 117, 117, 0.185);
   }
 
   &__container {
@@ -479,4 +480,6 @@ onUnmounted(() => {
     transform: translateX(0);
   }
 }
+
+
 </style>
