@@ -8,15 +8,12 @@
           <p class="widget-description">
             Помогите своим посетителям узнать о пособиях. Разместите наш точный и актуальный калькулятор у себя — это бесплатно и займет 5 минут.
           </p>
-          <button class="widget-button">Получить код виджета</button>
+          <a href="edinoe-posobie/widgetpage" class="widget-button">Получить код виджета</a>
         </div>
         
         <div class="widget-visual">
           <div class="widget-placeholder">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 6H14M14 10H10M14 14H10M14 18H10M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <p>Виджет калькулятора</p>
+            <img :src="image" alt="widget-illustration">
           </div>
         </div>
       </div>
@@ -25,6 +22,7 @@
 </template>
 
 <script setup>
+import image from '../assets/edinoe-posobie/widget_illustration.webp'
 </script>
 
 <style scoped lang="scss">
@@ -101,7 +99,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    
+    text-decoration: none;
     &:hover {
       background: #1a6ad8;
       transform: translateY(-2px);
@@ -120,8 +118,6 @@
   }
   
   .widget-placeholder {
-    width: 280px;
-    height: 350px;
     background: linear-gradient(135deg, #2b7bf6 0%, #1775F6 100%);
     border-radius: 25px;
     display: flex;
@@ -131,34 +127,13 @@
     color: white;
     padding: 30px;
     box-shadow: 0 20px 40px rgba(43, 123, 246, 0.25);
-    
-    svg {
-      width: 60px;
-      height: 60px;
-      margin-bottom: 20px;
-      opacity: 0.9;
-    }
-    
-    p {
-      font-size: 16px;
-      font-weight: 500;
-      text-align: center;
-      margin: 0;
-      opacity: 0.9;
-    }
-    
-    @media (max-width: 480px) {
-      width: 240px;
-      height: 300px;
-      
-      svg {
-        width: 50px;
-        height: 50px;
-      }
-      
-      p {
-        font-size: 14px;
-      }
+
+    img{
+      width: 350px;
+      border-radius: 10px;
+          @media (max-width: 480px) {
+            width: 240px;
+          }
     }
   }
 }

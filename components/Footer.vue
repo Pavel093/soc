@@ -5,7 +5,7 @@
       <div class="footer-main">
         <div class="footer-brand">
           <div class="logo">
-            <img src="assets/global-image/Logo.png" alt="ВсеПособия.рф" class="logo-image">
+            <img src="/assets/global-image/Logo.png" alt="ВсеПособия.рф" class="logo-image">
             <div class="brand-content">
               <span class="logo-text">ВсеПособия.рф</span>
               <p class="footer-description">
@@ -19,20 +19,33 @@
           <h4 class="nav-title">Навигация</h4>
           <ul class="nav-list">
             <li v-for="(item, index) in navigation" :key="index">
-              <a :href="item.link" class="nav-link">
+              <!-- Используем NuxtLink для внутренних ссылок -->
+              <NuxtLink :to="item.link" class="nav-link">
                 <span class="nav-link-text">{{ item.title }}</span>
                 <div class="nav-link-underline"></div>
-              </a>
+              </NuxtLink>
             </li>
           </ul>
         </nav>
 
         <div class="footer-info">
           <h4 class="info-title">Информация</h4>
-          <a href="/privacy-policy" class="privacy-link">
-            <span>Политика конфиденциальности</span>
-            <div class="privacy-link-underline"></div>
-          </a>
+          <ul class="info-list">
+            <li>
+              <!-- Ссылка на Политику конфиденциальности -->
+              <NuxtLink to="/privacy" class="info-link">
+                <span>Политика конфиденциальности</span>
+                <div class="info-link-underline"></div>
+              </NuxtLink>
+            </li>
+            <li>
+              <!-- Ссылка на Пользовательское соглашение -->
+              <NuxtLink to="/terms" class="info-link">
+                <span>Пользовательское соглашение</span>
+                <div class="info-link-underline"></div>
+              </NuxtLink>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -51,7 +64,8 @@
         <div class="contact-item">
           <p class="contact-text">
             По поводу сотрудничества и рекламы: 
-            <a href="https://t.me/username" target="_blank" class="contact-link">@username</a>
+            <a href="https://t.me/pavel0779" target="_blank" class="contact-link">@pavel0779</a>
+            (telegram)
           </p>
         </div>
         
@@ -76,7 +90,6 @@
           </p>
           
           <p class="legal-disclaimer">
-            ООО "ВсеПособия" • ИНН 7712345678 • ОГРН 1187746000000<br>
             Сервис является информационным проектом. Мы не являемся государственным учреждением 
             и не предоставляем официальных консультаций. Реклама и партнерские отношения помогают 
             поддерживать работу сервиса бесплатной для пользователей.
@@ -93,6 +106,7 @@
 
 <script setup>
 const navigation = [
+  // Якорные ссылки лучше делать без полного пути, если они на той же странице
   { title: 'На главную', link: '/#main' },
   { title: 'Ответы на вопросы', link: '/#faq' },
   { title: 'Калькуляторы', link: '/#calculator' },
@@ -293,6 +307,7 @@ const navigation = [
   }
 }
 
+/* --- ИЗМЕНЕНИЯ ЗДЕСЬ --- */
 .footer-info {
   .info-title {
     font-size: 16px;
@@ -307,7 +322,22 @@ const navigation = [
     }
   }
   
-  .privacy-link {
+  // Добавляем список для семантики
+  .info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      margin-bottom: 16px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // Общий стиль для ссылок в этом блоке
+  .info-link {
     color: #b4b4b4;
     text-decoration: none;
     font-size: 15px;
@@ -319,14 +349,14 @@ const navigation = [
     &:hover {
       color: white;
       
-      .privacy-link-underline {
+      .info-link-underline {
         width: 100%;
         background: #2b7bf6;
       }
     }
   }
   
-  .privacy-link-underline {
+  .info-link-underline {
     position: absolute;
     bottom: -4px;
     left: 0;
@@ -337,6 +367,7 @@ const navigation = [
     border-radius: 1px;
   }
 }
+/* --- КОНЕЦ ИЗМЕНЕНИЙ --- */
 
 .footer-divider {
   height: 1px;

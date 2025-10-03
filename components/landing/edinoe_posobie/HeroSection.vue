@@ -81,7 +81,6 @@
 <style lang="scss" scoped>
 .hero {
   position: relative;
-  min-height: 100vh;
   min-height: 100dvh; // Динамическая высота viewport для мобильных
   display: flex;
   align-items: center;
@@ -181,7 +180,7 @@
     color: #ffffff;
     border: 2px solid #97C3FF;
     padding: 23.5px 50px;
-    font-size: clamp(20px, 3vw, 30px);
+    font-size: clamp(20px, 3vw, 27px);
     font-weight: 500;
     border-radius: 15px;
     cursor: pointer;

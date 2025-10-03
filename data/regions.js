@@ -7,6 +7,7 @@ export const regions = [
   {
     code: 'belgorod',
     name: 'Белгородская область',
+    nameGenitive: 'Белгородской области',
     pmValue: 14896,
     pmWorking: 16237,
     pmPensioner: 12811,
@@ -15,6 +16,7 @@ export const regions = [
   {
     code: 'bryansk',
     name: 'Брянская область',
+    nameGenitive: 'Брянской области',
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
@@ -23,6 +25,7 @@ export const regions = [
   {
     code: 'vladimir',
     name: 'Владимирская область',
+    nameGenitive: 'Владимирской области',
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
@@ -31,6 +34,7 @@ export const regions = [
   {
     code: 'voronezh',
     name: 'Воронежская область',
+    nameGenitive: 'Воронежской области',
     pmValue: 15605,
     pmWorking: 17009,
     pmPensioner: 13420,
@@ -39,6 +43,7 @@ export const regions = [
   {
     code: 'ivanovo',
     name: 'Ивановская область',
+    nameGenitive: 'Ивановской области',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -47,6 +52,7 @@ export const regions = [
   {
     code: 'kaluga',
     name: 'Калужская область',
+    nameGenitive: 'Калужской области',
     pmValue: 17024,
     pmWorking: 18556,
     pmPensioner: 14641,
@@ -55,6 +61,7 @@ export const regions = [
   {
     code: 'kostroma',
     name: 'Костромская область',
+    nameGenitive: 'Костромской области',
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
@@ -63,6 +70,7 @@ export const regions = [
   {
     code: 'kursk',
     name: 'Курская область',
+    nameGenitive: 'Курской области',
     pmValue: 15428,
     pmWorking: 16817,
     pmPensioner: 13268,
@@ -71,6 +79,7 @@ export const regions = [
   {
     code: 'lipetsk',
     name: 'Липецкая область',
+    nameGenitive: 'Липецкой области',
     pmValue: 14718,
     pmWorking: 16043,
     pmPensioner: 12657,
@@ -79,6 +88,7 @@ export const regions = [
   {
     code: 'moscow_obl',
     name: 'Московская область',
+    nameGenitive: 'Московской области',
     pmValue: 19302,
     pmWorking: 21039,
     pmPensioner: 16600,
@@ -87,6 +97,7 @@ export const regions = [
   {
     code: 'orel',
     name: 'Орловская область',
+    nameGenitive: 'Орловской области',
     pmValue: 16492,
     pmWorking: 17976,
     pmPensioner: 14183,
@@ -95,6 +106,7 @@ export const regions = [
   {
     code: 'ryazan',
     name: 'Рязанская область',
+    nameGenitive: 'Рязанской области',
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
@@ -103,6 +115,7 @@ export const regions = [
   {
     code: 'smolensk',
     name: 'Смоленская область',
+    nameGenitive: 'Смоленской области',
     pmValue: 17556,
     pmWorking: 19136,
     pmPensioner: 15098,
@@ -111,6 +124,7 @@ export const regions = [
   {
     code: 'tambov',
     name: 'Тамбовская область',
+    nameGenitive: 'Тамбовской области',
     pmValue: 14718,
     pmWorking: 16043,
     pmPensioner: 12784,
@@ -119,6 +133,7 @@ export const regions = [
   {
     code: 'tver',
     name: 'Тверская область',
+    nameGenitive: 'Тверской области',
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
@@ -127,6 +142,7 @@ export const regions = [
   {
     code: 'tula',
     name: 'Тульская область',
+    nameGenitive: 'Тульской области',
     pmValue: 17733,
     pmWorking: 19329,
     pmPensioner: 15250,
@@ -135,6 +151,7 @@ export const regions = [
   {
     code: 'yaroslavl',
     name: 'Ярославская область',
+    nameGenitive: 'Ярославской области',
     pmValue: 17733,
     pmWorking: 19329,
     pmPensioner: 15250,
@@ -143,6 +160,7 @@ export const regions = [
   {
     code: 'moscow',
     name: 'Москва',
+    nameGenitive: 'Москве',
     pmValue: 23908,
     pmWorking: 27302,
     pmPensioner: 17897,
@@ -153,6 +171,7 @@ export const regions = [
   {
     code: 'karelia',
     name: 'Республика Карелия',
+    nameGenitive: 'Республике Карелия',
     pmValue: 19684,
     pmWorking: 21456,
     pmPensioner: 16928,
@@ -161,6 +180,7 @@ export const regions = [
   {
     code: 'komi',
     name: 'Республика Коми',
+    nameGenitive: 'Республике Коми',
     pmValue: 20393,
     pmWorking: 22228,
     pmPensioner: 17538,
@@ -169,6 +189,7 @@ export const regions = [
   {
     code: 'arkhangelsk',
     name: 'Архангельская область',
+    nameGenitive: 'Архангельской области',
     pmValue: 20570,
     pmWorking: 22421,
     pmPensioner: 17690,
@@ -177,6 +198,7 @@ export const regions = [
   {
     code: 'vologda',
     name: 'Вологодская область',
+    nameGenitive: 'Вологодской области',
     pmValue: 17910,
     pmWorking: 19522,
     pmPensioner: 15403,
@@ -185,6 +207,7 @@ export const regions = [
   {
     code: 'kaliningrad',
     name: 'Калининградская область',
+    nameGenitive: 'Калининградской области',
     pmValue: 18265,
     pmWorking: 19909,
     pmPensioner: 15708,
@@ -193,6 +216,7 @@ export const regions = [
   {
     code: 'leningrad',
     name: 'Ленинградская область',
+    nameGenitive: 'Ленинградской области',
     pmValue: 18974,
     pmWorking: 20682,
     pmPensioner: 16318,
@@ -201,6 +225,7 @@ export const regions = [
   {
     code: 'murmansk',
     name: 'Мурманская область',
+    nameGenitive: 'Мурманской области',
     pmValue: 25390,
     pmWorking: 27675,
     pmPensioner: 21835,
@@ -209,6 +234,7 @@ export const regions = [
   {
     code: 'novgorod',
     name: 'Новгородская область',
+    nameGenitive: 'Новгородской области',
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
@@ -217,6 +243,7 @@ export const regions = [
   {
     code: 'pskov',
     name: 'Псковская область',
+    nameGenitive: 'Псковской области',
     pmValue: 17556,
     pmWorking: 19136,
     pmPensioner: 15098,
@@ -225,6 +252,7 @@ export const regions = [
   {
     code: 'spb',
     name: 'Санкт-Петербург',
+    nameGenitive: 'Санкт-Петербурге',
     pmValue: 19329,
     pmWorking: 21069,
     pmPensioner: 16623,
@@ -233,6 +261,7 @@ export const regions = [
   {
     code: 'nenets',
     name: 'Ненецкий автономный округ',
+    nameGenitive: 'Ненецком автономном округе',
     pmValue: 29389,
     pmWorking: 32034,
     pmPensioner: 25275,
@@ -243,6 +272,7 @@ export const regions = [
   {
     code: 'adygea',
     name: 'Республика Адыгея',
+    nameGenitive: 'Республике Адыгея',
     pmValue: 15250,
     pmWorking: 16623,
     pmPensioner: 13115,
@@ -251,6 +281,7 @@ export const regions = [
   {
     code: 'kalmykia',
     name: 'Республика Калмыкия',
+    nameGenitive: 'Республике Калмыкия',
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
@@ -259,6 +290,7 @@ export const regions = [
   {
     code: 'krasnodar',
     name: 'Краснодарский край',
+    nameGenitive: 'Краснодарском крае',
     pmValue: 17024,
     pmWorking: 18556,
     pmPensioner: 14641,
@@ -267,6 +299,7 @@ export const regions = [
   {
     code: 'astrakhan',
     name: 'Астраханская область',
+    nameGenitive: 'Астраханской области',
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
@@ -275,6 +308,7 @@ export const regions = [
   {
     code: 'volgograd',
     name: 'Волгоградская область',
+    nameGenitive: 'Волгоградской области',
     pmValue: 15250,
     pmWorking: 16623,
     pmPensioner: 13115,
@@ -283,6 +317,7 @@ export const regions = [
   {
     code: 'rostov',
     name: 'Ростовская область',
+    nameGenitive: 'Ростовской области',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -291,6 +326,7 @@ export const regions = [
   {
     code: 'crimea',
     name: 'Республика Крым',
+    nameGenitive: 'Республике Крым',
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
@@ -299,6 +335,7 @@ export const regions = [
   {
     code: 'sevastopol',
     name: 'Севастополь',
+    nameGenitive: 'Севастополе',
     pmValue: 18088,
     pmWorking: 19716,
     pmPensioner: 15556,
@@ -309,6 +346,7 @@ export const regions = [
   {
     code: 'dagestan',
     name: 'Республика Дагестан',
+    nameGenitive: 'Республике Дагестан',
     pmValue: 16137,
     pmWorking: 17589,
     pmPensioner: 13878,
@@ -317,6 +355,7 @@ export const regions = [
   {
     code: 'ingushetia',
     name: 'Республика Ингушетия',
+    nameGenitive: 'Республике Ингушетия',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -325,6 +364,7 @@ export const regions = [
   {
     code: 'kbr',
     name: 'Кабардино-Балкарская Республика',
+    nameGenitive: 'Кабардино-Балкарской Республике',
     pmValue: 18974,
     pmWorking: 20682,
     pmPensioner: 16318,
@@ -333,6 +373,7 @@ export const regions = [
   {
     code: 'kchr',
     name: 'Карачаево-Черкесская Республика',
+    nameGenitive: 'Карачаево-Черкесской Республике',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -341,6 +382,7 @@ export const regions = [
   {
     code: 'osetia',
     name: 'Республика Северная Осетия — Алания',
+    nameGenitive: 'Республике Северная Осетия — Алания',
     pmValue: 15960,
     pmWorking: 17396,
     pmPensioner: 13726,
@@ -349,6 +391,7 @@ export const regions = [
   {
     code: 'chechnya',
     name: 'Чеченская Республика',
+    nameGenitive: 'Чеченской Республике',
     pmValue: 17024,
     pmWorking: 18556,
     pmPensioner: 14641,
@@ -357,6 +400,7 @@ export const regions = [
   {
     code: 'stavropol',
     name: 'Ставропольский край',
+    nameGenitive: 'Ставропольском крае',
     pmValue: 15960,
     pmWorking: 17396,
     pmPensioner: 13726,
@@ -367,6 +411,7 @@ export const regions = [
   {
     code: 'bashkortostan',
     name: 'Республика Башкортостан',
+    nameGenitive: 'Республике Башкортостан',
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
@@ -375,6 +420,7 @@ export const regions = [
   {
     code: 'mari_el',
     name: 'Республика Марий Эл',
+    nameGenitive: 'Республике Марий Эл',
     pmValue: 15605,
     pmWorking: 17009,
     pmPensioner: 13420,
@@ -383,6 +429,7 @@ export const regions = [
   {
     code: 'mordovia',
     name: 'Республика Мордовия',
+    nameGenitive: 'Республике Мордовия',
     pmValue: 15073,
     pmWorking: 16430,
     pmPensioner: 12963,
@@ -391,6 +438,7 @@ export const regions = [
   {
     code: 'tatarstan',
     name: 'Республика Татарстан',
+    nameGenitive: 'Республике Татарстан',
     pmValue: 15073,
     pmWorking: 16430,
     pmPensioner: 12963,
@@ -399,6 +447,7 @@ export const regions = [
   {
     code: 'udmurtia',
     name: 'Удмуртская Республика',
+    nameGenitive: 'Удмуртской Республике',
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
@@ -407,6 +456,7 @@ export const regions = [
   {
     code: 'chuvashia',
     name: 'Чувашская Республика',
+    nameGenitive: 'Чувашской Республике',
     pmValue: 15428,
     pmWorking: 16817,
     pmPensioner: 13268,
@@ -415,6 +465,7 @@ export const regions = [
   {
     code: 'perm',
     name: 'Пермский край',
+    nameGenitive: 'Пермском крае',
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
@@ -423,6 +474,7 @@ export const regions = [
   {
     code: 'kirov',
     name: 'Кировская область',
+    nameGenitive: 'Кировской области',
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
@@ -431,6 +483,7 @@ export const regions = [
   {
     code: 'nizhny',
     name: 'Нижегородская область',
+    nameGenitive: 'Нижегородской области',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -439,6 +492,7 @@ export const regions = [
   {
     code: 'orenburg',
     name: 'Оренбургская область',
+    nameGenitive: 'Оренбургской области',
     pmValue: 15428,
     pmWorking: 16817,
     pmPensioner: 13268,
@@ -447,6 +501,7 @@ export const regions = [
   {
     code: 'penza',
     name: 'Пензенская область',
+    nameGenitive: 'Пензенской области',
     pmValue: 14896,
     pmWorking: 16237,
     pmPensioner: 12811,
@@ -455,6 +510,7 @@ export const regions = [
   {
     code: 'samara',
     name: 'Самарская область',
+    nameGenitive: 'Самарской области',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -463,6 +519,7 @@ export const regions = [
   {
     code: 'saratov',
     name: 'Саратовская область',
+    nameGenitive: 'Саратовской области',
     pmValue: 14896,
     pmWorking: 16237,
     pmPensioner: 12811,
@@ -471,6 +528,7 @@ export const regions = [
   {
     code: 'ulyanovsk',
     name: 'Ульяновская область',
+    nameGenitive: 'Ульяновской области',
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
@@ -481,6 +539,7 @@ export const regions = [
   {
     code: 'kurgan',
     name: 'Курганская область',
+    nameGenitive: 'Курганской области',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -489,6 +548,7 @@ export const regions = [
   {
     code: 'sverdlovsk',
     name: 'Свердловская область',
+    nameGenitive: 'Свердловской области',
     pmValue: 17556,
     pmWorking: 19136,
     pmPensioner: 15098,
@@ -497,6 +557,7 @@ export const regions = [
   {
     code: 'tyumen',
     name: 'Тюменская область',
+    nameGenitive: 'Тюменской области',
     pmValue: 17733,
     pmWorking: 19329,
     pmPensioner: 15250,
@@ -505,6 +566,7 @@ export const regions = [
   {
     code: 'chelyabinsk',
     name: 'Челябинская область',
+    nameGenitive: 'Челябинской области',
     pmValue: 16314,
     pmWorking: 17782,
     pmPensioner: 14030,
@@ -513,6 +575,7 @@ export const regions = [
   {
     code: 'khanty_mansi',
     name: 'Ханты-Мансийский автономный округ — Югра',
+    nameGenitive: 'Ханты-Мансийском автономном округе — Югре',
     pmValue: 21252,
     pmWorking: 23165,
     pmPensioner: 18334,
@@ -521,6 +584,7 @@ export const regions = [
   {
     code: 'yamal',
     name: 'Ямало-Ненецкий автономный округ',
+    nameGenitive: 'Ямало-Ненецком автономном округе',
     pmValue: 24294,
     pmWorking: 26480,
     pmPensioner: 20893,
@@ -531,6 +595,7 @@ export const regions = [
   {
     code: 'altai_rep',
     name: 'Республика Алтай',
+    nameGenitive: 'Республике Алтай',
     pmValue: 16846,
     pmWorking: 18362,
     pmPensioner: 14488,
@@ -539,6 +604,7 @@ export const regions = [
   {
     code: 'buryatia',
     name: 'Республика Бурятия',
+    nameGenitive: 'Республике Бурятия',
     pmValue: 19329,
     pmWorking: 21069,
     pmPensioner: 16623,
@@ -547,6 +613,7 @@ export const regions = [
   {
     code: 'tuva',
     name: 'Республика Тыва',
+    nameGenitive: 'Республике Тыва',
     pmValue: 17910,
     pmWorking: 19522,
     pmPensioner: 15403,
@@ -555,6 +622,7 @@ export const regions = [
   {
     code: 'khakassia',
     name: 'Республика Хакасия',
+    nameGenitive: 'Республике Хакасия',
     pmValue: 18088,
     pmWorking: 19716,
     pmPensioner: 15556,
@@ -563,6 +631,7 @@ export const regions = [
   {
     code: 'altai_krai',
     name: 'Алтайский край',
+    nameGenitive: 'Алтайском крае',
     pmValue: 15782,
     pmWorking: 17202,
     pmPensioner: 13573,
@@ -571,6 +640,7 @@ export const regions = [
   {
     code: 'zabaykalsk',
     name: 'Забайкальский край',
+    nameGenitive: 'Забайкальском крае',
     pmValue: 20748,
     pmWorking: 22615,
     pmPensioner: 17843,
@@ -579,6 +649,7 @@ export const regions = [
   {
     code: 'krasnoyarsk',
     name: 'Красноярский край',
+    nameGenitive: 'Красноярском крае',
     pmValue: 19684,
     pmWorking: 21456,
     pmPensioner: 16928,
@@ -587,6 +658,7 @@ export const regions = [
   {
     code: 'irkutsk',
     name: 'Иркутская область',
+    nameGenitive: 'Иркутской области',
     pmValue: 18797,
     pmWorking: 20489,
     pmPensioner: 16165,
@@ -595,6 +667,7 @@ export const regions = [
   {
     code: 'kemerovo',
     name: 'Кемеровская область — Кузбасс',
+    nameGenitive: 'Кемеровской области — Кузбассе',
     pmValue: 16137,
     pmWorking: 17589,
     pmPensioner: 13878,
@@ -603,6 +676,7 @@ export const regions = [
   {
     code: 'novosibirsk',
     name: 'Новосибирская область',
+    nameGenitive: 'Новосибирской области',
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
@@ -611,6 +685,7 @@ export const regions = [
   {
     code: 'omsk',
     name: 'Омская область',
+    nameGenitive: 'Омской области',
     pmValue: 15428,
     pmWorking: 16816,
     pmPensioner: 13268,
@@ -619,6 +694,7 @@ export const regions = [
   {
     code: 'tomsk',
     name: 'Томская область',
+    nameGenitive: 'Томской области',
     pmValue: 17378,
     pmWorking: 18942,
     pmPensioner: 14945,
@@ -629,6 +705,7 @@ export const regions = [
   {
     code: 'sakha',
     name: 'Республика Саха (Якутия)',
+    nameGenitive: 'Республике Саха (Якутия)',
     pmValue: 26777,
     pmWorking: 29187,
     pmPensioner: 23028,
@@ -637,6 +714,7 @@ export const regions = [
   {
     code: 'kamchatka',
     name: 'Камчатский край',
+    nameGenitive: 'Камчатском крае',
     pmValue: 31210,
     pmWorking: 34019,
     pmPensioner: 26841,
@@ -645,6 +723,7 @@ export const regions = [
   {
     code: 'primorye',
     name: 'Приморский край',
+    nameGenitive: 'Приморском крае',
     pmValue: 21102,
     pmWorking: 23001,
     pmPensioner: 18148,
@@ -653,6 +732,7 @@ export const regions = [
   {
     code: 'khabarovsk',
     name: 'Хабаровский край',
+    nameGenitive: 'Хабаровском крае',
     pmValue: 21634,
     pmWorking: 23581,
     pmPensioner: 18605,
@@ -661,6 +741,7 @@ export const regions = [
   {
     code: 'amur',
     name: 'Амурская область',
+    nameGenitive: 'Амурской области',
     pmValue: 20393,
     pmWorking: 22228,
     pmPensioner: 17538,
@@ -669,6 +750,7 @@ export const regions = [
   {
     code: 'magadan',
     name: 'Магаданская область',
+    nameGenitive: 'Магаданской области',
     pmValue: 30855,
     pmWorking: 33632,
     pmPensioner: 26535,
@@ -677,6 +759,7 @@ export const regions = [
   {
     code: 'sakhalin',
     name: 'Сахалинская область',
+    nameGenitive: 'Сахалинской области',
     pmValue: 24117,
     pmWorking: 26288,
     pmPensioner: 20741,
@@ -685,6 +768,7 @@ export const regions = [
   {
     code: 'jewish',
     name: 'Еврейская автономная область',
+    nameGenitive: 'Еврейской автономной области',
     pmValue: 22166,
     pmWorking: 24161,
     pmPensioner: 19063,
@@ -693,6 +777,7 @@ export const regions = [
   {
     code: 'chukotka',
     name: 'Чукотский автономный округ',
+    nameGenitive: 'Чукотском автономном округе',
     pmValue: 46283,
     pmWorking: 50448,
     pmPensioner: 39803,
@@ -703,6 +788,7 @@ export const regions = [
   {
     code: 'donetsk',
     name: 'Донецкая область',
+    nameGenitive: 'Донецкой области',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -711,6 +797,7 @@ export const regions = [
   {
     code: 'lugansk',
     name: 'Луганская область',
+    nameGenitive: 'Луганской области',
     pmValue: 16669,
     pmWorking: 18169,
     pmPensioner: 14335,
@@ -719,6 +806,7 @@ export const regions = [
   {
     code: 'zaporozhye',
     name: 'Запорожская область',
+    nameGenitive: 'Запорожской области',
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,
@@ -727,6 +815,7 @@ export const regions = [
   {
     code: 'kherson',
     name: 'Херсонская область',
+    nameGenitive: 'Херсонской области',
     pmValue: 17201,
     pmWorking: 18749,
     pmPensioner: 14793,

@@ -1,7 +1,7 @@
 <template>
   <header class="header" :class="{ 'post': isScrolled }">
     <div class="header__container">
-      <div class="header__logo">
+      <div class="header__logo" @click="handleLogoClick">
         <img :src="Logo" alt="logo-image">
       </div>
       
@@ -30,7 +30,7 @@
     <div class="header__mobile-menu" :class="{ 'header__mobile-menu--open': isMenuOpen }">
       <!-- Шапка мобильного меню -->
       <div class="header__mobile-header">
-        <div class="header__mobile-logo">
+        <div class="header__mobile-logo" @click="handleLogoClick">
           <img :src="Logo" alt="logo-image">
           <span>Меню</span>
         </div>
@@ -74,22 +74,21 @@ import IconCalculator from './icons/IconCalculator.vue'
 import IconWidget from './icons/IconWidget.vue'
 
 const isMenuOpen = ref(false)
-
 const isScrolled = ref(false) 
 
 const menuItems = ref([
   {
-    href: '#main',
+    href: '/',
     text: 'На главную',
     description: 'Вернуться на главную страницу',
     icon: markRaw(IconHome)
   },
-  {
-    href: '#faq',
-    text: 'Ответы на вопросы',
-    description: 'Часто задаваемые вопросы',
-    icon: markRaw(IconFaq)
-  },
+  // {
+  //   href: '#faq',
+  //   text: 'Ответы на вопросы',
+  //   description: 'Часто задаваемые вопросы',
+  //   icon: markRaw(IconFaq)
+  // },
   {
     href: '#calculator',
     text: 'Калькуляторы',
@@ -103,6 +102,14 @@ const menuItems = ref([
     icon: markRaw(IconWidget)
   }
 ])
+
+// Функция для обработки клика на лого
+const handleLogoClick = () => {
+  if (window.location.pathname !== '/') {
+    window.location.replace('/')
+  }
+  closeMenu()
+}
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
@@ -153,6 +160,9 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    @media (max-width: 768px) {
+      padding: 10px 15px;
+    }
   }
 
   &__logo {
@@ -342,6 +352,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
     
     img {
       width: 35px;
@@ -480,6 +491,4 @@ onUnmounted(() => {
     transform: translateX(0);
   }
 }
-
-
 </style>

@@ -1,8 +1,19 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { regions, findRegionByCode } from '../data/regions'
 import SmartResults from './SmartResults.vue'
 import { detectRegionByIP } from '../utils/geoDetection'
+import { trackEvent, YM_EVENTS, getStepName, StepTimer } from '../utils/yandexMetrika'
+import IconOne from './svg-elements/one.vue'
+import IconTwo from './svg-elements/two.vue'
+import IconThree from './svg-elements/three.vue'
+
+// Инициализация таймера для отслеживания времени на шагах
+const stepTimer = new StepTimer()
+const isCalculatorStarted = ref(false)
+
+// Ключ для localStorage
+const STORAGE_KEY = 'calculatorProgress'
 
 // Рефы для элементов
 const contentContainer = ref(null)
@@ -15,6 +26,65 @@ let scrollTimeout = null
 let lastScrollY = 0
 let isScrollingDown = false
 let touchStartY = 0
+
+// Функции для работы с localStorage
+const saveToLocalStorage = () => {
+  try {
+    const dataToSave = {
+      currentQuestionIndex: currentQuestionIndex.value,
+      showResults: showResults.value,
+      formData: formData.value,
+      timestamp: Date.now()
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave))
+    
+    // Отслеживаем сохранение прогресса
+    trackEvent(YM_EVENTS.PROGRESS_SAVED, {
+      step: getStepName(currentQuestionIndex.value, questions),
+      step_number: currentQuestionIndex.value + 1
+    })
+  } catch (error) {
+    console.error('Ошибка сохранения в localStorage:', error)
+    trackEvent(YM_EVENTS.CALCULATOR_ERROR, {
+      error_type: 'localStorage_save',
+      error_message: error.message
+    })
+  }
+}
+
+const loadFromLocalStorage = () => {
+  try {
+    const savedData = localStorage.getItem(STORAGE_KEY)
+    if (savedData) {
+      const parsed = JSON.parse(savedData)
+      
+      // Проверяем, что данные не старше 24 часов
+      const dayInMs = 24 * 60 * 60 * 1000
+      if (Date.now() - parsed.timestamp < dayInMs) {
+        return parsed
+      } else {
+        // Если данные старые, удаляем их
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    }
+  } catch (error) {
+    console.error('Ошибка загрузки из localStorage:', error)
+    localStorage.removeItem(STORAGE_KEY)
+    trackEvent(YM_EVENTS.CALCULATOR_ERROR, {
+      error_type: 'localStorage_load',
+      error_message: error.message
+    })
+  }
+  return null
+}
+
+const clearLocalStorage = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch (error) {
+    console.error('Ошибка очистки localStorage:', error)
+  }
+}
 
 // Функция для плавного скролла к калькулятору
 const scrollToCalculator = () => {
@@ -35,7 +105,7 @@ const scrollToTop = () => {
     const offsetTop = element.getBoundingClientRect().top + window.pageYOffset;
     
     window.scrollTo({
-      top: offsetTop - 100, // Небольшой отступ сверху
+      top: offsetTop - 70,
       behavior: 'smooth'
     });
   }
@@ -146,8 +216,8 @@ const months = [
   { value: 12, label: 'Декабрь' }
 ]
 
-// Основные данные формы
-const formData = ref({
+// Основные данные формы - инициализируем значениями по умолчанию
+const getDefaultFormData = () => ({
   region: '',
   
   // Период подачи заявления
@@ -269,6 +339,9 @@ const formData = ref({
     emergencySituation: false
   }
 })
+
+// Основные данные формы
+const formData = ref(getDefaultFormData())
 
 // Состояние калькулятора
 const currentQuestionIndex = ref(0)
@@ -430,32 +503,172 @@ const canProceed = computed(() => {
   }
 })
 
-// Навигация
+// Навигация с метрикой
 const nextQuestion = () => {
+  // Отслеживаем завершение текущего шага
+  const currentStepName = getStepName(currentQuestionIndex.value, questions)
+  trackEvent(YM_EVENTS.STEP_COMPLETE, {
+    step: currentStepName,
+    step_number: currentQuestionIndex.value + 1,
+    total_steps: questions.length
+  })
+  
+  // Отслеживаем специфические события для каждого шага
+  switch (currentQuestion.value) {
+    case 'region':
+      trackEvent(YM_EVENTS.REGION_SELECTED, {
+        region: formData.value.region,
+        region_name: currentRegion.value?.name,
+        auto_detected: isAutoDetected.value
+      })
+      break
+    case 'recipient':
+      trackEvent(YM_EVENTS.RECIPIENT_SELECTED, {
+        type: formData.value.recipientType,
+        is_pregnant: isPregnantRecipient.value
+      })
+      break
+    case 'family':
+      trackEvent(YM_EVENTS.FAMILY_CONFIGURED, {
+        family_size: totalFamilyMembers.value,
+        children_count: totalChildren.value,
+        has_spouse: formData.value.hasSpouse,
+        is_single_parent: formData.value.special.singleParent,
+        is_large_family: isLargeFamily.value
+      })
+      break
+    case 'income':
+      trackEvent(YM_EVENTS.INCOME_ENTERED, {
+        income_percent: Math.round((averageMonthlyIncome.value / currentRegionPM.value) * 100),
+        passes_income_test: averageMonthlyIncome.value <= currentRegionPM.value,
+        average_income: averageMonthlyIncome.value,
+        total_yearly_income: formData.value.totalIncome || calculatedTotalIncome.value
+      })
+      break
+    case 'transport':
+      trackEvent(YM_EVENTS.TRANSPORT_CONFIGURED, {
+        cars: formData.value.transport.carsCount,
+        motorcycles: formData.value.transport.motorcyclesCount,
+        has_luxury: formData.value.transport.hasLuxuryCar,
+        has_boat: formData.value.transport.hasBoat,
+        from_social: formData.value.transport.transportFromSocial
+      })
+      break
+    case 'property':
+      trackEvent(YM_EVENTS.PROPERTY_CONFIGURED, {
+        apartments: formData.value.propertyCheck.apartmentsCount,
+        houses: formData.value.propertyCheck.housesCount,
+        garages: formData.value.propertyCheck.garagesCount,
+        has_country_house: formData.value.propertyCheck.hasCountryHouse,
+        has_commercial: formData.value.propertyCheck.hasCommercialProperty
+      })
+      break
+    case 'conditions':
+      trackEvent(YM_EVENTS.CONDITIONS_CONFIGURED, {
+        needs_zero_income_check: needsZeroIncomeCheck.value,
+        is_self_employed: formData.value.selfEmployed.isSelfEmployed,
+        receives_alimony: formData.value.alimony.receivesAlimony,
+        has_special_circumstances: hasSpecialCircumstances.value
+      })
+      break
+  }
+
   if (isLastQuestion.value) {
     showResults.value = true
+    stepTimer.endTimer()
+    
+    // Получаем результат расчета
+    const result = getCalculationData()
+    
+    // Отслеживаем завершение калькулятора
+    trackEvent(YM_EVENTS.CALCULATION_COMPLETE, {
+      is_eligible: result.isEligible,
+      benefit_amount: result.benefitAmount,
+      denial_reasons_count: result.denialReasons?.length || 0,
+      completion_time: Math.round((Date.now() - calculatorStartTime) / 1000)
+    })
+    
+    // Отслеживаем результат
+    if (result.isEligible) {
+      trackEvent(YM_EVENTS.RESULT_ELIGIBLE, {
+        benefit_amount: result.benefitAmount,
+        benefit_percent: result.benefitDetails?.[0]?.percent || 0,
+        region: formData.value.region,
+        family_size: totalFamilyMembers.value,
+        children_count: totalChildren.value
+      })
+    } else {
+      trackEvent(YM_EVENTS.RESULT_NOT_ELIGIBLE, {
+        main_reason: result.denialReasons?.[0] || 'unknown',
+        reasons_count: result.denialReasons?.length || 0,
+        failed_income_test: averageMonthlyIncome.value > currentRegionPM.value,
+        failed_property_test: hasPropertyIssues.value,
+        failed_zero_income: needsDetailedZeroIncomeCheck.value
+      })
+    }
   } else {
     currentQuestionIndex.value++
+    // Отслеживаем просмотр нового шага
+    const newStepName = getStepName(currentQuestionIndex.value, questions)
+    trackEvent(YM_EVENTS.STEP_VIEW, {
+      step: newStepName,
+      step_number: currentQuestionIndex.value + 1,
+      total_steps: questions.length
+    })
+    stepTimer.startStep(newStepName)
   }
+  
   nextTick(() => {
     scrollToTop()
+    saveToLocalStorage()
   })
 }
 
 const previousQuestion = () => {
   if (!isFirstQuestion.value) {
+    // Отслеживаем возврат назад
+    const fromStep = getStepName(currentQuestionIndex.value, questions)
+    const toStep = getStepName(currentQuestionIndex.value - 1, questions)
+    
+    trackEvent(YM_EVENTS.STEP_BACK, {
+      from_step: fromStep,
+      to_step: toStep,
+      from_step_number: currentQuestionIndex.value + 1,
+      to_step_number: currentQuestionIndex.value
+    })
+    
     currentQuestionIndex.value--
+    stepTimer.startStep(toStep)
+    
     nextTick(() => {
       scrollToTop()
+      saveToLocalStorage()
     })
   }
 }
 
 const resetCalculator = () => {
+  trackEvent(YM_EVENTS.RESULT_RECALCULATE, {
+    from_result: showResults.value,
+    last_step: getStepName(currentQuestionIndex.value, questions),
+    was_eligible: getCalculationData()?.isEligible
+  })
+  
   currentQuestionIndex.value = 0
   showResults.value = false
+  formData.value = getDefaultFormData()
+  clearLocalStorage()
+  isCalculatorStarted.value = false
+  calculatorStartTime = Date.now()
+  
   nextTick(() => {
-    scrollToTop() // Добавляем прокрутку к верху после сброса
+    scrollToTop()
+    // Начинаем новую сессию калькулятора
+    trackEvent(YM_EVENTS.CALCULATOR_START, {
+      is_recalculation: true
+    })
+    isCalculatorStarted.value = true
+    stepTimer.startStep(getStepName(0, questions))
   })
 }
 
@@ -480,7 +693,23 @@ const formatAmount = (amount) => {
   return new Intl.NumberFormat('ru-RU').format(Math.round(amount))
 }
 
-// Подготовка данных для расчета (продолжение функции getCalculationData)
+// Дополнительные проверки для расчета
+const hasPropertyIssues = computed(() => {
+  const check = formData.value.propertyCheck
+  return check.apartmentsCount > 1 || check.housesCount > 1 || 
+         check.hasCommercialProperty || check.hasNonResidential
+})
+
+const hasSpecialCircumstances = computed(() => {
+  const special = formData.value.special
+  return special.singleParent || special.hasDisabled || 
+         special.mobilized || special.refugeeStatus || special.emergencySituation
+})
+
+// Время начала заполнения калькулятора
+let calculatorStartTime = Date.now()
+
+// Подготовка данных для расчета
 const getCalculationData = () => {
   const region = currentRegion.value
   if (!region) return null
@@ -540,8 +769,7 @@ const getCalculationData = () => {
   if (!formData.value.transport.transportFromSocial) {
     const maxCars = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
     const maxMotorcycles = (isLargeFamily.value || formData.value.special.hasDisabled) ? 2 : 1
-    
-    if (formData.value.transport.carsCount > maxCars) {
+  if (formData.value.transport.carsCount > maxCars) {
       isEligible = false
       denialReasons.push(`Количество автомобилей (${formData.value.transport.carsCount}) превышает допустимое (${maxCars}).`)
     }
@@ -707,7 +935,7 @@ const getCalculationData = () => {
       const totalChildBenefit = benefitPerChild * totalChildren.value
       benefitAmount += totalChildBenefit
       
-benefitDetails.push({
+      benefitDetails.push({
         type: 'children',
         count: totalChildren.value,
         amountPerChild: benefitPerChild,
@@ -787,8 +1015,100 @@ const validReasonsList = [
   { value: 'imprisonment', label: 'Лишение свободы' }
 ]
 
+// Отслеживание изменений для автосохранения
+watch([currentQuestionIndex, showResults, formData], () => {
+  saveToLocalStorage()
+}, { deep: true })
+
 // Монтирование и размонтирование
 onMounted(async () => {
+  // Загружаем сохраненные данные
+  const savedData = loadFromLocalStorage()
+  
+  // Отслеживание старта калькулятора
+  if (!isCalculatorStarted.value) {
+    trackEvent(YM_EVENTS.CALCULATOR_START, {
+      has_saved_progress: !!savedData,
+      entry_point: 'direct'
+    })
+    isCalculatorStarted.value = true
+    calculatorStartTime = Date.now()
+    
+    // Начинаем таймер для первого шага
+    const stepName = getStepName(currentQuestionIndex.value, questions)
+    stepTimer.startStep(stepName)
+  }
+  
+  if (savedData) {
+    // Восстанавливаем состояние
+    currentQuestionIndex.value = savedData.currentQuestionIndex || 0
+    showResults.value = savedData.showResults || false
+    
+    // Восстанавливаем данные формы
+    if (savedData.formData) {
+      // Делаем глубокое слияние с дефолтными значениями
+      const defaultData = getDefaultFormData()
+      formData.value = {
+        ...defaultData,
+        ...savedData.formData,
+        // Убедимся, что вложенные объекты тоже правильно слиты
+        applicationDate: {
+          ...defaultData.applicationDate,
+          ...(savedData.formData.applicationDate || {})
+        },
+        pregnancy: {
+          ...defaultData.pregnancy,
+          ...(savedData.formData.pregnancy || {})
+        },
+        detailedIncome: {
+          ...defaultData.detailedIncome,
+          ...(savedData.formData.detailedIncome || {})
+        },
+        transport: {
+          ...defaultData.transport,
+          ...(savedData.formData.transport || {})
+        },
+        propertyCheck: {
+          ...defaultData.propertyCheck,
+          ...(savedData.formData.propertyCheck || {})
+        },
+        propertyExceptions: {
+          ...defaultData.propertyExceptions,
+          ...(savedData.formData.propertyExceptions || {})
+        },
+        adultsIncome: {
+          ...defaultData.adultsIncome,
+          ...(savedData.formData.adultsIncome || {})
+        },
+        validReasons: {
+          ...defaultData.validReasons,
+          ...(savedData.formData.validReasons || {})
+        },
+        selfEmployed: {
+          ...defaultData.selfEmployed,
+          ...(savedData.formData.selfEmployed || {})
+        },
+        alimony: {
+          ...defaultData.alimony,
+          ...(savedData.formData.alimony || {})
+        },
+        special: {
+          ...defaultData.special,
+          ...(savedData.formData.special || {})
+        }
+      }
+    }
+    
+    // Отслеживаем восстановление прогресса
+    trackEvent(YM_EVENTS.PROGRESS_RESTORED, {
+      restored_step: getStepName(currentQuestionIndex.value, questions),
+      step_number: currentQuestionIndex.value + 1,
+      hours_since_save: Math.round((Date.now() - savedData.timestamp) / 3600000)
+    })
+    
+    console.log('Восстановлен прогресс калькулятора')
+  }
+  
   // Добавляем слушатели событий
   window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('resize', handleResize)
@@ -804,7 +1124,7 @@ onMounted(async () => {
     checkCalculatorVisibility()
   })
   
-  // Автоопределение региона
+  // Автоопределение региона (только если регион не был сохранен)
   if (!formData.value.region) {
     isDetectingRegion.value = true
     
@@ -813,9 +1133,19 @@ onMounted(async () => {
       if (detectedRegion) {
         formData.value.region = detectedRegion
         isAutoDetected.value = true
+        
+        // Отслеживаем автоопределение региона
+        trackEvent('calculator_region_autodetected', {
+          region: detectedRegion,
+          success: true
+        })
       }
     } catch (error) {
       console.error('Ошибка определения региона:', error)
+      trackEvent('calculator_region_autodetected', {
+        success: false,
+        error: error.message
+      })
     } finally {
       isDetectingRegion.value = false
     }
@@ -823,6 +1153,19 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  // Если пользователь уходит не дойдя до результата
+  if (!showResults.value && currentQuestionIndex.value > 0) {
+    trackEvent(YM_EVENTS.CALCULATOR_ABANDON, {
+      last_step: getStepName(currentQuestionIndex.value, questions),
+      step_number: currentQuestionIndex.value + 1,
+      completion_percent: Math.round(((currentQuestionIndex.value + 1) / questions.length) * 100),
+      time_spent: Math.round((Date.now() - calculatorStartTime) / 1000)
+    })
+  }
+  
+  stepTimer.endTimer()
+  
+  // Удаляем слушатели событий
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('touchstart', handleTouchStart)
@@ -830,6 +1173,7 @@ onUnmounted(() => {
   if (scrollTimeout) clearTimeout(scrollTimeout)
 })
 </script>
+
 
 
 <template>
@@ -916,10 +1260,7 @@ onUnmounted(() => {
                 <input type="radio" v-model="formData.recipientType" value="pregnant" />
                 <div class="option-content">
                   <div class="option-icon">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="20" cy="12" r="5" stroke="#008CFF" stroke-width="2"/>
-                      <path d="M15 20C15 20 14 24 14 28C14 32 16 35 20 35C24 35 26 32 26 28C26 24 25 20 25 20" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
+                    <IconOne />
                   </div>
                   <div class="option-text">
                     <h3>Беременная женщина</h3>
@@ -932,12 +1273,7 @@ onUnmounted(() => {
                 <input type="radio" v-model="formData.recipientType" value="parent" />
                 <div class="option-content">
                   <div class="option-icon">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="16" cy="10" r="4" stroke="#008CFF" stroke-width="2"/>
-                      <circle cx="24" cy="10" r="4" stroke="#008CFF" stroke-width="2"/>
-                      <path d="M10 20C10 20 10 25 16 25C16 25 20 25 20 30" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
-                      <path d="M30 20C30 20 30 25 24 25C24 25 20 25 20 30" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
+                    <IconTwo />
                   </div>
                   <div class="option-text">
                     <h3>Родитель с детьми</h3>
@@ -950,13 +1286,7 @@ onUnmounted(() => {
                 <input type="radio" v-model="formData.recipientType" value="both" />
                 <div class="option-content">
                   <div class="option-icon">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="20" cy="10" r="4" stroke="#008CFF" stroke-width="2"/>
-                      <path d="M15 18C15 18 14 20 14 24C14 26 15 28 17 28" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
-                      <path d="M25 18C25 18 26 20 26 24C26 26 25 28 23 28" stroke="#008CFF" stroke-width="2" stroke-linecap="round"/>
-                      <circle cx="12" cy="30" r="3" stroke="#008CFF" stroke-width="2"/>
-                      <circle cx="28" cy="30" r="3" stroke="#008CFF" stroke-width="2"/>
-                    </svg>
+                    <IconThree />
                   </div>
                   <div class="option-text">
                     <h3>Беременная женщина с детьми</h3>
@@ -1741,6 +2071,9 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     height: 4px;
     background: linear-gradient(90deg, $primary, #8B5CF6);
     border-radius: 2px 2px 0 0;
+    @media (max-width: 768px) {
+      background:none;
+    }
   }
 }
 
@@ -1984,8 +2317,8 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     }
     
     .option-icon {
-      background: rgba(67, 97, 238, 0.1);
-      transform: scale(1.1);
+      //background: rgba(67, 97, 238, 0.1);
+      transform: scale(0.95);
     }
   }
   
@@ -2002,13 +2335,13 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     justify-content: center;
     width: 56px;
     height: 56px;
-    background: $bg-light;
+    //background: $bg-light;
     border-radius: 14px;
     transition: all 0.3s ease;
     
     svg {
-      width: 28px;
-      height: 28px;
+      width: 40px;
+      height: 40px;
     }
   }
   
@@ -3276,8 +3609,8 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     }
 
     .option-icon svg {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
     }
 
     .option-text h3 {
@@ -3488,7 +3821,7 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     padding: 0.5rem;
     
     .big-button {
-      padding: 0.6rem;
+      padding: 0.9rem;
       font-size: 0.85rem;
     }
   }
@@ -3497,8 +3830,8 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     padding: 0.75rem !important;
     
     .option-icon svg {
-      width: 24px;
-      height: 24px;
+      width: 30px;
+      height: 30px;
     }
   }
 }

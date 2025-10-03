@@ -1,5 +1,5 @@
 <template>
-  <section class="faq-section">
+  <section id="faq" class="faq-section">
     <div class="container">
       <h2 class="title">
         Частые <span class="title__accent">вопросы</span>
