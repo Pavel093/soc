@@ -24,7 +24,7 @@ export default defineNuxtConfig({
     '/**': { 
       prerender: true 
     },
-    s
+    
     // Embed страница - SSR
     '/embed': { 
       prerender: false, 
