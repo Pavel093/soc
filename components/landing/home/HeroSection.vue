@@ -3,7 +3,7 @@
     <div class="container section-grid">
       <div class="content">
         <h2 class="title">
-          Рассчитайте всё, что положеноооыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыы<br />
+          Рассчитайте всё, что положено<br />
           вашей семье
         </h2>
         
