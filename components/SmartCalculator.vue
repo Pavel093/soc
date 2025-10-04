@@ -3821,8 +3821,8 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     padding: 0.5rem;
     
     .big-button {
-      padding: 0.9rem;
-      font-size: 0.85rem;
+      padding: 1.2rem;
+      font-size: 1.10rem;
     }
   }
   
