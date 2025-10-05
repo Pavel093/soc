@@ -75,26 +75,52 @@ const timezoneMapping = {
 }
 
 // API провайдеры для определения региона
+// Дополненный список провайдеров
 const ipApiProviders = [
+  // Sypex Geo: сильный по РФ/СНГ
+  {
+    name: 'SypexGeo',
+    url: 'https://api.sypexgeo.net/json/',
+    regionPath: ['region.name_en', 'region.name_ru', 'city.name_en', 'city.name_ru'],
+    errorPath: [] // обычно без специального поля ошибки
+  },
+  // ipapi.co: без ключа, CORS, HTTPS
+  {
+    name: 'ipapi.co',
+    url: 'https://ipapi.co/json/?locale=en',
+    regionPath: ['region', 'city'],
+    errorPath: ['error', 'reason']
+  },
+  // ipinfo.io: стабильно, лучше с токеном
+  {
+    name: 'ipinfo.io',
+    url: 'https://ipinfo.io/json?token=YOUR_TOKEN',
+    regionPath: ['region', 'city'],
+    errorPath: ['error']
+  },
+  // IPRegistry
+  {
+    name: 'IPRegistry',
+    url: 'https://api.ipregistry.co/?key=YOUR_KEY',
+    regionPath: ['location.region.name', 'location.city'],
+    errorPath: ['error', 'message']
+  },
+  // DB-IP
+  {
+    name: 'DB-IP',
+    url: 'https://api.db-ip.com/v2/YOUR_KEY/self',
+    regionPath: ['stateProv', 'city'],
+    errorPath: ['error']
+  },
+  // ваш текущий ipwho.is как один из fallback
   {
     name: 'ipwhois.io',
     url: 'https://ipwho.is/',
     regionPath: ['region', 'city'],
     errorPath: ['error']
-  },
-  {
-    name: 'IP-API',
-    url: 'https://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city',
-    regionPath: ['regionName', 'city'],
-    errorPath: ['message']
-  },
-  {
-    name: 'FreeGeoIP',
-    url: 'https://freegeoip.app/json/',
-    regionPath: ['region_name', 'city'],
-    errorPath: ['error']
   }
 ]
+
 
 // Нормализация названия региона
 function normalizeRegionName(regionName) {
