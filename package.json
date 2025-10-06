@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "gh-pages": "^6.3.0",
+    "nuxt-yandex-metrika": "^1.2.9",
     "sass-embedded": "^1.89.2"
   }
 }
