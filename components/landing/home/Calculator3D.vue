@@ -193,7 +193,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: leftd-container {
+  .left-container {
     width: 160px;
     height: 200px;
     perspective: 800px;
