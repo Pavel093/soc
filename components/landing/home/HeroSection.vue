@@ -4,7 +4,7 @@
       <div class="content">
         <h2 class="title">
           Рассчитайте всё, что положено<br />
-          вашей семьееееее
+          вашей семье 
         </h2>
         
         <p class="description">
