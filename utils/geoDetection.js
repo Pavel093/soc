@@ -79,6 +79,12 @@ const timezoneMapping = {
 const ipApiProviders = [
   // Sypex Geo: сильный по РФ/СНГ
   {
+    name: 'ipwhois.io',
+    url: 'https://ipwho.is/',
+    regionPath: ['region', 'city'],
+    errorPath: ['error']
+  },
+  {
     name: 'SypexGeo',
     url: 'https://api.sypexgeo.net/json/',
     regionPath: ['region.name_en', 'region.name_ru', 'city.name_en', 'city.name_ru'],
@@ -90,13 +96,6 @@ const ipApiProviders = [
     url: 'https://ipapi.co/json/?locale=en',
     regionPath: ['region', 'city'],
     errorPath: ['error', 'reason']
-  },
-  // ipinfo.io: стабильно, лучше с токеном
-  {
-    name: 'ipinfo.io',
-    url: 'https://ipinfo.io/json?token=YOUR_TOKEN',
-    regionPath: ['region', 'city'],
-    errorPath: ['error']
   },
   // IPRegistry
   {

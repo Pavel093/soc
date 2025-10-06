@@ -56,22 +56,29 @@ export default defineNuxtConfig({
         lang: 'ru'
       },
       script: [
+        // --- ИЗМЕНЕНИЕ ---
+        // Оборачиваем код Яндекс.Метрики в setTimeout, чтобы он не блокировал
+        // первоначальную отрисовку страницы. Скрипт загрузится и запустится
+        // через 4 секунды после того, как страница станет интерактивной.
+        // Это значительно улучшает показатели PageSpeed Insights.
         {
           innerHTML: `
-            (function(m,e,t,r,i,k,a){
-              m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-              m[i].l=1*new Date();
-              for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-              k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-            })(window, document,'script','https://mc.yandex.ru/metrika/tag.js','ym');
+            setTimeout(function() {
+              (function(m,e,t,r,i,k,a){
+                m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+                m[i].l=1*new Date();
+                for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+                k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+              })(window, document,'script','https://mc.yandex.ru/metrika/tag.js','ym');
 
-            ym(104348512, 'init', {
-              clickmap:true,
-              trackLinks:true,
-              accurateTrackBounce:true,
-              webvisor:true,
-              ecommerce:"dataLayer"
-            });
+              ym(104348512, 'init', {
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true,
+                webvisor:true,
+                ecommerce:"dataLayer"
+              });
+            }, 4000);
           `,
           type: 'text/javascript'
         }
@@ -81,6 +88,7 @@ export default defineNuxtConfig({
           innerHTML: '<div><img src="https://mc.yandex.ru/watch/104348512" style="position:absolute; left:-9999px;" alt="" /></div>'
         }
       ],
+      // Эта опция нужна, чтобы Nuxt не экранировал содержимое innerHTML
       __dangerouslyDisableSanitizersByTagID: {
         'yandex-metrika-script': ['innerHTML'],
         'yandex-metrika-noscript': ['innerHTML']

@@ -1,5 +1,10 @@
 <template>
-  <div class="calculator-3d-container" :class="{ 'mobile-size': isMobile }">
+  <!-- 1. Добавляем ref, чтобы получить доступ к DOM-элементу в скрипте -->
+  <div 
+    ref="containerRef" 
+    class="calculator-3d-container" 
+    :class="{ 'mobile-size': isMobile }"
+  >
     <div class="calculator-3d" :style="calcStyle">
       <div class="display"></div>
       <div class="buttons">
@@ -19,37 +24,81 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
+// --- Refs для управления состоянием ---
 const rotateX = ref(15)
 const rotateY = ref(-15)
 const isMobile = ref(false)
+const containerRef = ref(null) // Ref для корневого элемента
+const startTime = ref(performance.now()) // Ref для таймера, чтобы сбрасывать его
 
+let frameId = null // ID кадра анимации, null - если анимация остановлена
+let observer = null // Экземпляр Intersection Observer
+
+// --- Computed-свойство для стилей (без изменений) ---
 const calcStyle = computed(() => ({
   transform: `rotateX(${rotateX.value}deg) rotateY(${rotateY.value}deg) scale(1.05)`
 }))
 
-let frameId
-const startTime = performance.now()
-
+// --- Основная функция анимации (без изменений, кроме startTime.value) ---
 function animate(time) {
-  const t = (time - startTime) / 1000
+  const t = (time - startTime.value) / 1000
   rotateX.value = 15 + Math.sin(t * 0.8) * 5
   rotateY.value = -15 + Math.cos(t * 0.6) * 5
   frameId = requestAnimationFrame(animate)
+}
+
+// --- 2. Функции для управления анимацией ---
+function startAnimation() {
+  if (!frameId) { // Запускаем, только если она еще не запущена
+    startTime.value = performance.now() // Сбрасываем таймер для плавного старта
+    frameId = requestAnimationFrame(animate)
+  }
+}
+
+function stopAnimation() {
+  if (frameId) { // Останавливаем, только если она запущена
+    cancelAnimationFrame(frameId)
+    frameId = null
+  }
 }
 
 function checkMobile() {
   isMobile.value = window.innerWidth <= 768
 }
 
+// --- 3. Хуки жизненного цикла с Intersection Observer ---
 onMounted(() => {
-  frameId = requestAnimationFrame(animate)
   checkMobile()
   window.addEventListener('resize', checkMobile)
+
+  // Настройка Intersection Observer
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      // Когда элемент появляется в зоне видимости - запускаем анимацию
+      if (entry.isIntersecting) {
+        startAnimation()
+      } else {
+      // Когда элемент пропадает - останавливаем
+        stopAnimation()
+      }
+    },
+    // Начинаем реагировать, когда хотя бы 10% элемента видно
+    { threshold: 0.1 } 
+  );
+
+  // Начинаем следить за нашим компонентом
+  if (containerRef.value) {
+    observer.observe(containerRef.value);
+  }
 })
 
 onBeforeUnmount(() => {
-  cancelAnimationFrame(frameId)
+  // Обязательная очистка, чтобы избежать утечек памяти
+  stopAnimation() 
   window.removeEventListener('resize', checkMobile)
+  if (observer && containerRef.value) {
+    observer.unobserve(containerRef.value)
+  }
 })
 </script>
 
@@ -81,6 +130,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   transition: transform 0.6s cubic-bezier(0.4, 2, 0.5, 1);
   border: 1px solid rgba(255, 255, 255, 0.8);
+  /* 4. Подсказка браузеру, что свойство transform будет меняться */
+  will-change: transform;
 }
 
 .display {
@@ -142,50 +193,7 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s;
-}
-
-.button:hover::before {
-  left: 100%;
-}
-
-/* Мобильная адаптация */
-@media (max-width: 768px) {
-  .calculator-3d-container {
-    width: 200px;
-    height: 260px;
-    perspective: 1000px;
-  }
-  
-  .calculator-3d {
-    width: 160px;
-    height: 220px;
-    border-radius: 20px;
-  }
-  
-  .display {
-    margin: 20px 16px 16px;
-    height: 40px;
-    border-radius: 12px;
-  }
-  
-  .buttons {
-    padding: 0 16px 16px;
-    gap: 12px;
-  }
-  
-  .button-row {
-    gap: 12px;
-  }
-  
-  .button {
-    width: 28px;
-    height: 28px;
-  }
-}
-
-@media (max-width: 480px) {
-  .calculator-3d-container {
+  transition: leftd-container {
     width: 160px;
     height: 200px;
     perspective: 800px;
@@ -233,6 +241,8 @@ onBeforeUnmount(() => {
 
 .btn-color-5 {
   animation: pulse 2s infinite;
+  /* Анимация box-shadow не очень производительна, но will-change может немного помочь */
+  will-change: box-shadow;
 }
 
 @keyframes pulse {

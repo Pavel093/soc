@@ -1,75 +1,79 @@
 <template>
   <section class="hero">
-    <!-- SVG фон -->
+    <!-- Анимированный фон с градиентами -->
     <div class="hero__background">
-      <svg 
-        viewBox="0 0 1403 723" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <g filter="url(#filter0_n_246_41)">
-          <rect width="1403" height="723" fill="url(#paint0_radial_246_41)"/>
-          <rect width="1403" height="723" fill="url(#paint1_radial_246_41)"/>
-          <rect width="1403" height="723" fill="url(#paint2_radial_246_41)"/>
-        </g>
-        <defs>
-          <filter id="filter0_n_246_41" x="0" y="0" width="1403" height="723" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-            <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-            <feTurbulence type="fractalNoise" baseFrequency="1 1" stitchTiles="stitch" numOctaves="3" result="noise" seed="107" />
-            <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
-            <feComponentTransfer in="alphaNoise" result="coloredNoise1">
-              <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
-            </feComponentTransfer>
-            <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
-            <feFlood flood-color="rgba(255, 255, 255, 0.18)" result="color1Flood" />
-            <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
-            <feMerge result="effect1_noise_246_41">
-              <feMergeNode in="shape" />
-              <feMergeNode in="color1" />
-            </feMerge>
-          </filter>
-          <radialGradient id="paint0_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(371 434.5) rotate(31.5978) scale(387.439 298.127)">
-            <stop stop-color="#22C4FF"/>
-            <stop offset="1" stop-color="white" stop-opacity="0"/>
-          </radialGradient>
-          <radialGradient id="paint1_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1045 441) rotate(140.053) scale(285.011 384.132)">
-            <stop stop-color="#FF48B6"/>
-            <stop offset="1" stop-color="white" stop-opacity="0"/>
-          </radialGradient>
-          <radialGradient id="paint2_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(702 361) rotate(90) scale(332.5 448.137)">
-            <stop stop-color="#6C4BFF" stop-opacity="0.85"/>
-            <stop offset="1" stop-color="white" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-      </svg>
+      <div class="hero__gradient hero__gradient--1"></div>
+      <div class="hero__gradient hero__gradient--2"></div>
+      <div class="hero__gradient hero__gradient--3"></div>
+      <div class="hero__noise"></div>
     </div>
     
     <!-- Градиентный переход снизу -->
     <div class="hero__gradient-overlay"></div>
     
+    <!-- Декоративные элементы -->
+    <div class="hero__decoration">
+      <div class="hero__circle hero__circle--1"></div>
+      <div class="hero__circle hero__circle--2"></div>
+      <div class="hero__circle hero__circle--3"></div>
+    </div>
+    
     <!-- Основной контент -->
     <div class="hero__container">
       <div class="hero__content">
+        <!-- Бейдж -->
+        <div class="hero__badge">
+          <span class="hero__badge-text">Официальный расчет</span>
+        </div>
+        
+        <!-- Заголовок -->
         <h1 class="hero__title">
-          калькулятор <span class="hero__title-accent">единого пособия</span> для
-          <span class="hero__title-accent">семей с детьми</span> и <span class="hero__title-accent">беременных</span>
+          <span class="hero__title-line">Калькулятор</span>
+          <span class="hero__title-accent">единого пособия</span>
+          <span class="hero__title-line">для семей с детьми</span>
+          <span class="hero__title-accent">и беременных</span>
         </h1>
         
+        <!-- Описание -->
         <p class="hero__description">
-          Рассчитайте все выплаты за 2 минуты. Точный расчет
-          <span class="hero__description-break">онлайн — бесплатно и без регистрации.</span>
+          Рассчитайте все выплаты за 2 минуты. Точный расчет онлайн — 
+          <span class="hero__description-accent">бесплатно и без регистрации.</span>
         </p>
         
-        <a href="#calculator" class="hero__button" type="button">
-          рассчитать
-        </a>
+        <!-- Преимущества -->
+        <ul class="hero__features">
+          <li class="hero__feature">
+            <span class="hero__feature-icon">✓</span>
+            <span class="hero__feature-text">Актуальные правила 2025 года</span>
+          </li>
+          <li class="hero__feature">
+            <span class="hero__feature-icon">✓</span>
+            <span class="hero__feature-text">Учет всех критериев</span>
+          </li>
+          <li class="hero__feature">
+            <span class="hero__feature-icon">✓</span>
+            <span class="hero__feature-text">Подробная расшифровка</span>
+          </li>
+        </ul>
         
-        <p class="hero__note">
-          Актуальные правила 2025 года
-        </p>
+        <!-- Кнопка CTA -->
+        <div class="hero__actions">
+          <a href="#calculator" class="hero__button">
+            <span class="hero__button-text">Рассчитать пособие</span>
+            <span class="hero__button-icon">→</span>
+          </a>
+          
+          <p class="hero__note">
+            Уже помогли <span class="hero__note-accent">12 843 семьям</span>
+          </p>
+        </div>
       </div>
+    </div>
+    
+    <!-- Scroll indicator -->
+    <div class="hero__scroll-indicator">
+      <span class="hero__scroll-text">Листайте вниз</span>
+      <div class="hero__scroll-arrow"></div>
     </div>
   </section>
 </template>
@@ -81,29 +85,67 @@
 <style lang="scss" scoped>
 .hero {
   position: relative;
-  min-height: 100dvh; // Динамическая высота viewport для мобильных
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #ffffff; // Базовый белый фон
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 
-  // SVG фон
+  // Анимированный фон
   &__background {
     position: absolute;
     top: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
     width: 100%;
     height: 100%;
-    min-width: 1403px;
     z-index: 0;
+  }
+
+  &__gradient {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.7;
+    animation: float 20s infinite ease-in-out;
     
-    svg {
-      width: 100%;
-      height: 100%;
-      opacity: 0.5;
+    &--1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(34, 196, 255, 0.15) 0%, transparent 70%);
+      top: -200px;
+      right: -100px;
+      animation-delay: 0s;
     }
+    
+    &--2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 72, 182, 0.1) 0%, transparent 70%);
+      bottom: -150px;
+      left: -100px;
+      animation-delay: -7s;
+    }
+    
+    &--3 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(108, 75, 255, 0.1) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -14s;
+    }
+  }
+
+  &__noise {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
   }
 
   // Градиентный переход снизу
@@ -112,19 +154,59 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 30%; // Занимает 30% высоты секции
+    height: 30%;
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      rgba(248, 249, 251, 0) 0%,
-      rgba(248, 249, 251, 0.2) 20%,
-      rgba(248, 249, 251, 0.4) 40%,
+      rgba(248, 249, 251, 0.1) 20%,
+      rgba(248, 249, 251, 0.3) 40%,
       rgba(248, 249, 251, 0.6) 60%,
       rgba(248, 249, 251, 0.8) 80%,
       #f5f7fa 100%
     );
-    pointer-events: none; // Чтобы не блокировать клики
+    pointer-events: none;
     z-index: 5;
+  }
+
+  // Декоративные элементы
+  &__decoration {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &__circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(23, 117, 246, 0.1);
+    
+    &--1 {
+      width: 80px;
+      height: 80px;
+      top: 20%;
+      right: 15%;
+      animation: pulse 4s infinite ease-in-out;
+    }
+    
+    &--2 {
+      width: 40px;
+      height: 40px;
+      bottom: 30%;
+      left: 10%;
+      animation: pulse 3s infinite ease-in-out 1s;
+    }
+    
+    &--3 {
+      width: 60px;
+      height: 60px;
+      top: 60%;
+      right: 20%;
+      animation: pulse 5s infinite ease-in-out 2s;
+    }
   }
 
   // Контейнер для правильного выравнивания
@@ -147,73 +229,242 @@
     width: 100%;
   }
 
+  // Бейдж
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(23, 117, 246, 0.1);
+    border: 1px solid rgba(23, 117, 246, 0.2);
+    border-radius: 50px;
+    padding: 8px 16px;
+    margin-bottom: 30px;
+    
+    &-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1775F6;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  // Заголовок
   &__title {
-    font-size: clamp(28px, 5vw, 56px);
+    font-size: clamp(32px, 5vw, 60px);
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.1;
     margin: 0 0 clamp(20px, 3vw, 30px);
-    color: rgb(0, 0, 0);
+    color: #0f172a;
+    
+    &-line {
+      display: block;
+    }
     
     &-accent {
       color: #1775F6;
       position: relative;
-      white-space: nowrap; // Предотвращаем разрыв акцентных фраз
+      display: inline-block;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        width: 100%;
+        height: 8px;
+        background: rgba(23, 117, 246, 0.15);
+        z-index: -1;
+        border-radius: 4px;
+      }
     }
   }
 
+  // Описание
   &__description {
-    font-size: clamp(18px, 2.5vw, 28px);
-    line-height: 1.3;
-    color: #3A3A3A;
-    margin: 0 0 clamp(30px, 4vw, 40px);
-    max-width: 800px;
-    width: 100%;
+    font-size: clamp(18px, 2.5vw, 24px);
+    line-height: 1.4;
+    color: #475569;
+    margin: 0 0 clamp(25px, 3vw, 35px);
+    max-width: 700px;
     
-    &-break {
-      display: block;
-      margin-top: 0.2em;
+    &-accent {
+      font-weight: 600;
+      color: #0f172a;
     }
+  }
+
+  // Преимущества
+  &__features {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin: 0 0 clamp(30px, 4vw, 45px);
+    padding: 0;
+    list-style: none;
+  }
+
+  &__feature {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 50px;
+    padding: 10px 18px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  &__feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 8px;
+  }
+
+  &__feature-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #475569;
+  }
+
+  // Кнопка и действия
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
   }
 
   &__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
     background: #1775F6;
-    color: #ffffff;
-    border: 2px solid #97C3FF;
-    padding: 23.5px 50px;
-    font-size: clamp(20px, 3vw, 27px);
-    font-weight: 500;
-    border-radius: 15px;
+    color: white;
+    border: none;
+    padding: 18px 32px;
+    font-size: clamp(18px, 2.5vw, 20px);
+    font-weight: 600;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
-    text-transform: capitalize;
-    min-width: 200px;
     text-decoration: none;
+    box-shadow: 0 4px 14px 0 rgba(23, 117, 246, 0.3);
+    
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(23, 117, 246, 0.3);
+      box-shadow: 0 6px 20px rgba(23, 117, 246, 0.4);
+      background: #0d6efd;
     }
     
     &:active {
       transform: translateY(0);
     }
+    
+    &-icon {
+      font-size: 20px;
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover &-icon {
+      transform: translateX(3px);
+    }
   }
 
   &__note {
-    margin-top: clamp(16px, 2vw, 20px);
-    font-size: clamp(16px, 2vw, 20px);
-    color: #3A3A3A;
-    opacity: 0.8;
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+    
+    &-accent {
+      font-weight: 600;
+      color: #1775F6;
+    }
   }
 
+  // Scroll indicator
+  &__scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__scroll-text {
+    font-size: 14px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+  }
+
+  &__scroll-arrow {
+    width: 20px;
+    height: 20px;
+    border-right: 2px solid #64748b;
+    border-bottom: 2px solid #64748b;
+    transform: rotate(45deg);
+    animation: bounce 2s infinite;
+  }
+
+  // Анимации
+  @keyframes float {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(30px, -30px) scale(1.05);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.95);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+      transform: rotate(45deg) translateY(0);
+    }
+    40% {
+      transform: rotate(45deg) translateY(-5px);
+    }
+    60% {
+      transform: rotate(45deg) translateY(-3px);
+    }
+  }
+
+  // Адаптивность
   // Планшеты (landscape)
   @media (max-width: 1024px) and (orientation: landscape) {
     min-height: 100vh;
     padding: 60px 0;
     
-    &__background {
-      min-width: 1200px;
-    }
-
     &__gradient-overlay {
       height: 25%;
     }
@@ -226,41 +477,25 @@
     &__container {
       padding: 0 16px;
     }
-    
-    &__background {
-      min-width: 1000px;
-      
-      svg {
-        opacity: 0.4;
-      }
-    }
 
     &__gradient-overlay {
       height: 20%;
     }
     
-    &__title {
-      &-accent {
-        white-space: normal; // Разрешаем перенос на планшетах
-      }
+    &__features {
+      flex-direction: column;
+      align-items: center;
     }
     
-    &__description {
-      &-break {
-        display: inline;
-        margin-top: 0;
-      }
-    }
-    
-    &__button {
-      width: 100%;
-      max-width: 400px;
+    &__feature {
+      width: fit-content;
     }
   }
 
   @media (max-width: 780px) {
     min-height: 100vh !important;
   }
+
   // Мобильные устройства
   @media (max-width: 480px) {
     padding-top: 40px;
@@ -269,17 +504,9 @@
     &__container {
       padding: 0 12px;
     }
-    
-    &__background {
-      min-width: 800px;
-      
-      svg {
-        opacity: 0.3;
-      }
-    }
 
     &__gradient-overlay {
-      height: 150px; // Фиксированная высота на мобильных
+      height: 150px;
     }
     
     &__content {
@@ -287,18 +514,13 @@
     }
     
     &__title {
-      font-size: 35px;
+      font-size: 36px;
       line-height: 1.1;
       margin-bottom: 20px;
-      
-      &-accent {
-        display: inline-block;
-        margin: 2px 0;
-      }
     }
     
     &__description {
-      font-size: 16px;
+      font-size: 17px;
       line-height: 1.4;
       margin-bottom: 25px;
       padding: 0 10px;
@@ -307,34 +529,42 @@
     &__button {
       width: calc(100% - 24px);
       max-width: none;
-      padding: 18px 24px;
-      font-size: 20px;
-      border-radius: 12px;
+      padding: 16px 24px;
+      font-size: 18px;
+      border-radius: 10px;
+      justify-content: center;
     }
     
     &__note {
-      font-size: 14px;
-      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    &__gradient-overlay {
+      height: 120px;
+    }
+    
+    &__circle {
+      display: none;
     }
   }
 
   // Очень маленькие экраны
   @media (max-width: 360px) {
     &__title {
-      font-size: 35px;
+      font-size: 32px;
     }
     
     &__description {
-      font-size: 15px;
+      font-size: 16px;
     }
     
     &__button {
       font-size: 16px;
-      padding: 12px 20px;
+      padding: 14px 20px;
     }
 
     &__gradient-overlay {
-      height: 120px;
+      height: 100px;
     }
   }
 
@@ -361,12 +591,24 @@
       margin-bottom: 20px;
     }
     
+    &__features {
+      margin-bottom: 20px;
+    }
+    
     &__note {
       margin-top: 10px;
     }
 
     &__gradient-overlay {
       height: 100px;
+    }
+    
+    &__badge {
+      margin-bottom: 20px;
+    }
+    
+    &__scroll-indicator {
+      display: none;
     }
   }
 }
