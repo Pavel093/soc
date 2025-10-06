@@ -57,7 +57,7 @@
         <div class="contact-item">
           <p class="contact-text">
             Нашли ошибку или хотите оставить пожелание? 
-            <a href="mailto:support@vseposobiya.ru" class="contact-link">support@vseposobiya.ru</a>
+            <a href="mailto:support@wseposobiya.ru" class="contact-link">support@wseposobiya.ru</a>
           </p>
         </div>
         
@@ -72,7 +72,7 @@
         <div class="contact-item">
           <p class="contact-text">
             По поводу виджетов калькулятора: 
-            <a href="mailto:widgets@vseposobiya.ru" class="contact-link">widgets@vseposobiya.ru</a>
+            <a href="mailto:widgets@wseposobiya.ru" class="contact-link">widgets@wseposobiya.ru</a>
           </p>
         </div>
       </div>
@@ -109,7 +109,7 @@ const navigation = [
   // Якорные ссылки лучше делать без полного пути, если они на той же странице
   { title: 'На главную', link: '/#main' },
   { title: 'Ответы на вопросы', link: '/#faq' },
-  { title: 'Калькуляторы', link: '/#calculator' },
+  { title: 'Калькуляторы', link: '/#all-calculators' },
   { title: 'Виджет на сайт', link: '/#widget' }
 ];
 </script>
