@@ -90,7 +90,7 @@ const menuItems = ref([
   //   icon: markRaw(IconFaq)
   // },
   {
-    href: '#calculator',
+    href: '/#all-calculators',
     text: 'Калькуляторы',
     description: 'Расчет стоимости и сроков',
     icon: markRaw(IconCalculator)

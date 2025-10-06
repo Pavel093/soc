@@ -13,20 +13,19 @@
           и без регистрации.
         </p>
         
-        <button class="cta-button">
+        <a href="#all-calculators" class="cta-button">
           смотреть все калькуляторы
-        </button>
+        </a>
       </div>
       <div class="calculator3d-wrapper">
         <Calculator3D />
       </div>
-    </div>
+    </div> 
   </section>
 </template>
 
 <script setup>
 import Calculator3D from './Calculator3D.vue';
-
 </script>
 
 <style scoped>
@@ -98,6 +97,8 @@ import Calculator3D from './Calculator3D.vue';
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .cta-button:hover {
@@ -148,5 +149,4 @@ import Calculator3D from './Calculator3D.vue';
     max-width: 180px;
   }
 }
-
 </style>

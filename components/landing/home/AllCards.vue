@@ -1,5 +1,5 @@
 <template>
-  <div class="calculators-page">
+  <div id="all-calculators" class="calculators-page">
     <!-- Основная секция с калькуляторами -->
     <section class="calculators-section">
       <div class="container">
