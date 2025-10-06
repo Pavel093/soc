@@ -19,12 +19,12 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
-const rotateX = ref(13)
-const rotateY = ref(-13)
+const rotateX = ref(15)
+const rotateY = ref(-15)
 const isMobile = ref(false)
 
 const calcStyle = computed(() => ({
-  transform: `rotateX(${rotateX.value}deg) rotateY(${rotateY.value}deg)`
+  transform: `rotateX(${rotateX.value}deg) rotateY(${rotateY.value}deg) scale(1.05)`
 }))
 
 let frameId
@@ -32,8 +32,8 @@ const startTime = performance.now()
 
 function animate(time) {
   const t = (time - startTime) / 1000
-  rotateX.value = 13 + Math.sin(t * 0.85) * 7
-  rotateY.value = -13 + Math.cos(t * 0.7) * 7.5
+  rotateX.value = 15 + Math.sin(t * 0.8) * 5
+  rotateY.value = -15 + Math.cos(t * 0.6) * 5
   frameId = requestAnimationFrame(animate)
 }
 
@@ -55,40 +55,55 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .calculator-3d-container {
-  perspective: 1200px;
-  width: 320px;
-  height: 400px;
+  perspective: 1400px;
+  width: 340px;
+  height: 440px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto;
   transition: all 0.3s ease;
+  z-index: 2;
 }
 
 .calculator-3d {
-  width: 240px;
-  height: 340px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #f9fafb 68%, #eaf3fb 100%);
+  width: 260px;
+  height: 360px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   box-shadow:
-    0 12px 32px 0 rgba(110, 140, 210, 0.09),
-    0 1.5px 8px 0 rgba(180,200,235, 0.065),
-    0 0.5px 1.5px 0 rgba(160,180,220, 0.042);
+    0 25px 50px -12px rgba(43, 123, 246, 0.15),
+    0 8px 25px -8px rgba(43, 123, 246, 0.1),
+    0 2px 8px -2px rgba(43, 123, 246, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
   position: relative;
   display: flex;
   flex-direction: column;
-  transition: transform 0.6s cubic-bezier(.4,2,.5,1);
+  transition: transform 0.6s cubic-bezier(0.4, 2, 0.5, 1);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .display {
-  margin: 28px 24px 20px;
-  height: 56px;
-  border-radius: 13px;
+  margin: 32px 28px 24px;
+  height: 64px;
+  border-radius: 16px;
   background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   box-shadow:
-    0 2px 8px 0 rgba(0, 0, 0, 0.15),
+    0 4px 12px 0 rgba(0, 0, 0, 0.2),
     inset 0 1px 2px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid #475569;
+  position: relative;
+  overflow: hidden;
+}
+
+.display::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
 }
 
 .buttons {
@@ -96,136 +111,147 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0 24px 24px;
-  gap: 18px;
+  padding: 0 28px 28px;
+  gap: 20px;
 }
 
 .button-row {
   display: flex;
   justify-content: space-between;
-  gap: 18px;
+  gap: 20px;
 }
 
 .button {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   box-shadow:
-    0 3px 8px 0 rgba(0, 0, 0, 0.15),
+    0 4px 12px 0 rgba(0, 0, 0, 0.15),
     inset 0 1px 3px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.button:hover::before {
+  left: 100%;
 }
 
 /* Мобильная адаптация */
 @media (max-width: 768px) {
   .calculator-3d-container {
-    width: 180px;
-    height: 240px;
-    perspective: 800px;
+    width: 200px;
+    height: 260px;
+    perspective: 1000px;
   }
   
   .calculator-3d {
-    width: 140px;
-    height: 200px;
-    border-radius: 16px;
+    width: 160px;
+    height: 220px;
+    border-radius: 20px;
   }
   
   .display {
-    margin: 16px 14px 12px;
-    height: 32px;
-    border-radius: 8px;
+    margin: 20px 16px 16px;
+    height: 40px;
+    border-radius: 12px;
   }
   
   .buttons {
-    padding: 0 14px 14px;
-    gap: 10px;
+    padding: 0 16px 16px;
+    gap: 12px;
   }
   
   .button-row {
-    gap: 10px;
+    gap: 12px;
   }
   
   .button {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 }
 
 @media (max-width: 480px) {
   .calculator-3d-container {
-    width: 140px;
-    height: 180px;
-    perspective: 600px;
+    width: 160px;
+    height: 200px;
+    perspective: 800px;
   }
   
   .calculator-3d {
-    width: 110px;
-    height: 155px;
-    border-radius: 12px;
+    width: 130px;
+    height: 170px;
+    border-radius: 16px;
   }
   
   .display {
-    margin: 12px 10px 8px;
-    height: 24px;
-    border-radius: 6px;
+    margin: 16px 12px 12px;
+    height: 32px;
+    border-radius: 10px;
   }
   
   .buttons {
-    padding: 0 10px 10px;
-    gap: 8px;
+    padding: 0 12px 12px;
+    gap: 10px;
   }
   
   .button-row {
-    gap: 8px;
+    gap: 10px;
   }
   
   .button {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
 }
 
-/* Цветовая схема кнопок */
-.btn-color-1, .btn-color-2, .btn-color-3,
-.btn-color-4, .btn-color-5, .btn-color-6,
-.btn-color-7, .btn-color-8, .btn-color-9 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Цветовая схема кнопок с #2b7bf6 */
+.btn-color-1, .btn-color-4, .btn-color-7 {
+  background: #2b7bf6;
 }
 
 .btn-color-2, .btn-color-5, .btn-color-8 {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #1d6de3;
 }
 
 .btn-color-3, .btn-color-6, .btn-color-9 {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #0f5fd1;
 }
 
 .btn-color-5 {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
   0%, 100% {
     box-shadow:
-      0 3px 8px 0 rgba(250, 112, 154, 0.15),
+      0 4px 12px 0 rgba(43, 123, 246, 0.3),
       inset 0 1px 3px 0 rgba(255, 255, 255, 0.3);
   }
   50% {
     box-shadow:
-      0 3px 12px 0 rgba(250, 112, 154, 0.3),
+      0 4px 20px 0 rgba(43, 123, 246, 0.5),
       inset 0 1px 3px 0 rgba(255, 255, 255, 0.4);
   }
 }
 
 /* Отключаем hover эффекты на мобильных */
 @media (hover: none) and (pointer: coarse) {
-  .button:hover {
-    transform: none;
-    box-shadow:
-      0 3px 8px 0 rgba(0, 0, 0, 0.15),
-      inset 0 1px 3px 0 rgba(255, 255, 255, 0.3);
+  .button:hover::before {
+    left: -100%;
   }
 }
 </style>
