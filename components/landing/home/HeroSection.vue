@@ -3,7 +3,7 @@
     <div class="container section-grid">
       <div class="content">
         <h2 class="title">
-          Рассчитайте всё, что положено...<br />
+          Рассчитайте всё, что положено<br />
           <span class="title-accent">вашей семье</span>
         </h2>
         
