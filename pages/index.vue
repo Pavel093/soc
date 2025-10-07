@@ -9,8 +9,8 @@ import AdvantagesSection from '~/components/landing/home/AdvantagesSection.vue'
   <div> 
     <Header />
     <HeroSection />
-    <AllCards />
-    <AdvantagesSection />
+    <LazyLandingHomeAllCards />
+    <LazyLandingHomeAdvantagesSection />
     <LazyFooter />
   </div>
 </template>
