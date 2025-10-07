@@ -5,7 +5,7 @@ import HeroSection from '~/components/landing/home/HeroSection.vue';
 
 <template>
   <div> 
-    <LazyHeader />
+    <Header />
     <HeroSection />
     <LazyAllCards />
     <LazyAdvantagesSection />
