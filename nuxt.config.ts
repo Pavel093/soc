@@ -94,7 +94,7 @@ export default defineNuxtConfig({
   ],
 
   site: {
-    url: 'https://всепособия.рф'
+    url: 'https://xn--90abjn2aafod7l.xn--p1ai'
   },
 
   sitemap: {
@@ -112,7 +112,7 @@ export default defineNuxtConfig({
       UserAgent: '*',
       Allow: '/',
       Disallow: ['/admin', '/embed'],
-      Sitemap: 'https://всепособия.рф/sitemap.xml'
+      Sitemap: 'https://xn--90abjn2aafod7l.xn--p1ai/sitemap.xml'
     }
   }
 })

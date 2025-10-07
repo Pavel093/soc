@@ -1,5 +1,4 @@
 <template>
-  <!-- 1. Добавляем ref, чтобы получить доступ к DOM-элементу в скрипте -->
   <div 
     ref="containerRef" 
     class="calculator-3d-container" 
@@ -113,6 +112,9 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   transition: all 0.3s ease;
   z-index: 2;
+  @media (max-width: 768px) {
+    margin-bottom: 24px;
+  }
 }
 
 .calculator-3d {
@@ -193,37 +195,44 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  .left-container {
-    width: 160px;
-    height: 200px;
-    perspective: 800px;
-  }
-  
-  .calculator-3d {
-    width: 130px;
-    height: 170px;
-    border-radius: 16px;
-  }
-  
-  .display {
-    margin: 16px 12px 12px;
-    height: 32px;
-    border-radius: 10px;
-  }
-  
-  .buttons {
-    padding: 0 12px 12px;
-    gap: 10px;
-  }
-  
-  .button-row {
-    gap: 10px;
-  }
-  
-  .button {
-    width: 22px;
-    height: 22px;
-  }
+  transition: left 0.5s ease;
+}
+
+.button:hover::before {
+  left: 100%;
+}
+
+/* Стили для мобильной версии (уменьшение в 2 раза) */
+.calculator-3d-container.mobile-size {
+  width: 170px;
+  height: 220px;
+  perspective: 700px;
+}
+
+.calculator-3d-container.mobile-size .calculator-3d {
+  width: 130px;
+  height: 180px;
+  border-radius: 14px;
+}
+
+.calculator-3d-container.mobile-size .display {
+  margin: 16px 14px 12px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.calculator-3d-container.mobile-size .buttons {
+  padding: 0 14px 14px;
+  gap: 10px;
+}
+
+.calculator-3d-container.mobile-size .button-row {
+  gap: 10px;
+}
+
+.calculator-3d-container.mobile-size .button {
+  width: 22px;
+  height: 22px;
 }
 
 /* Цветовая схема кнопок с #2b7bf6 */

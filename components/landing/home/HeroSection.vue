@@ -310,6 +310,13 @@ import Calculator3D from './Calculator3D.vue';
   .floating-element {
     display: none;
   }
+  
+  /* Уменьшаем контейнер калькулятора в 2 раза для мобильных */
+  .calculator3d-wrapper {
+    transform: scale(0.5);
+    transform-origin: center;
+    margin: -50px 0; /* Компенсируем уменьшение отступов */
+  }
 }
 
 @media (max-width: 480px) {
@@ -328,6 +335,12 @@ import Calculator3D from './Calculator3D.vue';
   .cta-button {
     width: 100%;
     justify-content: center;
+  }
+  
+  /* Дополнительное уменьшение для очень маленьких экранов */
+  .calculator3d-wrapper {
+    transform: scale(0.45);
+    margin: -60px 0;
   }
 }
 </style>
