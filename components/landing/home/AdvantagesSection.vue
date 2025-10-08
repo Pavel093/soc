@@ -10,7 +10,7 @@
             <span class="benefit-icon">⚡</span>
           </div>
           <h3 class="benefit-card-title">Актуально</h3>
-          <p class="benefit-card-description">Все калькуляторы обновлены под законы 2024 года</p>
+          <p class="benefit-card-description">Все калькуляторы обновлены под законы 2025 года</p>
         </div>
 
         <!-- Преимущество 2 -->

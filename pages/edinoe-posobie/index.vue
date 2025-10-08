@@ -37,7 +37,6 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
   twitterTitle: 'Калькулятор единого пособия 2025: онлайн расчет',
   twitterDescription: 'Рассчитайте точный размер единого пособия на 2025 год с учетом всех новых правил. Бесплатно и без регистрации.',
-  twitterImage: 'https://всепособия.рф/og-image-edinoe-posobie.jpg', 
 });
 
 
