@@ -16,7 +16,14 @@
         </ul>
       </nav>
 
-      <button class="header__burger" @click="toggleMenu" :class="{ 'header__burger--active': isMenuOpen }">
+      <!-- ИЗМЕНЕНО: Добавлены aria-label и aria-expanded -->
+      <button 
+        class="header__burger" 
+        @click="toggleMenu" 
+        :class="{ 'header__burger--active': isMenuOpen }"
+        aria-label="Открыть меню"
+        :aria-expanded="isMenuOpen"
+      >
         <span></span>
         <span></span>
         <span></span>
@@ -34,7 +41,8 @@
           <img :src="Logo" alt="logo-image">
           <span>Меню</span>
         </div>
-        <button class="header__mobile-close" @click="closeMenu">
+        <!-- ИЗМЕНЕНО: Добавлен aria-label -->
+        <button class="header__mobile-close" @click="closeMenu" aria-label="Закрыть меню">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
