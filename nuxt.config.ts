@@ -1,8 +1,5 @@
-import { regions } from './data/regions.js'
-import { getAllSlugs } from './data/calculatorPages.js'
-
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false }, // Отключить в продакшене
   
   devServer: {
     host: '0.0.0.0',
@@ -11,27 +8,58 @@ export default defineNuxtConfig({
   
   css: ['~/assets/scss/global.scss'],
   
+  // Экспериментальные оптимизации
+  experimental: {
+    payloadExtraction: false, // Уменьшает размер HTML
+    inlineSSRStyles: false, // Вынос стилей в отдельные файлы
+    renderJsonPayloads: true,
+    viewTransition: true
+  },
+
+  // Оптимизация производительности
   nitro: {
     prerender: {
       crawlLinks: true,
       routes: ['/'],
       failOnError: false
+    },
+    compressPublicAssets: true, // Сжатие статики
+    minify: true
+  },
+
+  // Оптимизация Vite
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: '' // Добавьте общие миксины/переменные если нужно
+        }
+      }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor': ['vue', 'vue-router']
+          }
+        }
+      }
     }
   },
 
   routeRules: {
-    // Все страницы по умолчанию - SSG
     '/**': { 
-      prerender: true 
+      prerender: true,
+      headers: {
+        'cache-control': 's-maxage=31536000' // Кеширование на год для статики
+      }
     },
     
-    // Embed страница - SSR
     '/embed': { 
       prerender: false, 
       ssr: true 
     },
     
-    // Admin страница и все подстраницы - SSR
     '/admin': { 
       prerender: false, 
       ssr: true 
@@ -41,10 +69,19 @@ export default defineNuxtConfig({
       ssr: true 
     },
     
-    // API маршруты - всегда серверные
     '/api/**': { 
       prerender: false,
-      cors: true
+      cors: true,
+      headers: {
+        'cache-control': 's-maxage=300' // 5 минут для API
+      }
+    },
+    
+    // Долгосрочное кеширование для статических ресурсов
+    '/_nuxt/**': {
+      headers: {
+        'cache-control': 'public, max-age=31536000, immutable'
+      }
     }
   },
 
@@ -55,43 +92,54 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'ru'
       },
-      script: [
+      // Добавляем preconnect для Яндекс Метрики
+      link: [
         {
-          innerHTML: `
-            (function(m,e,t,r,i,k,a){
-              m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-              m[i].l=1*new Date();
-              for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-              k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-            })(window, document,'script','https://mc.yandex.ru/metrika/tag.js','ym');
-
-            ym(104348512, 'init', {
-              clickmap:true,
-              trackLinks:true,
-              accurateTrackBounce:true,
-              webvisor:true,
-              ecommerce:"dataLayer"
-            });
-          `,
-          type: 'text/javascript'
-        }
-      ],
-      noscript: [
+          rel: 'preconnect',
+          href: 'https://mc.yandex.ru'
+        },
         {
-          innerHTML: '<div><img src="https://mc.yandex.ru/watch/104348512" style="position:absolute; left:-9999px;" alt="" /></div>'
+          rel: 'dns-prefetch',
+          href: 'https://mc.yandex.ru'
         }
-      ],
-      __dangerouslyDisableSanitizersByTagID: {
-        'yandex-metrika-script': ['innerHTML'],
-        'yandex-metrika-noscript': ['innerHTML']
-      }
+      ]
     }
   },
 
+  // Добавляем оптимизированные модули
   modules: [
     '@nuxtjs/sitemap',
-    '@nuxtjs/robots'
+    '@nuxtjs/robots',
+    '@nuxt/image', // Для оптимизации изображений
+    '@nuxtjs/fontaine', // Для оптимизации загрузки шрифтов
+    '@nuxtjs/critters' // Для инлайна критических CSS
   ],
+
+  // Конфигурация для @nuxt/image
+  image: {
+    quality: 80,
+    formats: ['webp', 'avif', 'jpeg'],
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536
+    }
+  },
+
+  // Конфигурация для Fontaine (оптимизация шрифтов)
+  fontMetrics: {
+    fonts: ['Inter', 'Roboto']
+  },
+
+  // Конфигурация для Critters (критический CSS)
+  critters: {
+    config: {
+      preload: 'swap'
+    }
+  },
 
   site: {
     url: 'https://всепособия.рф'
@@ -113,6 +161,25 @@ export default defineNuxtConfig({
       Allow: '/',
       Disallow: ['/admin', '/embed'],
       Sitemap: 'https://всепособия.рф/sitemap.xml'
+    }
+  },
+
+  // Отложенная загрузка компонентов
+  components: {
+    dirs: [
+      {
+        path: '~/components',
+        pathPrefix: false
+      }
+    ]
+  },
+
+  // Оптимизация рендеринга
+  render: {
+    bundleRenderer: {
+      shouldPreload: (file, type) => {
+        return ['script', 'style', 'font'].includes(type)
+      }
     }
   }
 })
