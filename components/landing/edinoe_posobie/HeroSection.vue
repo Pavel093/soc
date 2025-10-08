@@ -65,10 +65,10 @@
     </div>
     
     <!-- Scroll indicator -->
-    <div class="hero__scroll-indicator">
+    <!-- <div class="hero__scroll-indicator">
       <span class="hero__scroll-text">Листайте вниз</span>
       <div class="hero__scroll-arrow"></div>
-    </div>
+    </div> -->
   </section>
 </template>
 
