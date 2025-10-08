@@ -97,3 +97,16 @@ useHead({
   ],
 })
 </script>
+
+<template>
+  <div> 
+    <Header />
+    <HeroSection />
+    <LazyLandingHomeAllCards />
+    <LazyLandingHomeAdvantagesSection />
+    <LazyFooter />
+  </div>
+</template>
+
+<style lang="scss">
+</style>
