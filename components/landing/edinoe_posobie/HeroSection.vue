@@ -22,9 +22,6 @@
     <div class="hero__container">
       <div class="hero__content">
         <!-- Бейдж -->
-        <div class="hero__badge">
-          <span class="hero__badge-text">Официальный расчет</span>
-        </div>
         
         <!-- Заголовок -->
         <h1 class="hero__title">
@@ -62,10 +59,7 @@
             <span class="hero__button-text">Рассчитать пособие</span>
             <span class="hero__button-icon">→</span>
           </a>
-          
-          <p class="hero__note">
-            Уже помогли <span class="hero__note-accent">12 843 семьям</span>
-          </p>
+
         </div>
       </div>
     </div>
