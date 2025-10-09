@@ -1,26 +1,31 @@
 // plugins/metrika.client.ts
 
+// Расширяем глобальный интерфейс Window, чтобы TypeScript знал о 'ym'
+declare global {
+  interface Window {
+    ym: (id: number, action: string, ...args: any[]) => void;
+  }
+}
+
 export default defineNuxtPlugin(() => {
-  // Ваш ID счетчика
   const metrikaId = 104348512;
   
-  // Переменная для проверки, была ли метрика уже инициализирована
   let isMetrikaInitialized = false;
 
-  // Функция для загрузки и инициализации метрики
   const loadMetrika = () => {
-    // Если уже инициализировали, ничего не делаем
     if (isMetrikaInitialized) {
       return;
     }
 
+    // Загружаем сам скрипт
     (function(m,e,t,r,i,k,a){
       m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
       m[i].l=1*new Date();
       k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
     })(window, document,'script','https://mc.yandex.ru/metrika/tag.js','ym');
 
-    ym(metrikaId, 'init', {
+    // Инициализируем счетчик
+    window.ym(metrikaId, 'init', {
       clickmap:true,
       trackLinks:true,
       accurateTrackBounce:true,
@@ -28,26 +33,40 @@ export default defineNuxtPlugin(() => {
       ecommerce:"dataLayer"
     });
 
-    // Отмечаем, что инициализация прошла
-    isMetrikaInitialized = true;
+    console.log('Yandex Metrika Initialized'); // Для отладки в консоли браузера
 
-    // Убираем обработчики событий, чтобы они не висели в памяти без дела
+    isMetrikaInitialized = true;
+    
+    // ----- САМОЕ ВАЖНОЕ ИЗМЕНЕНИЕ -----
+    // Получаем доступ к роутеру Nuxt
+    const router = useRouter();
+
+    // Подписываемся на каждое изменение маршрута
+    router.afterEach((to, from) => {
+      // Проверяем, что Метрика доступна и это не первый переход (он уже учтен в 'init')
+      if (typeof window.ym !== 'undefined') {
+        // Отправляем данные о просмотре новой страницы
+        window.ym(metrikaId, 'hit', to.fullPath, {
+            referer: from.fullPath,
+            // title: document.title // можно также передавать заголовок страницы
+        });
+        console.log(`Metrika hit: ${to.fullPath}`); // Для отладки
+      }
+    });
+
+    // Убираем ненужные обработчики
     window.removeEventListener('scroll', loadMetrika, { passive: true });
     window.removeEventListener('mousemove', loadMetrika, { passive: true });
     window.removeEventListener('touchstart', loadMetrika, { passive: true });
     window.removeEventListener('click', loadMetrika, { passive: true });
   };
 
-  // ----- Триггеры для загрузки метрики -----
-
-  // 1. Загружаем по первому взаимодействию пользователя (скролл, движение мыши, тап, клик).
-  // Опция { once: true } гарантирует, что обработчик сработает только один раз.
+  // Триггеры для первоначальной загрузки (остаются без изменений)
   window.addEventListener('scroll', loadMetrika, { passive: true, once: true });
   window.addEventListener('mousemove', loadMetrika, { passive: true, once: true });
   window.addEventListener('touchstart', loadMetrika, { passive: true, once: true });
   window.addEventListener('click', loadMetrika, { passive: true, once: true });
 
-  // 2. Фолбэк: если пользователь неактивен, загружаем метрику через 3 секунды после загрузки страницы.
   setTimeout(() => {
     loadMetrika();
   }, 3000);
