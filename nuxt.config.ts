@@ -83,6 +83,7 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
+    hostname: 'https://xn--90abjn2aafod7l.xn--p1ai',
     sources: ['/api/sitemap'],
     exclude: [
       '/admin',

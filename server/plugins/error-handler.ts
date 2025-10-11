@@ -23,7 +23,8 @@ export default defineNitroPlugin((nitroApp) => {
       '/_nuxt',
       '/api',
       '/__nuxt',
-      '/favicon.ico'
+      '/favicon.ico',
+      '/favicon.svg',
     ]
     
     // Не проверяем служебные пути
