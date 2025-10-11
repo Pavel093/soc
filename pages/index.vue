@@ -18,7 +18,17 @@ useHead({
   link: [
     {
       rel: 'canonical',
-      href: siteUrl,
+      href: siteUrl, 
+    },
+    {
+      rel: 'icon',
+      type: 'image/svg+xml',
+      href: '/favicon.svg',
+    },
+    {
+      rel: 'icon',
+      type: 'image/png',
+      href: '/favicon.ico',
     },
   ],
 
