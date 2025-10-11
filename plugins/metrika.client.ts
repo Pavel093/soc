@@ -55,10 +55,10 @@ export default defineNuxtPlugin(() => {
     });
 
     // Убираем ненужные обработчики
-    window.removeEventListener('scroll', loadMetrika, { passive: true });
-    window.removeEventListener('mousemove', loadMetrika, { passive: true });
-    window.removeEventListener('touchstart', loadMetrika, { passive: true });
-    window.removeEventListener('click', loadMetrika, { passive: true });
+    // window.removeEventListener('scroll', loadMetrika, { passive: true });
+    // window.removeEventListener('mousemove', loadMetrika, { passive: true });
+    // window.removeEventListener('touchstart', loadMetrika, { passive: true });
+    // window.removeEventListener('click', loadMetrika, { passive: true });
   };
 
   // Триггеры для первоначальной загрузки (остаются без изменений)
