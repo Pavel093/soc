@@ -2,6 +2,7 @@
 <Header></Header>
 <Hero></Hero>
 <Calculator></Calculator>
+<LandingEdinoePosobieShareSection></LandingEdinoePosobieShareSection>
 <Advantages></Advantages>
 <HowItWorks></HowItWorks>
 <FAQ></FAQ>
