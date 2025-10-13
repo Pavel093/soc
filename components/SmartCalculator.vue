@@ -142,21 +142,23 @@ const checkCalculatorVisibility = () => {
   const contentRect = contentContainer.value.getBoundingClientRect();
   const windowHeight = window.innerHeight;
   
-  // Более точная проверка видимости
-  const calculatorTop = calculatorRect.top;
-  const calculatorBottom = calculatorRect.bottom;
-  const calculatorHeight = calculatorRect.height;
+  // Проверяем, находится ли контент калькулятора в видимой области
+  const contentInView = contentRect.top < windowHeight * 0.8 && contentRect.bottom > windowHeight * 0.2;
+  
+  // Проверяем, не скролим ли мы внутри самого контента
+  const isInternalScroll = contentRect.top <= 0 && contentRect.bottom >= windowHeight;
   
   // Показываем контролы если:
-  // - Калькулятор занимает больше 30% экрана
-  // - Или пользователь прокрутил до середины калькулятора
-  // - Или калькулятор близко к низу экрана
-  const isSubstantiallyVisible = (calculatorBottom > windowHeight * 0.3) && 
-                                (calculatorTop < windowHeight * 0.7);
+  // 1. Контент калькулятора видим
+  // 2. Или мы находимся внутри калькулятора (внутренняя прокрутка)
+  // 3. Или калькулятор занимает большую часть экрана
+  isCalculatorInView.value = contentInView || isInternalScroll || 
+    (calculatorRect.top < windowHeight * 0.5 && calculatorRect.bottom > windowHeight * 0.5);
   
-  const isNearBottom = calculatorBottom > windowHeight * 0.8;
-  
-  isCalculatorInView.value = isSubstantiallyVisible || isNearBottom;
+  // Дополнительная проверка: если скроллим вверх и калькулятор близко, показываем контролы
+  if (!isScrollingDown && calculatorRect.bottom > 0 && calculatorRect.top < windowHeight) {
+    isCalculatorInView.value = true;
+  }
 }
 
 // Обработчики касаний для мобильных
@@ -2016,19 +2018,6 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
-
-  <div v-if="!showResults && isMobile" 
-     class="scroll-indicator"
-     :class="{ 'visible': !isCalculatorInView }"
-     @click="scrollToCalculator">
-    <div class="indicator-content">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path d="M12 5V19M5 12L12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <span>Вернуться к калькулятору</span>
-      <div class="pulse-dot"></div>
-    </div>
-  </div>
 </template>
 
 <style scoped lang="scss">
@@ -3419,11 +3408,11 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   }
   
   &.primary {
-    background: #008CFF;
+    background: #008CFF !important;
     color: white;
     
     &:hover:not(:disabled) {
-      background: #0070CC;
+      background: #0070CC !important;
     }
   }
 }
@@ -3832,8 +3821,9 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     padding: 0.5rem;
     
     .big-button {
-      padding: 1.1rem;
-      font-size: 0.95rem;
+      padding: 1.3rem;
+      font-size: 0.99rem;
+      background: rgb(195, 192, 243);
     }
   }
   
@@ -4120,70 +4110,6 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   .reason-summary {
     padding: 0.75rem;
     font-size: 0.85rem;
-  }
-}
-
-/* Индикатор прокрутки */
-.scroll-indicator {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-100px);
-  background: linear-gradient(135deg, #008CFF 0%, #0066CC 100%);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 50px;
-  box-shadow: 0 8px 30px rgba(0, 140, 255, 0.4);
-  cursor: pointer;
-  z-index: 999;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  visibility: hidden;
-  
-  &.visible {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-    visibility: visible;
-  }
-  
-  .indicator-content {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-weight: 400;
-    font-size: 0.7rem;
-    position: relative;
-  }
-  
-  .pulse-dot {
-    width: 8px;
-    height: 8px;
-    background: #FF6B6B;
-    border-radius: 50%;
-    position: absolute;
-    top: -2px;
-    right: -5px;
-    animation: pulse 2s infinite;
-  }
-  
-  &:hover {
-    transform: translateX(-50%) translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 140, 255, 0.5);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.8);
-    opacity: 1;
-  }
-  70% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(0.8);
-    opacity: 1;
   }
 }
 </style>

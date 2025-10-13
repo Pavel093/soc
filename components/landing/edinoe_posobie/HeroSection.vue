@@ -14,7 +14,7 @@
       <div class="hero__content">
         <!-- Заголовок -->
         <h1 class="hero__title">
-          <span class="hero__title-line">Калькулятор</span>
+          <span class="hero__title-line">Бесплатный калькулятор</span>
           <span class="hero__title-accent">единого пособия</span>
         </h1>
         
@@ -27,7 +27,7 @@
         <ul class="hero__features">
           <li class="hero__feature">
             <span class="hero__feature-icon">✓</span>
-            <span class="hero__feature-text">Актуальные правила 2025 года</span>
+            <span class="hero__feature-text">Актуальные правила 2025/2026 года</span>
           </li>
           <li class="hero__feature">
             <span class="hero__feature-icon">✓</span>
@@ -275,7 +275,7 @@
 
   // Адаптивность
   @media (max-width: 768px) {
-    min-height: 60vh;
+    min-height: 80vh;
     
     &__container {
       padding: 30px 16px;
@@ -297,7 +297,6 @@
   }
 
   @media (max-width: 480px) {
-    min-height: 50vh;
     
     &__container {
       padding: 20px 12px;

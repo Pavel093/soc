@@ -3,6 +3,21 @@
 import { regions } from './data/regions.js'
 import { getAllSlugs } from './data/calculatorPages.js'
 
+// Список роутов в разработке, которые нужно скрыть от индексации
+const devRoutes = [
+  '/alimenty',
+  '/bolnichniy',
+  '/dekretnye',
+  '/kompensaciya-detsad',
+  '/nalogovyy-vychet',
+  '/otpusknye',
+  '/posobie-do-polutora-let',
+  '/raschet-dekretnyh',
+  '/semeynaya-ipoteka',
+  '/semeynyy-byudzhet',
+  '/vyplata-iz-matkapitala',
+]
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
   
@@ -47,7 +62,24 @@ export default defineNuxtConfig({
     '/api/**': { 
       prerender: false,
       cors: true
-    }
+    },
+
+    // ==========================================================
+    // Устанавливаем мета-тег noindex для каждой страницы
+    '/alimenty': { index: false },
+    '/bolnichniy': { index: false },
+    '/dekretnye': { index: false },
+    '/kompensaciya-detsad': { index: false },
+    '/nalogovyy-vychet': { index: false },
+    '/otpusknye': { index: false },
+    '/posobie-do-polutora-let': { index: false },
+    '/raschet-dekretnyh': { index: false },
+    '/semeynaya-ipoteka': { index: false },
+    '/semeynyy-byudzhet': { index: false },
+    '/vyplata-iz-matkapitala': { index: false },
+    // ==========================================================
+    // КОНЕЦ: Правила для страниц в разработке
+    // ==========================================================
   },
 
   app: {
@@ -57,19 +89,14 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'ru'
       },
-      // ДОБАВЛЕНО: Preconnect для ускорения загрузки скрипта метрики
       link: [
         { rel: 'preconnect', href: 'https://mc.yandex.ru' }
       ],
-      // УДАЛЕНО: Секция script с кодом метрики. Теперь это в плагине.
-      
-      // ОСТАВЛЕНО: Noscript важен для пользователей с отключенным JS
       noscript: [
         {
           innerHTML: '<div><img src="https://mc.yandex.ru/watch/104348512" style="position:absolute; left:-9999px;" alt="" /></div>'
         }
       ],
-      // УДАЛЕНО: __dangerouslyDisableSanitizersByTagID больше не нужен
     }
   },
 
@@ -84,11 +111,13 @@ export default defineNuxtConfig({
 
   sitemap: {
     sources: ['/api/sitemap'],
+    // Исключаем страницы из sitemap.xml
     exclude: [
       '/admin',
       '/admin/**',
       '/embed',
-      '/embed/**'
+      '/embed/**',
+      ...devRoutes // Добавляем сюда список страниц в разработке
     ]
   },
 
@@ -96,7 +125,12 @@ export default defineNuxtConfig({
     rules: {
       UserAgent: '*',
       Allow: '/',
-      Disallow: ['/admin', '/embed'],
+      // Запрещаем сканирование страниц в robots.txt
+      Disallow: [
+        '/admin', 
+        '/embed',
+        ...devRoutes // Добавляем сюда список страниц в разработке
+      ],
       Sitemap: 'https://всепособия.рф/sitemap.xml'
     }
   }
