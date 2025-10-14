@@ -1,149 +1,162 @@
 <template>
-  <div class="calculator-page">
-    <!-- Hero-секция для страницы -->
-    <div class="page-hero">
-      <div class="page-hero__background">
-        <svg viewBox="0 0 1403 723" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-          <g filter="url(#filter0_n_246_41)">
-            <rect width="1403" height="723" fill="url(#paint0_radial_246_41)"/>
-            <rect width="1403" height="723" fill="url(#paint1_radial_246_41)"/>
-            <rect width="1403" height="723" fill="url(#paint2_radial_246_41)"/>
-          </g>
-          <defs>
-            <filter id="filter0_n_246_41" x="0" y="0" width="1403" height="723" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-              <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-              <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-              <feTurbulence type="fractalNoise" baseFrequency="1 1" stitchTiles="stitch" numOctaves="3" result="noise" seed="107" />
-              <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
-              <feComponentTransfer in="alphaNoise" result="coloredNoise1">
-                <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
-              </feComponentTransfer>
-              <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
-              <feFlood flood-color="rgba(255, 255, 255, 0.18)" result="color1Flood" />
-              <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
-              <feMerge result="effect1_noise_246_41">
-                <feMergeNode in="shape" />
-                <feMergeNode in="color1" />
-              </feMerge>
-            </filter>
-            <radialGradient id="paint0_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(371 434.5) rotate(31.5978) scale(387.439 298.127)">
-              <stop stop-color="#22C4FF"/>
-              <stop offset="1" stop-color="white" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="paint1_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1045 441) rotate(140.053) scale(285.011 384.132)">
-              <stop stop-color="#FF48B6"/>
-              <stop offset="1" stop-color="white" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="paint2_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(702 361) rotate(90) scale(332.5 448.137)">
-              <stop stop-color="#6C4BFF" stop-opacity="0.85"/>
-              <stop offset="1" stop-color="white" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-        </svg>
-      </div>
-      
-      <div class="page-hero__gradient-overlay"></div>
-      
-      <div class="page-hero__container">
-        <div class="page-hero__content">
-          <h1 class="page-hero__title">
-            {{ pageData.h1 }}
-          </h1>
-          
-          <p class="page-hero__description">
-            {{ pageData.description }}
-          </p>
-          
-          <!-- Вводный текст -->
-          <div class="page-hero__intro" v-if="pageData.content?.intro">
-            <p>{{ pageData.content.intro }}</p>
-          </div>
-          
-          <!-- Подсказка по использованию -->
-          <div v-if="pageData.content?.hint" class="page-hero__hint">
-            <p>{{ pageData.content.hint }}</p>
-          </div>
+  <Header />
+  <div class="page-container">
+    <Breadcrumbs :items="breadcrumbs" />
+    <div class="calculator-page">
+      <!-- Hero-секция для страницы -->
+      <div class="page-hero">
+        <div class="page-hero__background">
+          <svg viewBox="0 0 1403 723" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <g filter="url(#filter0_n_246_41)">
+              <rect width="1403" height="723" fill="url(#paint0_radial_246_41)"/>
+              <rect width="1403" height="723" fill="url(#paint1_radial_246_41)"/>
+              <rect width="1403" height="723" fill="url(#paint2_radial_246_41)"/>
+            </g>
+            <defs>
+              <filter id="filter0_n_246_41" x="0" y="0" width="1403" height="723" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feTurbulence type="fractalNoise" baseFrequency="1 1" stitchTiles="stitch" numOctaves="3" result="noise" seed="107" />
+                <feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
+                <feComponentTransfer in="alphaNoise" result="coloredNoise1">
+                  <feFuncA type="discrete" tableValues="1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+                </feComponentTransfer>
+                <feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
+                <feFlood flood-color="rgba(255, 255, 255, 0.18)" result="color1Flood" />
+                <feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
+                <feMerge result="effect1_noise_246_41">
+                  <feMergeNode in="shape" />
+                  <feMergeNode in="color1" />
+                </feMerge>
+              </filter>
+              <radialGradient id="paint0_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(371 434.5) rotate(31.5978) scale(387.439 298.127)">
+                <stop stop-color="#22C4FF"/>
+                <stop offset="1" stop-color="white" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="paint1_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1045 441) rotate(140.053) scale(285.011 384.132)">
+                <stop stop-color="#FF48B6"/>
+                <stop offset="1" stop-color="white" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="paint2_radial_246_41" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(702 361) rotate(90) scale(332.5 448.137)">
+                <stop stop-color="#6C4BFF" stop-opacity="0.85"/>
+                <stop offset="1" stop-color="white" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+          </svg>
         </div>
-      </div>
-    </div>
-
-    <!-- Универсальный калькулятор -->
-    <SmartCalculator />
-
-    <!-- SEO-контент после калькулятора -->
-    <div class="seo-content">
-      <!-- Секции с информацией -->
-      <div 
-        v-for="section in pageData.content?.sections" 
-        :key="section.title"
-        class="info-section"
-      >
-        <h2>{{ section.title }}</h2>
-        <ul v-if="section.items">
-          <li v-for="item in section.items" :key="item">
-            {{ item }}
-          </li>
-        </ul>
-        <div v-if="section.text" v-html="section.text"></div>
-      </div>
-
-      <!-- Блок с ссылками на похожие страницы -->
-      <div class="related-pages">
-        <h3>Смотрите также:</h3>
-        <div class="related-links">
-          <NuxtLink 
-            v-for="related in relatedPages" 
-            :key="related.slug"
-            :to="`/edinoe-posobie/calculator/${related.slug}`"
-            class="related-link"
-          >
-            {{ related.title }}
-          </NuxtLink>
-        </div>
-      </div>
-
-      <!-- FAQ секция в стиле компонента FAQ -->
-      <div class="faq-section">
-        <h2 class="faq-title">
-          Частые <span class="faq-title__accent">вопросы</span>
-        </h2>
         
-        <div class="faq-list">
-          <div
-            v-for="(item, index) in faqItems"
-            :key="index"
-            class="faq-item"
-            :class="{ 'faq-item--active': item.isOpen }"
-            @click="toggleFaq(index)"
-          >
-            <div class="faq-item__header">
-              <h3 class="faq-item__question">{{ item.question }}</h3>
-              <div class="faq-item__icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path v-if="!item.isOpen" d="M10 4V16M16 10H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path v-else d="M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </div>
+        <div class="page-hero__gradient-overlay"></div>
+        
+        <div class="page-hero__container">
+          <div class="page-hero__content">
+            <h1 class="page-hero__title">
+              {{ pageData.h1 }}
+            </h1>
+            
+            <p class="page-hero__description">
+              {{ pageData.description }}
+            </p>
+            
+            <!-- Вводный текст -->
+            <div class="page-hero__intro" v-if="pageData.content?.intro">
+              <p>{{ pageData.content.intro }}</p>
             </div>
-            <transition
-              name="faq-slide"
-              @enter="enter"
-              @after-enter="afterEnter"
-              @leave="leave"
+            
+            <!-- Подсказка по использованию -->
+            <div v-if="pageData.content?.hint" class="page-hero__hint">
+              <p>{{ pageData.content.hint }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Универсальный калькулятор -->
+      <SmartCalculator />
+
+      <!-- SEO-контент после калькулятора -->
+      <div class="seo-content">
+        <!-- Секции с информацией -->
+        <div 
+          v-for="section in pageData.content?.sections" 
+          :key="section.title"
+          class="info-section"
+        >
+          <h2>{{ section.title }}</h2>
+          <ul v-if="section.items">
+            <li v-for="item in section.items" :key="item">
+              {{ item }}
+            </li>
+          </ul>
+          <div v-if="section.text" v-html="section.text"></div>
+        </div>
+
+        <!-- Блок с ссылками на похожие страницы -->
+        <div class="related-pages">
+          <h3>Смотрите также:</h3>
+          <div class="related-links">
+            <NuxtLink 
+              v-for="related in relatedPages" 
+              :key="related.slug"
+              :to="`/edinoe-posobie/calculator/${related.slug}`"
+              class="related-link"
             >
-              <div v-if="item.isOpen" class="faq-item__answer">
-                <p>{{ item.answer }}</p>
+              {{ related.title }}
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- FAQ секция в стиле компонента FAQ -->
+        <div class="faq-section">
+          <h2 class="faq-title">
+            Частые <span class="faq-title__accent">вопросы</span>
+          </h2>
+          
+          <div class="faq-list">
+            <div
+              v-for="(item, index) in faqItems"
+              :key="index"
+              class="faq-item"
+              :class="{ 'faq-item--active': item.isOpen }"
+              @click="toggleFaq(index)"
+            >
+              <div class="faq-item__header">
+                <h3 class="faq-item__question">{{ item.question }}</h3>
+                <div class="faq-item__icon">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path v-if="!item.isOpen" d="M10 4V16M16 10H4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path v-else d="M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
               </div>
-            </transition>
+              <transition
+                name="faq-slide"
+                @enter="enter"
+                @after-enter="afterEnter"
+                @leave="leave"
+              >
+                <div v-if="item.isOpen" class="faq-item__answer">
+                  <p>{{ item.answer }}</p>
+                </div>
+              </transition>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <script setup>
+import { computed, ref } from 'vue';
+import { useRoute, createError, useSeoMeta, useHead } from '#imports';
+
+// Импорт данных и компонентов
 import { getPageData, getAllSlugs } from '~/data/calculatorPages'
+import Header from '~/components/Header.vue';
+import Footer from '~/components/Footer.vue';
+import Breadcrumbs from '~/components/Breadcrumbs.vue';
+import SmartCalculator from '~/components/SmartCalculator.vue';
 
 const route = useRoute()
 const slug = route.params.slug
@@ -155,9 +168,17 @@ const pageData = getPageData(slug)
 if (!pageData) {
   throw createError({
     statusCode: 404,
-    statusMessage: 'Страница не найдена'
+    statusMessage: 'Страница не найдена',
+    fatal: true
   })
 }
+
+// Формируем путь для "хлебных крошек"
+const breadcrumbs = [
+  { text: 'Главная', to: '/' },
+  { text: 'Единое пособие', to: '/edinoe-posobie' },
+  { text: pageData.h1, to: null } // Последний элемент без ссылки
+];
 
 // Генерируем список похожих страниц
 const relatedPages = computed(() => {
@@ -199,7 +220,7 @@ const relatedPages = computed(() => {
     })
   }
   
-  return related.slice(0, 4)
+  return [...new Map(related.map(item => [item.slug, item])).values()].slice(0, 4);
 })
 
 // FAQ данные
@@ -288,10 +309,10 @@ useHead({
 </script>
 
 <style scoped lang="scss">
-.calculator-page {
+.page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.5rem;
 }
 
 // Hero секция в стиле главной страницы
@@ -583,8 +604,8 @@ useHead({
 
 // Мобильная адаптация
 @media (max-width: 768px) {
-  .calculator-page {
-    padding: 15px;
+  .page-container {
+    padding: 1rem;
   }
   
   .page-hero {

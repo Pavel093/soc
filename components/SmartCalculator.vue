@@ -8,6 +8,11 @@ import IconOne from './svg-elements/one.vue'
 import IconTwo from './svg-elements/two.vue'
 import IconThree from './svg-elements/three.vue'
 
+// Таймер для отслеживания бездействия пользователя
+const inactivityTimer = ref(null);
+// Флаг для запуска анимации
+const startPulsing = ref(false);
+
 // Инициализация таймера для отслеживания времени на шагах
 const stepTimer = new StepTimer()
 const isCalculatorStarted = ref(false)
@@ -20,6 +25,7 @@ const contentContainer = ref(null)
 const calculatorRef = ref(null)
 const isCalculatorInView = ref(false)
 const isMobile = ref(false)
+
 
 // Переменные для отслеживания скролла
 let scrollTimeout = null
@@ -506,6 +512,10 @@ const canProceed = computed(() => {
 // Навигация с метрикой
 const nextQuestion = () => {
   // Отслеживаем завершение текущего шага
+
+  clearTimeout(inactivityTimer.value);
+  startPulsing.value = false;
+
   const currentStepName = getStepName(currentQuestionIndex.value, questions)
   trackEvent(YM_EVENTS.STEP_COMPLETE, {
     step: currentStepName,
@@ -625,6 +635,11 @@ const nextQuestion = () => {
 }
 
 const previousQuestion = () => {
+
+  // Останавливаем таймер и анимацию при клике
+  clearTimeout(inactivityTimer.value);
+  startPulsing.value = false;
+  
   if (!isFirstQuestion.value) {
     // Отслеживаем возврат назад
     const fromStep = getStepName(currentQuestionIndex.value, questions)
@@ -1019,6 +1034,21 @@ const validReasonsList = [
 watch([currentQuestionIndex, showResults, formData], () => {
   saveToLocalStorage()
 }, { deep: true })
+
+watch(canProceed, (isNowProceedable, wasPreviouslyProceedable) => {
+  // Всегда сбрасываем предыдущее состояние при изменении
+  clearTimeout(inactivityTimer.value);
+  startPulsing.value = false;
+
+  // Если кнопка только что стала активной (была неактивна, а стала активна)
+  if (isNowProceedable && !wasPreviouslyProceedable) {
+    // Запускаем таймер на 3 секунды
+    inactivityTimer.value = setTimeout(() => {
+      // Если таймер сработал (пользователь бездействовал), запускаем пульсацию
+      startPulsing.value = true;
+    }, 3000); // 3 секунды бездействия
+  }
+});
 
 // Монтирование и размонтирование
 onMounted(async () => {
@@ -2010,6 +2040,7 @@ onUnmounted(() => {
         
         <button 
           class="big-button primary"
+          :class="{ 'pulse-attention': startPulsing }"
           @click="nextQuestion"
           :disabled="!canProceed"
         >
@@ -4111,5 +4142,103 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     padding: 0.75rem;
     font-size: 0.85rem;
   }
+}
+
+
+@keyframes strongPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.4);
+  }
+  50% {
+    // Увеличиваем интенсивность и размер свечения
+    box-shadow: 0 0 0 15px rgba(0, 140, 255, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
+  }
+}
+
+@keyframes doublePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.4),
+                0 0 0 0 rgba(0, 140, 255, 0.3);
+  }
+  50% {
+    // Двойное свечение для большего эффекта
+    box-shadow: 0 0 0 12px rgba(0, 140, 255, 0.2),
+                0 0 0 20px rgba(0, 140, 255, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0),
+                0 0 0 0 rgba(0, 140, 255, 0);
+  }
+}
+
+@keyframes pulseWithGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.5);
+    transform: scale(1);
+  }
+  25% {
+    // Легкое увеличение кнопки + свечение
+    box-shadow: 0 0 0 8px rgba(0, 140, 255, 0.3);
+    transform: scale(1.02);
+  }
+  50% {
+    box-shadow: 0 0 0 15px rgba(0, 140, 255, 0.15);
+    transform: scale(1.02);
+  }
+  75% {
+    box-shadow: 0 0 0 8px rgba(0, 140, 255, 0.1);
+    transform: scale(1.01);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
+    transform: scale(1);
+  }
+}
+
+.big-button.primary {
+  transition: all 0.3s ease;
+  position: relative;
+  
+  // Базовые стили для лучшей видимости
+  background-color: #008CFF;
+  border: none;
+  color: white;
+  
+  // Постоянная тень для контраста
+  box-shadow: 0 4px 15px rgba(0, 140, 255, 0.2);
+
+  &.pulse-attention:not(:disabled) {
+    // Вариант 1: Стандартная усиленная пульсация
+    animation: strongPulse 1.5s ease-in-out 4;
+    
+    // Вариант 2: Двойная пульсация (раскомментировать для использования)
+    // animation: doublePulse 2s ease-in-out 3;
+    
+    // Вариант 3: Пульсация с трансформацией (раскомментировать)
+    // animation: pulseWithGlow 2s ease-in-out 2;
+    
+    // Убедимся, что анимация имеет приоритет
+    animation-fill-mode: both;
+  }
+  
+  // Эффект при наведении для интерактивности
+  &:hover:not(:disabled) {
+    background-color: #0073d9;
+    box-shadow: 0 6px 20px rgba(0, 140, 255, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
+// Альтернативный вариант с бесконечной анимацией для постоянного внимания
+.big-button.primary.pulse-continuous:not(:disabled) {
+  animation: strongPulse 2s ease-in-out infinite;
+}
+
+// Дополнительный класс для срочного внимания
+.big-button.primary.pulse-urgent:not(:disabled) {
+  animation: pulseWithGlow 1s ease-in-out 6;
 }
 </style>

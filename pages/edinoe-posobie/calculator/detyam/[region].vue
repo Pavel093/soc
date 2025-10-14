@@ -1,39 +1,43 @@
 <template>
   <Header />
-  <article class="calculator-page">
-    <header class="page-intro">
-      <h1>{{ title }}</h1>
-      <p class="description">{{ description }}</p>
-    </header>
+  <div class="page-container">
+    <Breadcrumbs :items="breadcrumbs" />
+    <article class="calculator-page">
+      <header class="page-intro">
+        <h1>{{ title }}</h1>
+        <p class="description">{{ description }}</p>
+      </header>
 
-    <section class="calculator-block">
-      <SmartCalculator />
-    </section>
+      <section class="calculator-block">
+        <SmartCalculator />
+      </section>
 
-    <aside class="living-wage-summary">
-      <h2>Прожиточный минимум в {{ regionGenitive }}</h2>
-      <ul class="wage-list">
-        <li>
-          <strong>На душу населения:</strong>
-          <span>{{ currentRegion?.pmValue?.toLocaleString('ru-RU') }} ₽</span>
-        </li>
-        <li>
-          <strong>Для трудоспособных:</strong>
-          <span>{{ currentRegion?.pmWorking?.toLocaleString('ru-RU') }} ₽</span>
-        </li>
-        <li>
-          <strong>Для детей:</strong>
-          <span>{{ currentRegion?.pmChild?.toLocaleString('ru-RU') }} ₽</span>
-        </li>
-      </ul>
-      <p class="info-note">Данные о прожиточном минимуме используются для определения права на пособие и расчета его размера.</p>
-    </aside>
-  </article>
+      <aside class="living-wage-summary">
+        <h2>Прожиточный минимум в {{ regionGenitive }}</h2>
+        <ul class="wage-list">
+          <li>
+            <strong>На душу населения:</strong>
+            <span>{{ currentRegion?.pmValue?.toLocaleString('ru-RU') }} ₽</span>
+          </li>
+          <li>
+            <strong>Для трудоспособных:</strong>
+            <span>{{ currentRegion?.pmWorking?.toLocaleString('ru-RU') }} ₽</span>
+          </li>
+          <li>
+            <strong>Для детей:</strong>
+            <span>{{ currentRegion?.pmChild?.toLocaleString('ru-RU') }} ₽</span>
+          </li>
+        </ul>
+        <p class="info-note">Данные о прожиточном минимуме используются для определения права на пособие и расчета его размера.</p>
+      </aside>
+    </article>
+  </div>
   <Footer />
 </template>
 
 <script setup>
 import { findRegionByCode } from '~/data/regions.js'
+import Breadcrumbs from '~/components/Breadcrumbs.vue' // <-- Импорт компонента
 
 const route = useRoute()
 const currentRegion = findRegionByCode(route.params.region)
@@ -46,10 +50,7 @@ if (!currentRegion) {
   })
 }
 
-// Используем падеж для красивого отображения в тексте (например, "в Москве")
 const regionGenitive = currentRegion.nameGenitive || currentRegion.name
-
-// --- Ключевые изменения для SEO ---
 const title = `Калькулятор единого пособия на детей в ${regionGenitive} в 2025 году`
 const description = `Рассчитайте онлайн размер единого пособия для семей с детьми от 0 до 17 лет в ${regionGenitive}. Актуальный расчет с учетом прожиточного минимума на ребенка в регионе: ${currentRegion.pmChild.toLocaleString('ru-RU')} ₽.`
 
@@ -60,6 +61,14 @@ useSeoMeta({
   ogDescription: description,
   keywords: `единое пособие, пособие на детей, детские пособия, калькулятор пособий, ${regionGenitive}, 2025, прожиточный минимум`
 })
+
+// <-- Формируем массив для хлебных крошек
+const breadcrumbs = [
+  { text: 'Главная', to: '/' },
+  { text: 'Единое пособие', to: '/edinoe-posobie' },
+  { text: 'Калькулятор на детей', to: '/edinoe-posobie/calculator/detyam' },
+  { text: currentRegion.name } // Последний элемент без ссылки
+];
 </script>
 
 <style lang="scss" scoped>
