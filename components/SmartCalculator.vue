@@ -1,12 +1,18 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+// ИЗМЕНЕНО: Добавляем useRoute для доступа к параметрам URL
+import { useRoute } from 'vue-router'
 import { regions, findRegionByCode } from '../data/regions'
 import SmartResults from './SmartResults.vue'
-import { detectRegionByIP } from '../utils/geoDetection'
+// УДАЛЕНО: Больше не используем определение по IP
+// import { detectRegionByIP } from '../utils/geoDetection'
 import { trackEvent, YM_EVENTS, getStepName, StepTimer } from '../utils/yandexMetrika'
 import IconOne from './svg-elements/one.vue'
 import IconTwo from './svg-elements/two.vue'
 import IconThree from './svg-elements/three.vue'
+
+// ИЗМЕНЕНО: Получаем доступ к текущему роуту
+const route = useRoute()
 
 // Таймер для отслеживания бездействия пользователя
 const inactivityTimer = ref(null);
@@ -32,7 +38,6 @@ let scrollTimeout = null
 let lastScrollY = 0
 let isScrollingDown = false
 let touchStartY = 0
-
 // Функции для работы с localStorage
 const saveToLocalStorage = () => {
   try {
@@ -120,85 +125,18 @@ const scrollToTop = () => {
 // Обработчики скролла
 const handleScroll = () => {
   // На ПК всегда показываем контролы
-  if (window.innerWidth > 768) {
-    isCalculatorInView.value = true
-    return
-  }
-  
-  // Определяем направление скролла
-  const currentScrollY = window.scrollY
-  isScrollingDown = currentScrollY > lastScrollY
-  lastScrollY = currentScrollY
-  
-  // Проверяем видимость с небольшой задержкой для стабильности
-  if (scrollTimeout) clearTimeout(scrollTimeout)
-  scrollTimeout = setTimeout(checkCalculatorVisibility, 50)
+  isCalculatorInView.value = true
 }
 
 const checkCalculatorVisibility = () => {
-  if (!calculatorRef.value || !contentContainer.value) return;
-  
-  // Всегда показываем контролы на ПК
-  if (window.innerWidth > 768) {
-    isCalculatorInView.value = true;
-    return;
-  }
-  
-  const calculatorRect = calculatorRef.value.getBoundingClientRect();
-  const contentRect = contentContainer.value.getBoundingClientRect();
-  const windowHeight = window.innerHeight;
-  
-  // Проверяем, находится ли контент калькулятора в видимой области
-  const contentInView = contentRect.top < windowHeight * 0.8 && contentRect.bottom > windowHeight * 0.2;
-  
-  // Проверяем, не скролим ли мы внутри самого контента
-  const isInternalScroll = contentRect.top <= 0 && contentRect.bottom >= windowHeight;
-  
-  // Показываем контролы если:
-  // 1. Контент калькулятора видим
-  // 2. Или мы находимся внутри калькулятора (внутренняя прокрутка)
-  // 3. Или калькулятор занимает большую часть экрана
-  isCalculatorInView.value = contentInView || isInternalScroll || 
-    (calculatorRect.top < windowHeight * 0.5 && calculatorRect.bottom > windowHeight * 0.5);
-  
-  // Дополнительная проверка: если скроллим вверх и калькулятор близко, показываем контролы
-  if (!isScrollingDown && calculatorRect.bottom > 0 && calculatorRect.top < windowHeight) {
-    isCalculatorInView.value = true;
-  }
-}
-
-// Обработчики касаний для мобильных
-const handleTouchStart = (e) => {
-  if (window.innerWidth > 768) return;
-  touchStartY = e.touches[0].clientY;
-}
-
-const handleTouchMove = (e) => {
-  if (window.innerWidth > 768) return;
-  
-  const touchY = e.touches[0].clientY;
-  const deltaY = touchStartY - touchY;
-  
-  // Если это небольшое движение (возможно внутренний скролл), не скрываем контролы
-  if (Math.abs(deltaY) < 10) {
-    return;
-  }
-  
-  // Проверяем, не является ли это скроллом внутри контента калькулятора
-  if (contentContainer.value) {
-    const contentRect = contentContainer.value.getBoundingClientRect();
-    if (touchY >= contentRect.top && touchY <= contentRect.bottom) {
-      // Касание внутри контента - не скрываем контролы
-      isCalculatorInView.value = true;
-      return;
-    }
-  }
+  // Всегда показываем контролы
+  isCalculatorInView.value = true
 }
 
 // Обработчик ресайза
 const handleResize = () => {
   isMobile.value = window.innerWidth <= 768
-  checkCalculatorVisibility()
+  // Убираем вызов checkCalculatorVisibility
 }
 
 // Получение текущей даты для расчета периода
@@ -352,10 +290,102 @@ const formData = ref(getDefaultFormData())
 // Состояние калькулятора
 const currentQuestionIndex = ref(0)
 const showResults = ref(false)
-const isDetectingRegion = ref(false)
-const isAutoDetected = ref(false)
+// УДАЛЕНО: Больше не нужно
+// const isDetectingRegion = ref(false)
+const isAutoDetected = ref(false) // Этот флаг оставляем, он полезен для UI
 const showIncomeHelp = ref(false)
 const showReasonDetails = ref(false)
+
+// ТЕПЕРЬ ДОБАВЛЯЕМ код для выбора региона после formData
+// Данные для выбора региона
+const regionSearch = ref('')
+const showRegionDropdown = ref(false)
+const regionSearchInput = ref(null)
+
+// Отсортированный по алфавиту список регионов
+const sortedRegions = computed(() => {
+  return [...regions].sort((a, b) => a.name.localeCompare(b.name))
+})
+
+// Отфильтрованные регионы по поиску
+const filteredRegions = computed(() => {
+  if (!regionSearch.value.trim()) {
+    return sortedRegions.value
+  }
+  
+  const searchTerm = regionSearch.value.toLowerCase().trim()
+  return sortedRegions.value.filter(region => 
+    region.name.toLowerCase().includes(searchTerm)
+  )
+})
+
+// Название выбранного региона
+const selectedRegionName = computed(() => {
+  if (!formData.value.region) return ''
+  const region = findRegionByCode(formData.value.region)
+  return region ? region.name : ''
+})
+
+// Методы для работы с регионами
+const selectRegion = (region) => {
+  formData.value.region = region.code
+  regionSearch.value = region.name // Показываем полное название в поле ввода
+  showRegionDropdown.value = false
+}
+
+const handleRegionSearch = () => {
+  // При вводе текста автоматически открываем dropdown
+  if (!showRegionDropdown.value) {
+    showRegionDropdown.value = true
+  }
+}
+
+const toggleDropdown = () => {
+  showRegionDropdown.value = !showRegionDropdown.value
+  if (showRegionDropdown.value) {
+    nextTick(() => {
+      regionSearchInput.value?.focus()
+    })
+  }
+}
+
+const closeRegionDropdown = () => {
+  // Не закрываем dropdown если фокус в поле ввода
+  if (document.activeElement === regionSearchInput.value) {
+    return
+  }
+  showRegionDropdown.value = false
+  
+  // Если есть выбранный регион, показываем его название в поле поиска
+  if (formData.value.region && regionSearch.value !== selectedRegionName.value) {
+    regionSearch.value = selectedRegionName.value
+  }
+}
+
+// Директива для закрытия по клику вне элемента
+const vClickOutside = {
+  mounted(el, binding) {
+    el.clickOutsideEvent = function(event) {
+      if (!(el === event.target || el.contains(event.target))) {
+        binding.value()
+      }
+    }
+    document.addEventListener('click', el.clickOutsideEvent)
+  },
+  unmounted(el) {
+    document.removeEventListener('click', el.clickOutsideEvent)
+  }
+}
+
+// При монтировании устанавливаем начальное значение если регион уже выбран
+watch(() => formData.value.region, (newRegion) => {
+  if (newRegion && !regionSearch.value) {
+    const region = findRegionByCode(newRegion)
+    if (region) {
+      regionSearch.value = region.name
+    }
+  }
+}, { immediate: true })
 
 // Список вопросов
 const questions = ['region', 'recipient', 'family', 'income', 'transport', 'property', 'conditions']
@@ -672,6 +702,12 @@ const resetCalculator = () => {
   currentQuestionIndex.value = 0
   showResults.value = false
   formData.value = getDefaultFormData()
+  
+  // ДОБАВЛЕНО: Сбрасываем состояние поиска региона
+  regionSearch.value = ''
+  isAutoDetected.value = false
+  showRegionDropdown.value = false
+  
   clearLocalStorage()
   isCalculatorStarted.value = false
   calculatorStartTime = Date.now()
@@ -1050,6 +1086,20 @@ watch(canProceed, (isNowProceedable, wasPreviouslyProceedable) => {
   }
 });
 
+watch(() => formData.value.region, (newRegion, oldRegion) => {
+  if (newRegion && !regionSearch.value) {
+    const region = findRegionByCode(newRegion)
+    if (region) {
+      regionSearch.value = region.name
+    }
+  }
+  
+  // При сбросе региона также сбрасываем поиск
+  if (!newRegion && oldRegion) {
+    regionSearch.value = ''
+  }
+}, { immediate: true })
+
 // Монтирование и размонтирование
 onMounted(async () => {
   // Загружаем сохраненные данные
@@ -1139,11 +1189,12 @@ onMounted(async () => {
     console.log('Восстановлен прогресс калькулятора')
   }
   
-  // Добавляем слушатели событий
+  // Добавляем слушатели событий - УБИРАЕМ обработчики касаний
   window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('resize', handleResize)
-  window.addEventListener('touchstart', handleTouchStart, { passive: true })
-  window.addEventListener('touchmove', handleTouchMove, { passive: true })
+  // УБИРАЕМ эти строки:
+  // window.addEventListener('touchstart', handleTouchStart, { passive: true })
+  // window.addEventListener('touchmove', handleTouchMove, { passive: true })
   
   // Инициализируем значения
   isMobile.value = window.innerWidth <= 768
@@ -1154,30 +1205,21 @@ onMounted(async () => {
     checkCalculatorVisibility()
   })
   
-  // Автоопределение региона (только если регион не был сохранен)
+  // ИЗМЕНЕНО: Весь блок автоопределения заменен на логику подстановки из роута
+  // Подстановка региона из роута (только если регион не был сохранен)
   if (!formData.value.region) {
-    isDetectingRegion.value = true
+    const regionSlugFromRoute = route.params.region;
     
-    try {
-      const detectedRegion = await detectRegionByIP()
-      if (detectedRegion) {
-        formData.value.region = detectedRegion
-        isAutoDetected.value = true
-        
-        // Отслеживаем автоопределение региона
-        trackEvent('calculator_region_autodetected', {
-          region: detectedRegion,
-          success: true
-        })
-      }
-    } catch (error) {
-      console.error('Ошибка определения региона:', error)
-      trackEvent('calculator_region_autodetected', {
-        success: false,
-        error: error.message
-      })
-    } finally {
-      isDetectingRegion.value = false
+    // Проверяем, что слаг из URL существует и соответствует одному из наших регионов
+    if (regionSlugFromRoute && findRegionByCode(regionSlugFromRoute)) {
+      formData.value.region = regionSlugFromRoute;
+      isAutoDetected.value = true; // Используем этот флаг, чтобы показать сообщение "Регион определен автоматически"
+      
+      // Отслеживаем автоподстановку региона из URL
+      trackEvent('calculator_region_from_route', {
+        region: regionSlugFromRoute,
+        success: true
+      });
     }
   }
 })
@@ -1195,24 +1237,18 @@ onUnmounted(() => {
   
   stepTimer.endTimer()
   
-  // Удаляем слушатели событий
+  // Удаляем слушатели событий - УБИРАЕМ обработчики касаний
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', handleResize)
-  window.removeEventListener('touchstart', handleTouchStart)
-  window.removeEventListener('touchmove', handleTouchMove)
+  // УБИРАЕМ эти строки:
+  // window.removeEventListener('touchstart', handleTouchStart)
+  // window.removeEventListener('touchmove', handleTouchMove)
   if (scrollTimeout) clearTimeout(scrollTimeout)
 })
 </script>
 
-
-
 <template>
   <div class="smart-calculator" ref="calculatorRef">
-    <div style="display: none;" v-if="!isCalculatorInView && isMobile" class="floating-scroll-button" @click="scrollToCalculator">  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path d="M12 20V4M5 11L12 4L19 11" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      Вернуться к калькулятору
-    </div>
     <div class="container">
       <!-- Основной контент -->
       <div class="content base-bg-color-two" ref="contentContainer">
@@ -1240,20 +1276,52 @@ onUnmounted(() => {
             </p>
             
             <div class="base-option">
-              <div class="select-wrapper">
-                <select v-model="formData.region" class="region-select">
-                  <option disabled value="">Выберите регион</option>
-                  <option v-for="region in regions" :key="region.code" :value="region.code">
-                    {{ region.name }} (ПМ: {{ formatAmount(region.pmValue) }} ₽)
-                  </option>
-                </select>
+              <!-- Комбинированное поле поиска и выбора -->
+              <div class="select-wrapper" v-click-outside="closeRegionDropdown">
+                <!-- Поле ввода, которое также работает как триггер -->
+                <div class="search-trigger-wrapper">
+                  <input 
+                    type="text"
+                    v-model="regionSearch"
+                    placeholder="Начните вводить название региона..."
+                    class="region-search-input"
+                    @focus="showRegionDropdown = true"
+                    @input="handleRegionSearch"
+                    ref="regionSearchInput"
+                  />
+                  <div class="dropdown-arrow" :class="{ 'rotated': showRegionDropdown }" @click="toggleDropdown">
+                    ▼
+                  </div>
+                </div>
+                
+                <!-- Выпадающий список регионов -->
+                <div v-if="showRegionDropdown" class="region-dropdown">
+                  <div class="region-list">
+                    <div
+                      v-for="region in filteredRegions"
+                      :key="region.code"
+                      class="region-option"
+                      :class="{ 'selected': formData.region === region.code }"
+                      @click="selectRegion(region)"
+                    >
+                      <span class="region-name">{{ region.name }}</span>
+                      <span class="region-pm">ПМ: {{ formatAmount(region.pmValue) }} ₽</span>
+                    </div>
+                    
+                    <div v-if="filteredRegions.length === 0" class="no-results">
+                      Регионы не найдены. Попробуйте изменить запрос.
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div v-if="isDetectingRegion" class="loading-message light-text">
-                <div class="spinner"></div>
-                Определяем ваш регион...
-              </div>
+
               <div v-if="formData.region && isAutoDetected" class="success-message">
                 ✓ Регион определен автоматически
+              </div>
+              
+              <!-- Отображение выбранного региона -->
+              <div v-if="formData.region && !showRegionDropdown" class="selected-region-display">
+                <strong>Выбран регион:</strong> {{ selectedRegionName }} (ПМ: {{ formatAmount(currentRegionPM) }} ₽)
               </div>
             </div>
 
@@ -2029,7 +2097,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Кнопки управления -->
-      <div class="controls base-bg-color-two" v-if="!showResults" :class="{ 'hidden': !isCalculatorInView }">
+      <div class="controls base-bg-color-two" v-if="!showResults">
         <button 
           class="big-button" 
           @click="previousQuestion"
@@ -2580,23 +2648,30 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   padding: 1.5rem 0 0 0;
   background: transparent;
   
+  // Убираем фиксированное позиционирование для всех устройств
+  position: static;
+  transform: none;
+  opacity: 1;
+  box-shadow: none !important;
+  border-radius: 0;
+  
   @media (max-width: 768px) {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1rem;
-    background: $bg-lighter;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    border-radius: 20px 20px 0 0;
+    // На мобильных тоже статичное позиционирование
+    position: static;
+    background: transparent;
+    padding: 1.5rem 0 0 0;
+    box-shadow: none;
+    border-radius: 0;
     
-    transition: all 0.3s ease;
+    // Убираем все анимации и трансформации
+    transition: none;
     
+    // Убираем класс hidden
     &.hidden {
-      transform: translateY(100%);
-      opacity: 0;
-      pointer-events: none;
+      display: flex !important;
+      opacity: 1 !important;
+      transform: none !important;
+      pointer-events: all !important;
     }
   }
 }
@@ -2612,6 +2687,8 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   .content {
     padding: 1.5rem;
     border-radius: 16px;
+    // Убираем отступ снизу для мобильных
+    padding-bottom: 1.5rem;
   }
   
   .step-title {
@@ -3936,26 +4013,21 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
 
   .content {
     overflow: visible;
-    padding-bottom: 80px;
-    min-height: calc(100vh - 80px);
+    // Убираем фиксированный отступ для контролов
+    padding-bottom: 1.5rem;
+    min-height: auto;
   }
 
+  // УБИРАЕМ фиксированное позиционирование контролов
   .controls {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: static;
+    transform: none;
+    opacity: 1;
     
     &.hidden {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    
-    &:not(.hidden) {
-      transform: translateY(0);
-      opacity: 1;
+      display: flex !important;
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
 }
@@ -4232,5 +4304,174 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
 // Дополнительный класс для срочного внимания
 .big-button.primary.pulse-urgent:not(:disabled) {
   animation: pulseWithGlow 1s ease-in-out 6;
+}
+
+// Стили для выбора региона с поиском
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-trigger-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.region-search-input {
+  width: 100%;
+  padding: 1rem 3rem 1rem 1rem;
+  border: 2px solid #E8EAED;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background: white;
+  cursor: pointer;
+  
+  &:focus {
+    outline: none;
+    border-color: #008CFF;
+    cursor: text;
+  }
+  
+  &::placeholder {
+    color: #A2AAB5;
+  }
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  color: #6F767E;
+  font-size: 0.8rem;
+  
+  &.rotated {
+    transform: translateY(-50%) rotate(180deg);
+  }
+  
+  &:hover {
+    color: #008CFF;
+  }
+}
+
+.region-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #E8EAED;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.region-list {
+  padding: 0.5rem 0;
+}
+
+.region-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-left: 3px solid transparent;
+  
+  &:hover {
+    background-color: #F8FBFF;
+    border-left-color: #008CFF;
+  }
+  
+  &.selected {
+    background-color: #F0F7FF;
+    border-left-color: #008CFF;
+    
+    .region-name {
+      color: #008CFF;
+      font-weight: 600;
+    }
+  }
+}
+
+.region-name {
+  font-size: 0.95rem;
+  color: #1A1D1F;
+}
+
+.region-pm {
+  font-size: 0.85rem;
+  color: #6F767E;
+  font-weight: 500;
+}
+
+.no-results {
+  padding: 1.5rem;
+  text-align: center;
+  color: #6F767E;
+  font-size: 0.9rem;
+  background: #F8FAFC;
+}
+
+.selected-region-display {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #F0F7FF;
+  border-radius: 8px;
+  border-left: 4px solid #008CFF;
+  font-size: 0.95rem;
+  
+  strong {
+    color: #008CFF;
+  }
+}
+
+// Адаптивность для мобильных устройств
+@media (max-width: 768px) {
+  .region-search-input {
+    padding: 0.875rem 2.5rem 0.875rem 0.875rem;
+    font-size: 0.95rem;
+  }
+  
+  .dropdown-arrow {
+    right: 0.875rem;
+  }
+  
+  .region-dropdown {
+    max-height: 250px;
+  }
+  
+  .region-option {
+    padding: 0.625rem 0.875rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .region-name {
+    font-size: 0.9rem;
+  }
+  
+  .region-pm {
+    font-size: 0.8rem;
+    align-self: flex-end;
+  }
+  
+  .selected-region-display {
+    padding: 0.875rem;
+    font-size: 0.9rem;
+  }
 }
 </style>
