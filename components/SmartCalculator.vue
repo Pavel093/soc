@@ -4175,24 +4175,24 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 @keyframes pulseWithGlow {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.5);
+  0%, 30% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
     transform: scale(1);
   }
-  25% {
+  40% {
     // Легкое увеличение кнопки + свечение
     box-shadow: 0 0 0 8px rgba(0, 140, 255, 0.3);
     transform: scale(1.02);
   }
-  50% {
+  55% {
     box-shadow: 0 0 0 15px rgba(0, 140, 255, 0.15);
     transform: scale(1.02);
   }
-  75% {
+  70% {
     box-shadow: 0 0 0 8px rgba(0, 140, 255, 0.1);
     transform: scale(1.01);
   }
-  100% {
+  80%, 100% {
     box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
     transform: scale(1);
   }
@@ -4211,18 +4211,10 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   box-shadow: 0 4px 15px rgba(0, 140, 255, 0.2);
 
   &.pulse-attention:not(:disabled) {
-    // Вариант 1: Стандартная усиленная пульсация
-    animation: strongPulse 1.5s ease-in-out 4;
-    
-    // Вариант 2: Двойная пульсация (раскомментировать для использования)
-    // animation: doublePulse 2s ease-in-out 3;
-    
-    // Вариант 3: Пульсация с трансформацией (раскомментировать)
-    // animation: pulseWithGlow 2s ease-in-out 2;
-    
-    // Убедимся, что анимация имеет приоритет
+    animation: doublePulse 6s ease-in-out infinite;
+    animation-delay: 2s;
     animation-fill-mode: both;
-  }
+}
   
   // Эффект при наведении для интерактивности
   &:hover:not(:disabled) {
