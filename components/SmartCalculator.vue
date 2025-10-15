@@ -298,25 +298,11 @@ const showReasonDetails = ref(false)
 
 // ТЕПЕРЬ ДОБАВЛЯЕМ код для выбора региона после formData
 // Данные для выбора региона
-const regionSearch = ref('')
 const showRegionDropdown = ref(false)
-const regionSearchInput = ref(null)
 
 // Отсортированный по алфавиту список регионов
 const sortedRegions = computed(() => {
   return [...regions].sort((a, b) => a.name.localeCompare(b.name))
-})
-
-// Отфильтрованные регионы по поиску
-const filteredRegions = computed(() => {
-  if (!regionSearch.value.trim()) {
-    return sortedRegions.value
-  }
-  
-  const searchTerm = regionSearch.value.toLowerCase().trim()
-  return sortedRegions.value.filter(region => 
-    region.name.toLowerCase().includes(searchTerm)
-  )
 })
 
 // Название выбранного региона
@@ -329,37 +315,15 @@ const selectedRegionName = computed(() => {
 // Методы для работы с регионами
 const selectRegion = (region) => {
   formData.value.region = region.code
-  regionSearch.value = region.name // Показываем полное название в поле ввода
   showRegionDropdown.value = false
-}
-
-const handleRegionSearch = () => {
-  // При вводе текста автоматически открываем dropdown
-  if (!showRegionDropdown.value) {
-    showRegionDropdown.value = true
-  }
 }
 
 const toggleDropdown = () => {
   showRegionDropdown.value = !showRegionDropdown.value
-  if (showRegionDropdown.value) {
-    nextTick(() => {
-      regionSearchInput.value?.focus()
-    })
-  }
 }
 
 const closeRegionDropdown = () => {
-  // Не закрываем dropdown если фокус в поле ввода
-  if (document.activeElement === regionSearchInput.value) {
-    return
-  }
   showRegionDropdown.value = false
-  
-  // Если есть выбранный регион, показываем его название в поле поиска
-  if (formData.value.region && regionSearch.value !== selectedRegionName.value) {
-    regionSearch.value = selectedRegionName.value
-  }
 }
 
 // Директива для закрытия по клику вне элемента
@@ -376,16 +340,6 @@ const vClickOutside = {
     document.removeEventListener('click', el.clickOutsideEvent)
   }
 }
-
-// При монтировании устанавливаем начальное значение если регион уже выбран
-watch(() => formData.value.region, (newRegion) => {
-  if (newRegion && !regionSearch.value) {
-    const region = findRegionByCode(newRegion)
-    if (region) {
-      regionSearch.value = region.name
-    }
-  }
-}, { immediate: true })
 
 // Список вопросов
 const questions = ['region', 'recipient', 'family', 'income', 'transport', 'property', 'conditions']
@@ -703,8 +657,7 @@ const resetCalculator = () => {
   showResults.value = false
   formData.value = getDefaultFormData()
   
-  // ДОБАВЛЕНО: Сбрасываем состояние поиска региона
-  regionSearch.value = ''
+  // ДОБАВЛЕНО: Сбрасываем состояние выбора региона
   isAutoDetected.value = false
   showRegionDropdown.value = false
   
@@ -1086,20 +1039,6 @@ watch(canProceed, (isNowProceedable, wasPreviouslyProceedable) => {
   }
 });
 
-watch(() => formData.value.region, (newRegion, oldRegion) => {
-  if (newRegion && !regionSearch.value) {
-    const region = findRegionByCode(newRegion)
-    if (region) {
-      regionSearch.value = region.name
-    }
-  }
-  
-  // При сбросе региона также сбрасываем поиск
-  if (!newRegion && oldRegion) {
-    regionSearch.value = ''
-  }
-}, { immediate: true })
-
 // Монтирование и размонтирование
 onMounted(async () => {
   // Загружаем сохраненные данные
@@ -1276,21 +1215,16 @@ onUnmounted(() => {
             </p>
             
             <div class="base-option">
-              <!-- Комбинированное поле поиска и выбора -->
+              <!-- Простой выпадающий список регионов -->
               <div class="select-wrapper" v-click-outside="closeRegionDropdown">
-                <!-- Поле ввода, которое также работает как триггер -->
+                <!-- Триггер для открытия списка -->
                 <div class="search-trigger-wrapper">
-                  <input 
-                    type="text"
-                    v-model="regionSearch"
-                    placeholder="Начните вводить название региона..."
-                    class="region-search-input"
-                    @focus="showRegionDropdown = true"
-                    @input="handleRegionSearch"
-                    ref="regionSearchInput"
-                  />
-                  <div class="dropdown-arrow" :class="{ 'rotated': showRegionDropdown }" @click="toggleDropdown">
-                    ▼
+                  <div class="region-select-trigger" @click="toggleDropdown">
+                    <span v-if="formData.region">{{ selectedRegionName }}</span>
+                    <span v-else class="placeholder">Выберите регион из списка</span>
+                    <div class="dropdown-arrow" :class="{ 'rotated': showRegionDropdown }">
+                      ▼
+                    </div>
                   </div>
                 </div>
                 
@@ -1298,7 +1232,7 @@ onUnmounted(() => {
                 <div v-if="showRegionDropdown" class="region-dropdown">
                   <div class="region-list">
                     <div
-                      v-for="region in filteredRegions"
+                      v-for="region in sortedRegions"
                       :key="region.code"
                       class="region-option"
                       :class="{ 'selected': formData.region === region.code }"
@@ -1306,10 +1240,6 @@ onUnmounted(() => {
                     >
                       <span class="region-name">{{ region.name }}</span>
                       <span class="region-pm">ПМ: {{ formatAmount(region.pmValue) }} ₽</span>
-                    </div>
-                    
-                    <div v-if="filteredRegions.length === 0" class="no-results">
-                      Регионы не найдены. Попробуйте изменить запрос.
                     </div>
                   </div>
                 </div>
@@ -2136,6 +2066,30 @@ $border-color: #E2E8F0;
 $shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
 
+
+.region-select-trigger {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #E8EAED;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+  
+  &:hover {
+    border-color: #CBD5E1;
+  }
+  
+  .placeholder {
+    color: #A2AAB5;
+  }
+}
+
+
 // ===== ОСНОВНЫЕ СТИЛИ =====
 .smart-calculator {
   width: 100%;
@@ -2159,7 +2113,6 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   background: $bg-lighter;
   box-shadow: $shadow;
   position: relative;
-  overflow: hidden;
   
   &::before {
     content: '';
@@ -4044,7 +3997,6 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
 /* Исправляем z-index для предотвращения наложения */
 .content {
   position: relative;
-  z-index: 1;
 }
 
 .controls {
@@ -4253,15 +4205,15 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   }
   40% {
     // Легкое увеличение кнопки + свечение
-    box-shadow: 0 0 0 8px rgba(0, 140, 255, 0.3);
+    box-shadow: 0 0 0 4px rgba(0, 140, 255, 0.3);
     transform: scale(1.02);
   }
   55% {
-    box-shadow: 0 0 0 15px rgba(0, 140, 255, 0.15);
+    box-shadow: 0 0 0 5px rgba(0, 140, 255, 0.15);
     transform: scale(1.02);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(0, 140, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(0, 140, 255, 0.1);
     transform: scale(1.01);
   }
   80%, 100% {
@@ -4283,7 +4235,7 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
   box-shadow: 0 4px 15px rgba(0, 140, 255, 0.2);
 
   &.pulse-attention:not(:disabled) {
-    animation: doublePulse 6s ease-in-out infinite;
+    animation: doublePulse 5s ease-in-out infinite;
     animation-delay: 2s;
     animation-fill-mode: both;
 }
@@ -4294,16 +4246,6 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     box-shadow: 0 6px 20px rgba(0, 140, 255, 0.3);
     transform: translateY(-1px);
   }
-}
-
-// Альтернативный вариант с бесконечной анимацией для постоянного внимания
-.big-button.primary.pulse-continuous:not(:disabled) {
-  animation: strongPulse 2s ease-in-out infinite;
-}
-
-// Дополнительный класс для срочного внимания
-.big-button.primary.pulse-urgent:not(:disabled) {
-  animation: pulseWithGlow 1s ease-in-out 6;
 }
 
 // Стили для выбора региона с поиском

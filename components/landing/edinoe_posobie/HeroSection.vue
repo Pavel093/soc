@@ -33,6 +33,10 @@
             <span class="hero__feature-icon">✓</span>
             <span class="hero__feature-text">Учет всех критериев</span>
           </li>
+          <li class="hero__feature">
+            <span class="hero__feature-icon">✓</span>
+            <span class="hero__feature-text">Учет всех регионов</span>
+          </li>
         </ul>
         
         <!-- Кнопка CTA -->
