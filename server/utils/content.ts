@@ -16,7 +16,7 @@ export interface Article {
   readTime: string
 }
 
-const contentDir = path.join(process.cwd(), 'content', 'blog')
+const contentDir = path.join(process.cwd(), 'server/content/blog') 
 
 /**
  * Расчет времени чтения
