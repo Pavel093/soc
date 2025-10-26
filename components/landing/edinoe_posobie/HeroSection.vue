@@ -58,13 +58,14 @@
 <style lang="scss" scoped>
 .hero {
   position: relative;
-  min-height: 70vh;
+  min-height: auto !important;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-
+  padding-top: 7%;
+  padding-bottom: 7%;
   // Анимированный фон
   &__background {
     position: absolute;

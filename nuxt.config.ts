@@ -1,9 +1,6 @@
-// nuxt.config.ts
-
 import { regions } from './data/regions.js'
 import { getAllSlugs } from './data/calculatorPages.js'
 
-// Список роутов в разработке, которые нужно скрыть от индексации
 const devRoutes = [
   '/alimenty',
   '/bolnichniy',
@@ -36,32 +33,19 @@ export default defineNuxtConfig({
     }
   },
 
-  // ==========================================================
-  // ДОБАВЛЕННЫЙ БЛОК
-  // ==========================================================
-  runtimeConfig: {
-    // Этот блок позволяет безопасно использовать переменные окружения (из вашего .env файла)
-    // Переменные здесь доступны ТОЛЬКО на серверной стороне.
-    // Они не попадут в клиентский код, что защищает ваш API-ключ.
-    dadataApiKey: process.env.DADATA_API_KEY,
-  },
-  // ==========================================================
-  // КОНЕЦ ДОБАВЛЕННОГО БЛОКА
-  // ==========================================================
+  modules: [
+    '@nuxtjs/sitemap',
+    '@nuxtjs/robots'
+  ],
 
   routeRules: {
-    // Все страницы по умолчанию - SSG
     '/**': { 
       prerender: true 
     },
-    
-    // Embed страница - SSR
     '/embed': { 
       prerender: false, 
       ssr: true 
     },
-    
-    // Admin страница и все подстраницы - SSR
     '/admin': { 
       prerender: false, 
       ssr: true 
@@ -70,15 +54,10 @@ export default defineNuxtConfig({
       prerender: false, 
       ssr: true 
     },
-    
-    // API маршруты - всегда серверные
     '/api/**': { 
       prerender: false,
       cors: true
     },
-
-    // ==========================================================
-    // Устанавливаем мета-тег noindex для каждой страницы
     '/alimenty': { index: false },
     '/bolnichniy': { index: false },
     '/dekretnye': { index: false },
@@ -90,9 +69,6 @@ export default defineNuxtConfig({
     '/semeynaya-ipoteka': { index: false },
     '/semeynyy-byudzhet': { index: false },
     '/vyplata-iz-matkapitala': { index: false },
-    // ==========================================================
-    // КОНЕЦ: Правила для страниц в разработке
-    // ==========================================================
   },
 
   app: {
@@ -113,24 +89,18 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: [
-    '@nuxtjs/sitemap',
-    '@nuxtjs/robots'
-  ],
-
   site: {
     url: 'https://всепособия.рф'
   },
 
   sitemap: {
     sources: ['/api/sitemap'],
-    // Исключаем страницы из sitemap.xml
     exclude: [
       '/admin',
       '/admin/**',
       '/embed',
       '/embed/**',
-      ...devRoutes // Добавляем сюда список страниц в разработке
+      ...devRoutes
     ]
   },
 
@@ -138,11 +108,10 @@ export default defineNuxtConfig({
     rules: {
       UserAgent: '*',
       Allow: '/',
-      // Запрещаем сканирование страниц в robots.txt
       Disallow: [
         '/admin', 
         '/embed',
-        ...devRoutes // Добавляем сюда список страниц в разработке
+        ...devRoutes
       ],
       Sitemap: 'https://всепособия.рф/sitemap.xml'
     }

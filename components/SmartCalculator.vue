@@ -242,7 +242,9 @@ const getDefaultFormData = () => ({
     applicantHasIncome: false,
     spouseHasIncome: false,
     applicantReasons: [],
-    spouseReasons: []
+    spouseReasons: [],
+    // ДОБАВЛЕНО: Хранит, кто из родителей использует льготу многодетной семьи ('applicant' или 'spouse')
+    largeFamilyParent: ''
   },
   
   // Уважительные причины отсутствия дохода
@@ -429,23 +431,43 @@ const averageMonthlyIncome = computed(() => {
 })
 
 // Проверка освобождения от правила нулевого дохода
+// УДАЛЯЕМ ИЛИ КОММЕНТИРУЕМ старое вычисляемое свойство:
+/*
 const isExemptFromZeroIncomeRule = computed(() => {
   return formData.value.special.mobilized ||
          formData.value.special.singleParent ||
          isPregnantRecipient.value ||
-         isLargeFamily.value
+         isLargeFamily.value // <- Это главная проблема, убираем ее
+})
+*/
+
+// ДОБАВЛЯЕМ новые, более точные вычисляемые свойства:
+// Проверяет, освобожден ли ЗАЯВИТЕЛЬ от правила нулевого дохода
+const isApplicantExempt = computed(() => {
+  return formData.value.special.mobilized ||
+         formData.value.special.singleParent ||
+         isPregnantRecipient.value ||
+         (isLargeFamily.value && formData.value.adultsIncome.largeFamilyParent === 'applicant')
+})
+
+// Проверяет, освобожден ли СУПРУГ(А) от правила нулевого дохода
+const isSpouseExempt = computed(() => {
+  return formData.value.special.mobilized ||
+         (isLargeFamily.value && formData.value.adultsIncome.largeFamilyParent === 'spouse')
 })
 
 // Проверка нужна ли проверка нулевого дохода
 const needsZeroIncomeCheck = computed(() => {
-  if (isExemptFromZeroIncomeRule.value) return false
-  return averageMonthlyIncome.value < currentRegionPM.value * 0.3
-})
+  // Просто проверяем доход. Освобождения обрабатываются позже.
+  return averageMonthlyIncome.value < currentRegionPM.value * 0.3;
+});
 
 // Детализированная проверка нулевого дохода
 const needsDetailedZeroIncomeCheck = computed(() => {
-  return needsZeroIncomeCheck.value && !isExemptFromZeroIncomeRule.value
-})
+  // Это свойство теперь дублирует предыдущее. Можно оставить одно.
+  // Но для сохранения структуры оставим так, убрав ошибочную часть.
+  return needsZeroIncomeCheck.value; 
+});
 
 // Подсчет месяцев с уважительными причинами
 const calculateValidReasonMonths = (reasons) => {
@@ -745,27 +767,29 @@ const getCalculationData = () => {
     denialReasons.push(`Среднедушевой доход (${formatAmount(averageMonthlyIncome.value)} ₽) превышает прожиточный минимум региона (${formatAmount(currentRegionPM.value)} ₽).`)
   }
 
-  // Проверка 4: Правило нулевого дохода
-  if (needsDetailedZeroIncomeCheck.value) {
+  // Проверка 4: Правило нулевого дохода (обновленная логика)
+  if (needsZeroIncomeCheck.value) {
     let zeroIncomeIssues = []
     
-    if (!formData.value.adultsIncome.applicantHasIncome) {
+    // Проверяем заявителя, только если у него нет дохода и он НЕ освобожден
+    if (!formData.value.adultsIncome.applicantHasIncome && !isApplicantExempt.value) {
       const validMonths = calculateValidReasonMonths(formData.value.adultsIncome.applicantReasons)
       if (validMonths < 10) {
-        zeroIncomeIssues.push(`заявитель (${validMonths} месяцев из 10 требуемых)`)
+        zeroIncomeIssues.push(`заявитель (требуется уважительная причина на 10 мес., найдено: ${validMonths})`)
       }
     }
     
-    if (formData.value.hasSpouse && !formData.value.adultsIncome.spouseHasIncome) {
+    // Проверяем супруга, только если он есть, у него нет дохода и он НЕ освобожден
+    if (formData.value.hasSpouse && !formData.value.adultsIncome.spouseHasIncome && !isSpouseExempt.value) {
       const validMonths = calculateValidReasonMonths(formData.value.adultsIncome.spouseReasons)
       if (validMonths < 10) {
-        zeroIncomeIssues.push(`супруг(а) (${validMonths} месяцев из 10 требуемых)`)
+        zeroIncomeIssues.push(`супруг(а) (требуется уважительная причина на 10 мес., найдено: ${validMonths})`)
       }
     }
     
     if (zeroIncomeIssues.length > 0) {
       isEligible = false
-      denialReasons.push(`Нарушено правило нулевого дохода для: ${zeroIncomeIssues.join(', ')}. Уважительные причины должны покрывать минимум 10 месяцев из 12.`)
+      denialReasons.push(`Нарушено правило нулевого дохода для: ${zeroIncomeIssues.join(' и ')}. Уважительные причины должны покрывать минимум 10 месяцев из 12.`)
     }
   }
 
@@ -977,7 +1001,6 @@ const getCalculationData = () => {
       averageMonthlyIncome: averageMonthlyIncome.value,
       incomePercent: Math.round((averageMonthlyIncome.value / currentRegionPM.value) * 100),
       isLargeFamily: isLargeFamily.value,
-      isExemptFromZeroIncome: isExemptFromZeroIncomeRule.value
     }
   }
 }
@@ -1405,7 +1428,7 @@ onUnmounted(() => {
                 Доход будет делиться на {{ totalFamilyMembers }} для расчета среднедушевого дохода.
               </p>
               <div v-if="isLargeFamily" class="info-badge success">
-                ✓ Многодетная семья (освобождение от правила нулевого дохода)
+                ✓ Многодетная семья (есть льгота по правилу нулевого дохода для одного из родителей)
               </div>
             </div>
           </div>
@@ -1774,24 +1797,41 @@ onUnmounted(() => {
             <div class="conditions-list">
               <!-- Правило нулевого дохода -->
               <div class="condition-block" v-if="needsZeroIncomeCheck">
-                <h3 class="condition-title">
-                  ⚠️ Правило нулевого дохода
-                </h3>
+                <h3 class="condition-title">⚠️ Правило нулевого дохода</h3>
                 <p class="condition-desc light-text">
-                  Ваш доход ниже 30% от прожиточного минимума. Необходимо подтвердить уважительные причины отсутствия дохода.
+                  Ваш доход ниже нормы, поэтому каждый взрослый член семьи должен иметь доход или уважительную причину его отсутствия в течение 10 из 12 месяцев.
                 </p>
-                
-                <div v-if="isExemptFromZeroIncomeRule" class="info-badge success">
-                  ✓ Вы освобождены от правила нулевого дохода:
-                  <ul style="margin: 5px 0 0 20px;">
-                    <li v-if="isPregnantRecipient">Беременная женщина</li>
-                    <li v-if="isLargeFamily">Многодетная семья</li>
-                    <li v-if="formData.special.singleParent">Единственный родитель</li>
-                    <li v-if="formData.special.mobilized">Член семьи мобилизован</li>
-                  </ul>
+
+                <!-- НОВЫЙ БЛОК: Выбор для многодетной семьи с двумя родителями -->
+                <div v-if="isLargeFamily && formData.hasSpouse" class="large-family-choice">
+                  <h4>Выбор льготы для многодетной семьи</h4>
+                  <p class="hint-text light-text">
+                    Статус многодетного родителя является уважительной причиной отсутствия дохода только для одного из родителей. Выберите, кто им воспользуется.
+                  </p>
+                  <div class="recipient-options">
+                    <label class="option-card" :class="{ 'selected': formData.adultsIncome.largeFamilyParent === 'applicant' }">
+                      <input type="radio" v-model="formData.adultsIncome.largeFamilyParent" value="applicant" />
+                      <div class="option-content">
+                        <div class="option-text">
+                          <h3>Заявитель</h3>
+                          <p>Второй родитель должен будет подтвердить свой доход или другую причину.</p>
+                        </div>
+                      </div>
+                    </label>
+                    <label class="option-card" :class="{ 'selected': formData.adultsIncome.largeFamilyParent === 'spouse' }">
+                      <input type="radio" v-model="formData.adultsIncome.largeFamilyParent" value="spouse" />
+                      <div class="option-content">
+                        <div class="option-text">
+                          <h3>Супруг(а)</h3>
+                          <p>Заявитель должен будет подтвердить свой доход или другую причину.</p>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
                 </div>
                 
-                <div v-else class="zero-income-details">
+                <!-- ОБНОВЛЕННЫЙ БЛОК ПРОВЕРКИ -->
+                <div class="zero-income-details">
                   <!-- Заявитель -->
                   <div class="person-income-block">
                     <h4>Заявитель</h4>
@@ -1800,8 +1840,14 @@ onUnmounted(() => {
                       <span class="checkmark"></span>
                       <span class="checkbox-text">Был доход в расчетном периоде</span>
                     </label>
+
+                    <!-- Сообщение об освобождении -->
+                    <div v-if="!formData.adultsIncome.applicantHasIncome && isApplicantExempt" class="info-badge success" style="margin-top: 1rem;">
+                      ✓ Уважительная причина подтверждена статусом (например, единственный родитель, беременность, многодетность).
+                    </div>
                     
-                    <div v-if="!formData.adultsIncome.applicantHasIncome" class="reasons-selector">
+                    <!-- Показываем детализацию, только если нет дохода и НЕТ освобождения -->
+                    <div v-if="!formData.adultsIncome.applicantHasIncome && !isApplicantExempt" class="reasons-selector">
                       <p class="hint-text">Укажите месяцы и причины отсутствия дохода (минимум 10 из 12):</p>
                       <button @click="showReasonDetails = !showReasonDetails" class="toggle-reasons-btn">
                         {{ showReasonDetails ? 'Скрыть' : 'Показать' }} помесячную детализацию
@@ -1810,8 +1856,8 @@ onUnmounted(() => {
                       <div v-if="showReasonDetails" class="months-grid">
                         <div v-for="month in 12" :key="month" class="month-reason">
                           <label>Месяц {{ month }}:</label>
-                          <select @change="(e) => e.target.value && addValidReason('applicant', month, e.target.value)">
-                            <option value="">Был доход</option>
+                          <select @change="(e) => e.target.value ? addValidReason('applicant', month, e.target.value) : removeValidReason('applicant', month)">
+                            <option value="">Был доход / нет причины</option>
                             <option v-for="reason in validReasonsList" :key="reason.value" :value="reason.value">
                               {{ reason.label }}
                             </option>
@@ -1834,13 +1880,20 @@ onUnmounted(() => {
                       <span class="checkmark"></span>
                       <span class="checkbox-text">Был доход в расчетном периоде</span>
                     </label>
+
+                    <!-- Сообщение об освобождении -->
+                    <div v-if="!formData.adultsIncome.spouseHasIncome && isSpouseExempt" class="info-badge success" style="margin-top: 1rem;">
+                      ✓ Уважительная причина подтверждена статусом многодетного родителя.
+                    </div>
                     
-                    <div v-if="!formData.adultsIncome.spouseHasIncome" class="reasons-selector">
+                    <!-- Показываем детализацию, только если нет дохода и НЕТ освобождения -->
+                    <div v-if="!formData.adultsIncome.spouseHasIncome && !isSpouseExempt" class="reasons-selector">
                       <p class="hint-text">Укажите месяцы и причины отсутствия дохода (минимум 10 из 12):</p>
-                      
+                      <!-- Здесь можно добавить вторую детализацию для супруга, если нужно, или просто оставить итоговый подсчет -->
                       <div class="reason-summary">
                         Месяцев с уважительной причиной: 
                         <strong>{{ calculateValidReasonMonths(formData.adultsIncome.spouseReasons) }} из 10 требуемых</strong>
+                        <br><small>(причины для супруга нужно будет указывать в таком же блоке, как для заявителя)</small>
                       </div>
                     </div>
                   </div>
@@ -1958,7 +2011,7 @@ onUnmounted(() => {
               </div>
 
               <!-- Уважительные причины (если нужны) -->
-              <div class="condition-block" v-if="!isExemptFromZeroIncomeRule">
+              <!-- <div class="condition-block" v-if="!isExemptFromZeroIncomeRule">
                 <h3 class="condition-title">
                   📋 Уважительные причины отсутствия дохода
                 </h3>
@@ -2013,7 +2066,7 @@ onUnmounted(() => {
                   <span class="checkmark"></span>
                   <span class="checkbox-text">Лишение свободы или нахождение под стражей</span>
                 </label>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
@@ -4416,4 +4469,22 @@ $shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     font-size: 0.9rem;
   }
 }
+
+.large-family-choice {
+  background: #fefce8;
+  border: 1px solid #facc15;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  
+  h4 {
+    margin: 0 0 0.5rem 0;
+    color: #854d0e;
+  }
+
+  .recipient-options {
+    margin-top: 1rem;
+  }
+}
+
 </style>

@@ -4,14 +4,14 @@
       <ol class="breadcrumbs__list">
         <li
           v-for="(item, index) in items"
-          :key="item.to || item.text"
+          :key="getItemKey(item)"
           class="breadcrumbs__item"
         >
-          <NuxtLink v-if="item.to" :to="item.to" class="breadcrumbs__link">
-            {{ item.text }}
+          <NuxtLink v-if="getItemPath(item)" :to="getItemPath(item)" class="breadcrumbs__link">
+            {{ getItemLabel(item) }}
           </NuxtLink>
           <span v-else class="breadcrumbs__current" aria-current="page">
-            {{ item.text }}
+            {{ getItemLabel(item) }}
           </span>
           <span v-if="index < items.length - 1" class="breadcrumbs__separator" aria-hidden="true">/</span>
         </li>
@@ -21,28 +21,46 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   items: {
     type: Array,
     required: true
   }
 })
+
+// Универсальные геттеры для поддержки разных форматов
+const getItemLabel = (item) => {
+  return item.label || item.text || ''
+}
+
+const getItemPath = (item) => {
+  return item.path || item.to || null
+}
+
+const getItemKey = (item) => {
+  return getItemPath(item) || getItemLabel(item)
+}
 </script>
 
 <style scoped lang="scss">
 .breadcrumbs-wrapper {
   width: 100%;
-  // Можно добавить верхний/нижний отступ, если нужно отделить от Header
   padding-top: 1.5rem; 
   padding-bottom: 1.5rem;
+  @media (max-width: 768px) {
+    padding: 0 ;
+    margin: 0;
+  }
 }
 
 .breadcrumbs-container {
-  // Эти стили повторяют стили ваших основных контейнеров (`.page-container`)
-  // Теперь они встроены прямо в компонент.
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.5rem; // Боковые отступы, чтобы не прилипать к краям
+  padding: 0 1.5rem;
+  @media (max-width: 768px) {
+    padding: 1rem ;
+    margin: 0;
+  }
 }
 
 .breadcrumbs__list {

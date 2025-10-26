@@ -73,13 +73,14 @@
 </template>
 
 <script setup>
-import { ref, markRaw } from 'vue'
+import { ref, markRaw, onMounted, onUnmounted } from 'vue'
 import Logo from '../assets/global-image/Logo.png'
 
 import IconHome from './icons/IconHome.vue'
 import IconFaq from './icons/IconFaq.vue'
 import IconCalculator from './icons/IconCalculator.vue'
 import IconWidget from './icons/IconWidget.vue'
+import IconBlog from './icons/IconBlog.vue' // ДОБАВЛЕНО: Импорт иконки блога
 
 const isMenuOpen = ref(false)
 const isScrolled = ref(false) 
@@ -108,6 +109,13 @@ const menuItems = ref([
     text: 'Виджет на сайт',
     description: 'Установка виджета',
     icon: markRaw(IconWidget)
+  },
+  // ДОБАВЛЕНО: Новый раздел "Блог"
+  {
+    href: '/blog',
+    text: 'Блог',
+    description: 'Полезные статьи и новости',
+    icon: markRaw(IconBlog)
   }
 ])
 
@@ -458,8 +466,8 @@ onUnmounted(() => {
       width: 22px;
       height: 22px;
       @media (max-width: 768px) {
-        fill: white;
-      }      
+        fill: white !important;
+      }    
     }
   }
 

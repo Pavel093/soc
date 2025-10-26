@@ -1,5 +1,6 @@
 import { regions } from '~/data/regions.js'
 import { getCalculatorPagesForSitemap } from '~/data/calculatorPages.js'
+import { getAllArticles, getAllCategories } from '~/server/utils/content'
 
 export default defineSitemapEventHandler(() => {
   const routes = []
@@ -53,6 +54,38 @@ export default defineSitemapEventHandler(() => {
   
   // Новые тематические страницы
   routes.push(...getCalculatorPagesForSitemap())
+  
+  // === БЛОГ ===
+  
+  // Главная страница блога
+  routes.push({
+    loc: '/blog',
+    changefreq: 'daily',
+    priority: 0.9
+  })
+  
+  // Получаем все статьи и категории
+  const articles = getAllArticles()
+  const categories = getAllCategories()
+  
+  // Добавляем страницы категорий
+  categories.forEach(category => {
+    routes.push({
+      loc: `/blog/${category}`,
+      changefreq: 'weekly',
+      priority: 0.8
+    })
+  })
+  
+  // Добавляем страницы статей
+  articles.forEach(article => {
+    routes.push({
+      loc: `/blog/${article.category}/${article.slug}`,
+      changefreq: 'monthly',
+      priority: 0.7,
+      lastmod: article.date || new Date().toISOString()
+    })
+  })
   
   return routes
 })

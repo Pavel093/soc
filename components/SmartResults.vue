@@ -59,7 +59,6 @@ const recalculate = () => {
   emit('recalculate')
 }
 
-// Печать только результатов
 // Печать только результатов (безопасная версия)
 const printResults = () => {
   const printWindow = window.open('', '_blank')
@@ -289,6 +288,14 @@ const copyToClipboard = async () => {
   <div class="results-wrapper">
     <!-- Панель действий -->
     <div class="action-panel">
+      <!-- ИЗМЕНЕНИЕ: Добавлена яркая кнопка "Пересчитать" -->
+      <button @click="recalculate" class="action-btn recalculate-btn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M2 10C2 14.418 5.582 18 10 18C12.15 18 14.078 17.086 15.47 15.63L14 14.16C12.97 15.19 11.57 15.82 10 15.82C6.69 15.82 4 13.14 4 9.82C4 6.5 6.69 3.82 10 3.82C11.58 3.82 12.96 4.44 14 5.48L12 7.48H18V1.48L15.47 4.01C14.08 2.56 12.15 1.64 10 1.64C5.582 1.64 2 5.222 2 9.64V10Z" fill="currentColor"/>
+        </svg>
+        Пересчитать
+      </button>
+      
       <button @click="printResults" class="action-btn print-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
@@ -572,6 +579,19 @@ const copyToClipboard = async () => {
   
   svg {
     flex-shrink: 0;
+  }
+}
+
+/* ИЗМЕНЕНИЕ: Стили для новой яркой кнопки */
+.recalculate-btn {
+  background-color: #008CFF;
+  color: white;
+  border-color: #008CFF;
+  
+  &:hover {
+    background-color: #0070d2;
+    border-color: #0070d2;
+    color: white;
   }
 }
 
