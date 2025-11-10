@@ -16,6 +16,7 @@ const devRoutes = [
 ]
 
 export default defineNuxtConfig({
+  compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   
   devServer: {
@@ -32,8 +33,10 @@ export default defineNuxtConfig({
       failOnError: false
     },
     externals: {
-      inline: ['gray-matter', 'markdown-it']
-    }
+      external: ['gray-matter'],
+      inline: ['markdown-it']
+    },
+    nodeModulesDirs: ['node_modules']
   },
 
   modules: [
@@ -82,11 +85,29 @@ export default defineNuxtConfig({
         lang: 'ru'
       },
       link: [
-        { rel: 'preconnect', href: 'https://mc.yandex.ru' }
+        { rel: 'preconnect', href: 'https://mc.yandex.ru' },
+        { rel: 'preconnect', href: 'https://www.googletagmanager.com' } // добавлено
+      ],
+      script: [
+        // Google Tag Manager
+        {
+          innerHTML: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-W94MZW8L');`,
+          type: 'text/javascript',
+          tagPosition: 'head'
+        }
       ],
       noscript: [
         {
           innerHTML: '<div><img src="https://mc.yandex.ru/watch/104348512" style="position:absolute; left:-9999px;" alt="" /></div>'
+        },
+        // Google Tag Manager (noscript)
+        {
+          innerHTML: '<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W94MZW8L" height="0" width="0" style="display:none;visibility:hidden"></iframe>',
+          tagPosition: 'bodyOpen'
         }
       ],
     }

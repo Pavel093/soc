@@ -1,6 +1,12 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import html2canvas from 'html2canvas'
+
+// Импортируем изображения для разных сценариев
+import debitCardDesktop from '@/assets/edinoe-posobie/debit_card_design_one_prod.png'
+import debitCardMobile from '@/assets/edinoe-posobie/debit_card_design_one_mobile_prod.png'
+import creditCardDesktop from '@/assets/edinoe-posobie/credit_card_design_one_prod.jpg'
+import creditCardMobile from '@/assets/edinoe-posobie/credit_card_design_one_mobile_prod.jpg'
 
 const props = defineProps({
   calculationData: {
@@ -14,6 +20,48 @@ const emit = defineEmits(['recalculate'])
 const data = computed(() => props.calculationData)
 const resultsContainer = ref(null)
 const isGeneratingImage = ref(false)
+const isMobile = ref(false)
+
+// Разные ссылки для разных сценариев
+const debitCardLink = 'https://t-cpa.ru/3Cujw8' // Для дебетовой карты (пособие положено)
+const creditCardLink = 'https://t-cpa.ru/19oFVK' // Для кредитной карты (пособие не положено)
+
+// Проверка мобильного устройства
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+// Определение пути к изображению в зависимости от устройства и сценария
+const getImagePath = () => {
+  if (data.value.isEligible) {
+    // Для сценария "положено" - дебетовая карта
+    return isMobile.value ? debitCardMobile : debitCardDesktop
+  } else {
+    // Для сценария "не положено" - кредитная карта
+    return isMobile.value ? creditCardMobile : creditCardDesktop
+  }
+}
+
+// Получение ссылки в зависимости от сценария
+const getAdvertisementLink = () => {
+  return data.value.isEligible ? debitCardLink : creditCardLink
+}
+
+// Получение альтернативного текста
+const getAltText = () => {
+  return data.value.isEligible 
+    ? 'Дебетовая карта для получения пособий' 
+    : 'Кредитная карта для финансовой поддержки'
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 // Проверка наличия проблем с имуществом
 const hasPropertyIssues = computed(() => {
@@ -51,7 +99,7 @@ const getChildrenWord = (count) => {
 const getIncomeClass = () => {
   const percent = data.value.calculations.incomePercent
   if (percent <= 100) return 'success'
-  return 'error'
+  return 'warning'
 }
 
 // Пересчет
@@ -94,8 +142,8 @@ const printResults = () => {
           border-top: 4px solid #00B93E;
         }
         
-        .result-card.error {
-          border-top: 4px solid #FF4444;
+        .result-card.neutral {
+          border-top: 4px solid #FFA726;
         }
         
         .result-header {
@@ -123,9 +171,9 @@ const printResults = () => {
           color: #00B93E;
         }
         
-        .denial-reasons {
+        .consideration-notes {
           padding: 20px;
-          background: #fff2f2;
+          background: #fff3e0;
           border-radius: 10px;
           margin-bottom: 30px;
         }
@@ -168,6 +216,11 @@ const printResults = () => {
           display: none !important;
         }
         
+        /* Стили для рекламного блока */
+        .advertisement-section {
+          display: none !important;
+        }
+        
         @media print {
           body {
             padding: 0;
@@ -194,7 +247,6 @@ const printResults = () => {
     }
   }
 }
-
 
 // Скачивание результатов как JPG
 const downloadAsImage = async () => {
@@ -254,7 +306,7 @@ const copyToClipboard = async () => {
   let textToCopy = ''
   
   if (data.value.isEligible) {
-    textToCopy = `✅ Вы имеете право на единое пособие!\n\n`
+    textToCopy = `✅ Вам положено единое пособие!\n\n`
     textToCopy += `💰 Размер пособия: ${formatAmount(data.value.benefitAmount)} ₽ в месяц\n\n`
     
     if (data.value.benefitDetails?.length > 0) {
@@ -268,11 +320,12 @@ const copyToClipboard = async () => {
       })
     }
   } else {
-    textToCopy = `❌ К сожалению, вы не имеете права на единое пособие\n\n`
-    textToCopy += `Причины отказа:\n`
+    textToCopy = `ℹ️ По текущим условиям пособие не предусмотрено\n\n`
+    textToCopy += `Что повлияло на решение:\n`
     data.value.denialReasons?.forEach(reason => {
       textToCopy += `• ${reason}\n`
     })
+    textToCopy += `\n💡 Рекомендация: Рассмотрите возможность изменения условий или кредитные продукты для временной поддержки`
   }
   
   try {
@@ -288,7 +341,7 @@ const copyToClipboard = async () => {
   <div class="results-wrapper">
     <!-- Панель действий -->
     <div class="action-panel">
-      <!-- ИЗМЕНЕНИЕ: Добавлена яркая кнопка "Пересчитать" -->
+      <!-- Яркая кнопка "Пересчитать" -->
       <button @click="recalculate" class="action-btn recalculate-btn">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M2 10C2 14.418 5.582 18 10 18C12.15 18 14.078 17.086 15.47 15.63L14 14.16C12.97 15.19 11.57 15.82 10 15.82C6.69 15.82 4 13.14 4 9.82C4 6.5 6.69 3.82 10 3.82C11.58 3.82 12.96 4.44 14 5.48L12 7.48H18V1.48L15.47 4.01C14.08 2.56 12.15 1.64 10 1.64C5.582 1.64 2 5.222 2 9.64V10Z" fill="currentColor"/>
@@ -322,7 +375,7 @@ const copyToClipboard = async () => {
 
     <!-- Контейнер с результатами -->
     <div class="results-container" ref="resultsContainer">
-      <div class="result-card" :class="data.isEligible ? 'success' : 'error'">
+      <div class="result-card" :class="data.isEligible ? 'success' : 'neutral'">
         <!-- Заголовок результата -->
         <div class="result-header">
           <div class="result-icon">
@@ -331,16 +384,20 @@ const copyToClipboard = async () => {
               <path d="M20 30L26 36L40 22" stroke="#00B93E" stroke-width="3" stroke-linecap="round"/>
             </svg>
             <svg v-else width="60" height="60" viewBox="0 0 60 60" fill="none">
-              <circle cx="30" cy="30" r="30" fill="#FF4444" fill-opacity="0.1"/>
-              <path d="M22 22L38 38M38 22L22 38" stroke="#FF4444" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="30" cy="30" r="30" fill="#FFA726" fill-opacity="0.1"/>
+              <path d="M30 25V30M30 35H30.01" stroke="#FFA726" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="30" cy="30" r="14" fill="#FFA726" fill-opacity="0.1"/>
             </svg>
           </div>
           <h2 class="result-title dark-text">
-            {{ data.isEligible ? 'Вам положено единое пособие!' : 'К сожалению, вы не подходите' }}
+            {{ data.isEligible ? 'Вам положено единое пособие!' : 'По текущим условиям пособие не предусмотрено' }}
           </h2>
+          <p v-if="!data.isEligible" class="result-subtitle light-text">
+            Это не окончательный отказ - вы можете пересмотреть условия и подать заявление позже
+          </p>
         </div>
 
-        <!-- Размер пособия для одобренных -->
+        <!-- КРАТКИЙ РЕЗУЛЬТАТ: Размер пособия для одобренных -->
         <div v-if="data.isEligible" class="benefit-amount">
           <p class="amount-label light-text">Размер ежемесячного пособия:</p>
           <p class="amount-value dark-text">{{ formatAmount(data.benefitAmount) }} ₽</p>
@@ -363,19 +420,45 @@ const copyToClipboard = async () => {
           </div>
         </div>
 
-        <!-- Причины отказа -->
-        <div v-else class="denial-reasons">
-          <p class="reason-label light-text">Причины отказа:</p>
-          <ul class="reasons-list">
-            <li v-for="(reason, index) in data.denialReasons" :key="index" class="reason-item dark-text">
+        <!-- РЕКЛАМНОЕ ИЗОБРАЖЕНИЕ (разное для разных сценариев) -->
+        <div class="advertisement-section">
+          <a 
+            :href="getAdvertisementLink()" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              :src="getImagePath()" 
+              :alt="getAltText()"
+              class="advertisement-image"
+            />
+          </a>
+          <!-- Текст под изображением только для дебетовой карты -->
+          <div class="advertisement-text" v-if="data.isEligible">
+            <p class="ad-title">Оформляйте выплаты на удобную карту</p>
+            <p class="ad-subtitle">Бесплатное обслуживание и кэшбэк за покупки</p>
+          </div>
+        </div>
+
+        <!-- Причины отказа - смягченные -->
+        <div v-if="!data.isEligible" class="consideration-notes">
+          <div class="notes-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 9V11M12 15H12.01M5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21Z" stroke="#FFA726" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h3 class="notes-title">Что повлияло на решение:</h3>
+          </div>
+          <ul class="notes-list">
+            <li v-for="(reason, index) in data.denialReasons" :key="index" class="note-item">
+              <span class="note-bullet">•</span>
               {{ reason }}
             </li>
           </ul>
         </div>
 
-        <!-- Сводка по данным -->
+        <!-- ДЕТАЛИ РАСЧЕТА: Сводка по данным -->
         <div class="summary-section">
-          <h3 class="summary-title dark-text">Ваши данные:</h3>
+          <h3 class="summary-title dark-text">Детали расчета:</h3>
           
           <!-- Основная информация -->
           <div class="summary-grid">
@@ -421,20 +504,20 @@ const copyToClipboard = async () => {
           </div>
 
           <!-- Имущество (если есть превышения) -->
-          <div v-if="hasPropertyIssues" class="property-summary-card warning">
-            <h4 class="card-title">⚠️ Имущественные ограничения</h4>
+          <div v-if="hasPropertyIssues" class="property-summary-card">
+            <h4 class="card-title">🏠 Имущественные условия</h4>
             <div class="property-list">
               <div v-if="data.formData.propertyCheck?.hasMultipleApartments" class="property-row">
-                <span>❌ Более одной квартиры</span>
+                <span>• Более одной квартиры</span>
               </div>
               <div v-if="data.formData.propertyCheck?.hasMultipleCars" class="property-row">
-                <span>❌ Более одного автомобиля</span>
+                <span>• Более одного автомобиля</span>
               </div>
               <div v-if="data.formData.propertyCheck?.hasLuxuryCar" class="property-row">
-                <span>❌ Автомобиль премиум-класса</span>
+                <span>• Автомобиль премиум-класса</span>
               </div>
               <div v-if="data.formData.propertyCheck?.hasHighSavings" class="property-row">
-                <span>❌ Высокие сбережения</span>
+                <span>• Высокие сбережения</span>
               </div>
             </div>
           </div>
@@ -481,21 +564,40 @@ const copyToClipboard = async () => {
 
         <!-- Рекомендации для отказников -->
         <div v-else class="recommendations">
-          <h3 class="steps-title dark-text">Что можно сделать?</h3>
-          <ul class="recommendations-list">
-            <li v-if="data.calculations.incomePercent > 100">
-              <strong>Проверьте другие пособия:</strong> Вы можете иметь право на региональные выплаты
-            </li>
-            <li v-if="hasPropertyIssues">
-              <strong>Пересмотрите имущество:</strong> Некоторые виды имущества не учитываются при наличии инвалидности в семье
-            </li>
-            <li v-if="!data.formData.hasValidReason && needsZeroIncomeRule">
-              <strong>Трудоустройство:</strong> Официальное трудоустройство или постановка на учет в центр занятости
-            </li>
-            <li>
-              <strong>Повторная подача:</strong> Вы можете подать заявление позже, когда изменятся обстоятельства
-            </li>
-          </ul>
+          <h3 class="steps-title dark-text">Возможные пути решения:</h3>
+          <div class="recommendations-grid">
+            <div v-if="data.calculations.incomePercent > 100" class="recommendation-card">
+              <div class="rec-icon">💡</div>
+              <div class="rec-content">
+                <h4>Проверьте другие пособия</h4>
+                <p>Вы можете иметь право на региональные выплаты и поддержку</p>
+              </div>
+            </div>
+            
+            <div v-if="hasPropertyIssues" class="recommendation-card">
+              <div class="rec-icon">🏠</div>
+              <div class="rec-content">
+                <h4>Уточните имущественные условия</h4>
+                <p>Некоторые виды имущества не учитываются при особых обстоятельствах</p>
+              </div>
+            </div>
+            
+            <div v-if="!data.formData.hasValidReason && needsZeroIncomeRule" class="recommendation-card">
+              <div class="rec-icon">💼</div>
+              <div class="rec-content">
+                <h4>Рассмотрите трудоустройство</h4>
+                <p>Официальная работа или постановка на учет в центре занятости</p>
+              </div>
+            </div>
+            
+            <div class="recommendation-card">
+              <div class="rec-icon">🔄</div>
+              <div class="rec-content">
+                <h4>Подайте заявление позже</h4>
+                <p>При изменении обстоятельств вы сможете получить пособие</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Полезная информация -->
@@ -582,7 +684,7 @@ const copyToClipboard = async () => {
   }
 }
 
-/* ИЗМЕНЕНИЕ: Стили для новой яркой кнопки */
+/* Стили для яркой кнопки */
 .recalculate-btn {
   background-color: #008CFF;
   color: white;
@@ -654,8 +756,8 @@ const copyToClipboard = async () => {
     border-top: 4px solid #00B93E;
   }
   
-  &.error {
-    border-top: 4px solid #FF4444;
+  &.neutral {
+    border-top: 4px solid #FFA726;
   }
 }
 
@@ -671,6 +773,16 @@ const copyToClipboard = async () => {
     font-size: 28px;
     font-weight: 600;
     margin: 0;
+  }
+  
+  .result-subtitle {
+    font-size: 16px;
+    margin-top: 10px;
+    opacity: 0.8;
+    line-height: 1.4;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -727,33 +839,98 @@ const copyToClipboard = async () => {
   }
 }
 
-.denial-reasons {
-  padding: 20px;
-  background: #FF444410;
-  border-radius: 12px;
-  margin-bottom: 30px;
+/* Стили для рекламного блока */
+.advertisement-section {
+  margin: 30px 0;
+  text-align: center;
   
-  .reason-label {
-    font-size: 16px;
-    margin-bottom: 15px;
+  a {
+    display: inline-block;
+    text-decoration: none;
+    
+    .advertisement-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
   }
   
-  .reasons-list {
+  .advertisement-text {
+    margin-top: 15px;
+    
+    .ad-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1A1D1F;
+      margin-bottom: 5px;
+    }
+    
+    .ad-subtitle {
+      font-size: 14px;
+      color: #6F767E;
+      margin: 0;
+    }
+  }
+}
+
+/* Стили для сценария "положено" */
+.result-card.success {
+  .advertisement-section {
+    .advertisement-text {
+      .ad-title {
+        color: #00B93E;
+      }
+    }
+  }
+}
+
+/* Смягченный блок причин */
+.consideration-notes {
+  padding: 25px;
+  background: linear-gradient(135deg, #FFF3E0, #FFECB3);
+  border-radius: 12px;
+  margin-bottom: 30px;
+  border: 1px solid #FFE0B2;
+  
+  .notes-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    
+    .notes-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #E65100;
+      margin: 0;
+    }
+    
+    svg {
+      flex-shrink: 0;
+    }
+  }
+  
+  .notes-list {
     list-style: none;
     padding: 0;
     margin: 0;
     
-    .reason-item {
-      padding: 10px 0;
-      padding-left: 25px;
-      position: relative;
+    .note-item {
+      padding: 12px 0;
+      padding-left: 8px;
+      color: #5D4037;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
       
-      &:before {
-        content: "✗";
-        position: absolute;
-        left: 0;
-        color: #FF4444;
+      .note-bullet {
+        color: #FFA726;
         font-weight: bold;
+        font-size: 18px;
+        flex-shrink: 0;
+        margin-top: 1px;
       }
     }
   }
@@ -804,17 +981,12 @@ const copyToClipboard = async () => {
   padding: 20px;
   margin-bottom: 20px;
   
-  &.warning {
-    background: #fff3e0;
-    border: 1px solid #ffcc80;
-  }
-  
   .card-title {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 15px;
     color: #2C3E50;
-      }
+  }
 }
 
 .income-details {
@@ -827,7 +999,7 @@ const copyToClipboard = async () => {
       font-weight: 600;
       
       &.success { color: #00B93E; }
-      &.error { color: #FF4444; }
+      &.warning { color: #FFA726; }
     }
   }
 }
@@ -835,7 +1007,7 @@ const copyToClipboard = async () => {
 .property-list {
   .property-row {
     padding: 8px 0;
-    color: #d32f2f;
+    color: #5D4037;
   }
 }
 
@@ -870,8 +1042,7 @@ const copyToClipboard = async () => {
     margin-bottom: 20px;
   }
   
-  .steps-list,
-  .recommendations-list {
+  .steps-list {
     padding-left: 20px;
     
     > li {
@@ -896,8 +1067,56 @@ const copyToClipboard = async () => {
 .recommendations {
   background: #fff3e0;
   
-  strong {
-    color: #f57c00;
+  .steps-title {
+    color: #E65100;
+  }
+}
+
+/* Улучшенные рекомендации */
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.recommendation-card {
+  display: flex;
+  gap: 15px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #E0E0E0;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #FFA726;
+  }
+  
+  .rec-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  
+  .rec-content {
+    flex: 1;
+    
+    h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1A1D1F;
+      margin-bottom: 8px;
+    }
+    
+    p {
+      font-size: 14px;
+      color: #6F767E;
+      margin: 0;
+      line-height: 1.4;
+    }
   }
 }
 
@@ -977,6 +1196,10 @@ const copyToClipboard = async () => {
     display: none !important;
   }
   
+  .advertisement-section {
+    display: none !important;
+  }
+  
   .results-wrapper {
     padding: 0;
   }
@@ -1024,8 +1247,30 @@ const copyToClipboard = async () => {
     font-size: 22px !important;
   }
   
+  .result-subtitle {
+    font-size: 14px;
+  }
+  
   .amount-value {
     font-size: 28px !important;
+  }
+  
+  .advertisement-section {
+    margin: 20px 0;
+  }
+  
+  .consideration-notes {
+    padding: 20px;
+    
+    .notes-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      
+      .notes-title {
+        font-size: 16px;
+      }
+    }
   }
   
   .actions {
@@ -1053,6 +1298,19 @@ const copyToClipboard = async () => {
   
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .recommendations-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .recommendation-card {
+    padding: 15px;
+    
+    .rec-icon {
+      font-size: 20px;
+    }
   }
 }
 
@@ -1101,5 +1359,46 @@ const copyToClipboard = async () => {
       }
     }
   }
+  
+  .advertisement-section {
+    .advertisement-text {
+      .ad-title {
+        font-size: 16px;
+      }
+      
+      .ad-subtitle {
+        font-size: 13px;
+      }
+    }
+  }
+  
+  .recommendation-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+    
+    .rec-icon {
+      align-self: center;
+    }
+  }
+}
+
+/* Обновленные стили для иконки информации */
+.result-card.neutral .result-icon circle {
+  fill: #FFA726;
+  fill-opacity: 0.1;
+}
+
+.result-card.neutral .result-icon path {
+  stroke: #FFA726;
+}
+
+/* Цветовые переменные для текста */
+.dark-text {
+  color: #1A1D1F;
+}
+
+.light-text {
+  color: #6F767E;
 }
 </style>
