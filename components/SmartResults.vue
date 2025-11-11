@@ -20,9 +20,11 @@ const data = computed(() => props.calculationData)
 const resultsContainer = ref(null)
 const isGeneratingImage = ref(false)
 const isMobile = ref(false)
+const promoSection = ref(null)
 
-const debitCardLink = 'https://t-cpa.ru/3Cujw8'
-const creditCardLink = 'https://t-cpa.ru/19oFVK'
+// Закодированные данные
+const l1 = 'aHR0cHM6Ly90LWNwYS5ydS8zQ3Vqdzg='
+const l2 = 'aHR0cHM6Ly90LWNwYS5ydS8xOW9GVks='
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768
@@ -36,26 +38,59 @@ const getImagePath = () => {
   }
 }
 
-const getAdvertisementLink = () => {
-  return data.value.isEligible ? debitCardLink : creditCardLink
-}
+const createPromoElement = () => {
+  if (!promoSection.value) return
 
-const getAltText = () => {
-  return data.value.isEligible 
-    ? 'Дебетовая карта для получения пособий' 
-    : 'Кредитная карта для финансовой поддержки'
-}
+  const container = promoSection.value
+  container.innerHTML = ''
 
-const advertisementImage = ref('')
+  // Декодирование ссылки
+  const targetUrl = atob(data.value.isEligible ? l1 : l2)
+  
+  // Создание элементов
+  const link = document.createElement('a')
+  link.href = targetUrl
+  link.target = '_blank'
+  link.rel = 'noopener noreferrer'
+  link.style.cssText = 'display:inline-block;text-decoration:none;transition:opacity 0.3s ease'
+  
+  const img = document.createElement('img')
+  img.src = getImagePath()
+  img.style.cssText = 'max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);transition:transform 0.3s ease,box-shadow 0.3s ease'
+  img.loading = 'lazy'
+  
+  link.appendChild(img)
+  container.appendChild(link)
 
-const loadAdvertisementImage = () => {
-  return new Promise((resolve) => {
-    const img = new Image()
-    const imagePath = getImagePath()
+  // Добавление текста только для eligible
+  if (data.value.isEligible) {
+    const textDiv = document.createElement('div')
+    textDiv.style.cssText = 'margin-top:15px;animation:fadeInUp 0.6s ease'
     
-    img.src = imagePath
-    img.onload = () => resolve(imagePath)
-    img.onerror = () => resolve(imagePath)
+    const title = document.createElement('p')
+    title.textContent = 'Оформляйте выплаты на удобную карту'
+    title.style.cssText = 'font-size:18px;font-weight:600;color:#1A1D1F;margin-bottom:5px'
+    
+    const subtitle = document.createElement('p')
+    subtitle.textContent = 'Бесплатное обслуживание и кэшбэк за покупки'
+    subtitle.style.cssText = 'font-size:14px;color:#6F767E;margin:0'
+    
+    textDiv.appendChild(title)
+    textDiv.appendChild(subtitle)
+    container.appendChild(textDiv)
+  }
+
+  // Hover эффекты
+  link.addEventListener('mouseenter', () => {
+    link.style.opacity = '0.95'
+    img.style.transform = 'translateY(-2px)'
+    img.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)'
+  })
+  
+  link.addEventListener('mouseleave', () => {
+    link.style.opacity = '1'
+    img.style.transform = 'translateY(0)'
+    img.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)'
   })
 }
 
@@ -63,9 +98,10 @@ onMounted(async () => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
   
-  setTimeout(async () => {
-    advertisementImage.value = await loadAdvertisementImage()
-  }, 100)
+  await nextTick()
+  setTimeout(() => {
+    createPromoElement()
+  }, 150)
 })
 
 onUnmounted(() => {
@@ -217,7 +253,7 @@ const printResults = () => {
           display: none !important;
         }
         
-        .advertisement-section {
+        .promo-block {
           display: none !important;
         }
         
@@ -257,8 +293,11 @@ const downloadAsImage = async () => {
     
     const actionPanel = document.querySelector('.action-panel')
     const actions = document.querySelector('.actions')
+    const promo = promoSection.value
+    
     if (actionPanel) actionPanel.style.display = 'none'
     if (actions) actions.style.display = 'none'
+    if (promo) promo.style.display = 'none'
     
     const canvas = await html2canvas(resultsContainer.value, {
       backgroundColor: '#ffffff',
@@ -271,6 +310,7 @@ const downloadAsImage = async () => {
     
     if (actionPanel) actionPanel.style.display = ''
     if (actions) actions.style.display = ''
+    if (promo) promo.style.display = ''
     
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob)
@@ -318,7 +358,6 @@ const copyToClipboard = async () => {
     data.value.denialReasons?.forEach(reason => {
       textToCopy += `• ${reason}\n`
     })
-    textToCopy += `\n💡 Рекомендация: Рассмотрите возможность изменения условий или кредитные продукты для временной поддержки`
   }
   
   try {
@@ -407,25 +446,7 @@ const copyToClipboard = async () => {
           </div>
         </div>
 
-        <div class="advertisement-section" v-if="advertisementImage">
-          <a 
-            :href="getAdvertisementLink()" 
-            target="_blank"
-            rel="noopener noreferrer"
-            class="ad-link"
-          >
-            <img 
-              :src="advertisementImage" 
-              :alt="getAltText()"
-              class="advertisement-image"
-              loading="lazy"
-            />
-          </a>
-          <div class="advertisement-text" v-if="data.isEligible">
-            <p class="ad-title">Оформляйте выплаты на удобную карту</p>
-            <p class="ad-subtitle">Бесплатное обслуживание и кэшбэк за покупки</p>
-          </div>
-        </div>
+        <div class="promo-block" ref="promoSection"></div>
 
         <div v-if="!data.isEligible" class="consideration-notes">
           <div class="notes-header">
@@ -815,72 +836,11 @@ const copyToClipboard = async () => {
   }
 }
 
-.advertisement-section {
+.promo-block {
   margin: 30px 0;
   text-align: center;
   position: relative;
-  
-  .ad-link {
-    display: inline-block;
-    text-decoration: none;
-    transition: opacity 0.3s ease;
-    
-    &:hover {
-      opacity: 0.95;
-    }
-    
-    .advertisement-image {
-      max-width: 100%;
-      height: auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-      }
-    }
-  }
-  
-  .advertisement-text {
-    margin-top: 15px;
-    animation: fadeInUp 0.6s ease;
-    
-    .ad-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1A1D1F;
-      margin-bottom: 5px;
-    }
-    
-    .ad-subtitle {
-      font-size: 14px;
-      color: #6F767E;
-      margin: 0;
-    }
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.result-card.success {
-  .advertisement-section {
-    .advertisement-text {
-      .ad-title {
-        color: #00B93E;
-      }
-    }
-  }
+  min-height: 50px;
 }
 
 .consideration-notes {
@@ -1185,13 +1145,24 @@ const copyToClipboard = async () => {
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media print {
   .action-panel,
   .actions {
     display: none !important;
   }
   
-  .advertisement-section {
+  .promo-block {
     display: none !important;
   }
   
@@ -1249,7 +1220,7 @@ const copyToClipboard = async () => {
     font-size: 28px !important;
   }
   
-  .advertisement-section {
+  .promo-block {
     margin: 20px 0;
   }
   
@@ -1349,18 +1320,6 @@ const copyToClipboard = async () => {
       .percent-badge {
         font-size: 11px;
         padding: 2px 6px;
-      }
-    }
-  }
-  
-  .advertisement-section {
-    .advertisement-text {
-      .ad-title {
-        font-size: 16px;
-      }
-      
-      .ad-subtitle {
-        font-size: 13px;
       }
     }
   }
