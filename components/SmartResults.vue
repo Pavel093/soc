@@ -2,7 +2,6 @@
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import html2canvas from 'html2canvas'
 
-// Импортируем изображения для разных сценариев
 import debitCardDesktop from '@/assets/edinoe-posobie/debit_card_design_one_prod.png'
 import debitCardMobile from '@/assets/edinoe-posobie/debit_card_design_one_mobile_prod.png'
 import creditCardDesktop from '@/assets/edinoe-posobie/credit_card_design_one_prod.jpg'
@@ -22,48 +21,57 @@ const resultsContainer = ref(null)
 const isGeneratingImage = ref(false)
 const isMobile = ref(false)
 
-// Разные ссылки для разных сценариев
-const debitCardLink = 'https://t-cpa.ru/3Cujw8' // Для дебетовой карты (пособие положено)
-const creditCardLink = 'https://t-cpa.ru/19oFVK' // Для кредитной карты (пособие не положено)
+const debitCardLink = 'https://t-cpa.ru/3Cujw8'
+const creditCardLink = 'https://t-cpa.ru/19oFVK'
 
-// Проверка мобильного устройства
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768
 }
 
-// Определение пути к изображению в зависимости от устройства и сценария
 const getImagePath = () => {
   if (data.value.isEligible) {
-    // Для сценария "положено" - дебетовая карта
     return isMobile.value ? debitCardMobile : debitCardDesktop
   } else {
-    // Для сценария "не положено" - кредитная карта
     return isMobile.value ? creditCardMobile : creditCardDesktop
   }
 }
 
-// Получение ссылки в зависимости от сценария
 const getAdvertisementLink = () => {
   return data.value.isEligible ? debitCardLink : creditCardLink
 }
 
-// Получение альтернативного текста
 const getAltText = () => {
   return data.value.isEligible 
     ? 'Дебетовая карта для получения пособий' 
     : 'Кредитная карта для финансовой поддержки'
 }
 
-onMounted(() => {
+const advertisementImage = ref('')
+
+const loadAdvertisementImage = () => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const imagePath = getImagePath()
+    
+    img.src = imagePath
+    img.onload = () => resolve(imagePath)
+    img.onerror = () => resolve(imagePath)
+  })
+}
+
+onMounted(async () => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
+  
+  setTimeout(async () => {
+    advertisementImage.value = await loadAdvertisementImage()
+  }, 100)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 
-// Проверка наличия проблем с имуществом
 const hasPropertyIssues = computed(() => {
   const check = data.value.formData.propertyCheck
   if (!check) return false
@@ -71,43 +79,36 @@ const hasPropertyIssues = computed(() => {
          check.hasLuxuryCar || check.hasHighSavings
 })
 
-// Проверка особых обстоятельств
 const hasSpecialCircumstances = computed(() => {
   const special = data.value.formData.special
   if (!special) return false
   return special.singleParent || special.hasDisabled || special.mobilized
 })
 
-// Нужна ли проверка нулевого дохода
 const needsZeroIncomeRule = computed(() => {
   return data.value.calculations.incomePercent < 30
 })
 
-// Форматирование суммы
 const formatAmount = (amount) => {
   return new Intl.NumberFormat('ru-RU').format(amount)
 }
 
-// Склонение слова "ребенок"
 const getChildrenWord = (count) => {
   if (count === 1) return 'ребенка'
   if (count >= 2 && count <= 4) return 'детей'
   return 'детей'
 }
 
-// Класс для дохода
 const getIncomeClass = () => {
   const percent = data.value.calculations.incomePercent
   if (percent <= 100) return 'success'
   return 'warning'
 }
 
-// Пересчет
 const recalculate = () => {
   emit('recalculate')
 }
 
-// Печать только результатов (безопасная версия)
 const printResults = () => {
   const printWindow = window.open('', '_blank')
   const resultsHTML = resultsContainer.value.innerHTML
@@ -216,7 +217,6 @@ const printResults = () => {
           display: none !important;
         }
         
-        /* Стили для рекламного блока */
         .advertisement-section {
           display: none !important;
         }
@@ -239,7 +239,6 @@ const printResults = () => {
   printWindow.document.write(printContent)
   printWindow.document.close()
   
-  // Запускаем печать после загрузки контента
   printWindow.onload = function() {
     printWindow.print()
     printWindow.onafterprint = function() {
@@ -248,7 +247,6 @@ const printResults = () => {
   }
 }
 
-// Скачивание результатов как JPG
 const downloadAsImage = async () => {
   if (!resultsContainer.value) return
   
@@ -257,13 +255,11 @@ const downloadAsImage = async () => {
   try {
     await nextTick()
     
-    // Временно скрываем панель действий
     const actionPanel = document.querySelector('.action-panel')
     const actions = document.querySelector('.actions')
     if (actionPanel) actionPanel.style.display = 'none'
     if (actions) actions.style.display = 'none'
     
-    // Создаем канвас
     const canvas = await html2canvas(resultsContainer.value, {
       backgroundColor: '#ffffff',
       scale: 2,
@@ -273,11 +269,9 @@ const downloadAsImage = async () => {
       windowHeight: resultsContainer.value.scrollHeight
     })
     
-    // Возвращаем панель действий
     if (actionPanel) actionPanel.style.display = ''
     if (actions) actions.style.display = ''
     
-    // Конвертируем в JPG и скачиваем
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -301,7 +295,6 @@ const downloadAsImage = async () => {
   }
 }
 
-// Копирование результата в буфер обмена
 const copyToClipboard = async () => {
   let textToCopy = ''
   
@@ -339,9 +332,7 @@ const copyToClipboard = async () => {
 
 <template>
   <div class="results-wrapper">
-    <!-- Панель действий -->
     <div class="action-panel">
-      <!-- Яркая кнопка "Пересчитать" -->
       <button @click="recalculate" class="action-btn recalculate-btn">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M2 10C2 14.418 5.582 18 10 18C12.15 18 14.078 17.086 15.47 15.63L14 14.16C12.97 15.19 11.57 15.82 10 15.82C6.69 15.82 4 13.14 4 9.82C4 6.5 6.69 3.82 10 3.82C11.58 3.82 12.96 4.44 14 5.48L12 7.48H18V1.48L15.47 4.01C14.08 2.56 12.15 1.64 10 1.64C5.582 1.64 2 5.222 2 9.64V10Z" fill="currentColor"/>
@@ -373,10 +364,8 @@ const copyToClipboard = async () => {
       </button>
     </div>
 
-    <!-- Контейнер с результатами -->
     <div class="results-container" ref="resultsContainer">
       <div class="result-card" :class="data.isEligible ? 'success' : 'neutral'">
-        <!-- Заголовок результата -->
         <div class="result-header">
           <div class="result-icon">
             <svg v-if="data.isEligible" width="60" height="60" viewBox="0 0 60 60" fill="none">
@@ -397,12 +386,10 @@ const copyToClipboard = async () => {
           </p>
         </div>
 
-        <!-- КРАТКИЙ РЕЗУЛЬТАТ: Размер пособия для одобренных -->
         <div v-if="data.isEligible" class="benefit-amount">
           <p class="amount-label light-text">Размер ежемесячного пособия:</p>
           <p class="amount-value dark-text">{{ formatAmount(data.benefitAmount) }} ₽</p>
           
-          <!-- Детализация пособия -->
           <div class="benefit-breakdown" v-if="data.benefitDetails && data.benefitDetails.length">
             <div v-for="detail in data.benefitDetails" :key="detail.type" class="breakdown-item">
               <span v-if="detail.type === 'children'" class="breakdown-text">
@@ -420,27 +407,26 @@ const copyToClipboard = async () => {
           </div>
         </div>
 
-        <!-- РЕКЛАМНОЕ ИЗОБРАЖЕНИЕ (разное для разных сценариев) -->
-        <div class="advertisement-section">
+        <div class="advertisement-section" v-if="advertisementImage">
           <a 
             :href="getAdvertisementLink()" 
             target="_blank"
             rel="noopener noreferrer"
+            class="ad-link"
           >
             <img 
-              :src="getImagePath()" 
+              :src="advertisementImage" 
               :alt="getAltText()"
               class="advertisement-image"
+              loading="lazy"
             />
           </a>
-          <!-- Текст под изображением только для дебетовой карты -->
           <div class="advertisement-text" v-if="data.isEligible">
             <p class="ad-title">Оформляйте выплаты на удобную карту</p>
             <p class="ad-subtitle">Бесплатное обслуживание и кэшбэк за покупки</p>
           </div>
         </div>
 
-        <!-- Причины отказа - смягченные -->
         <div v-if="!data.isEligible" class="consideration-notes">
           <div class="notes-header">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -456,11 +442,9 @@ const copyToClipboard = async () => {
           </ul>
         </div>
 
-        <!-- ДЕТАЛИ РАСЧЕТА: Сводка по данным -->
         <div class="summary-section">
           <h3 class="summary-title dark-text">Детали расчета:</h3>
           
-          <!-- Основная информация -->
           <div class="summary-grid">
             <div class="summary-item">
               <span class="summary-label light-text">Регион:</span>
@@ -480,7 +464,6 @@ const copyToClipboard = async () => {
             </div>
           </div>
 
-          <!-- Доходы -->
           <div class="income-summary-card">
             <h4 class="card-title">Доходы семьи</h4>
             <div class="income-details">
@@ -503,7 +486,6 @@ const copyToClipboard = async () => {
             </div>
           </div>
 
-          <!-- Имущество (если есть превышения) -->
           <div v-if="hasPropertyIssues" class="property-summary-card">
             <h4 class="card-title">🏠 Имущественные условия</h4>
             <div class="property-list">
@@ -522,7 +504,6 @@ const copyToClipboard = async () => {
             </div>
           </div>
 
-          <!-- Особые обстоятельства -->
           <div v-if="hasSpecialCircumstances" class="special-card">
             <h4 class="card-title">Особые обстоятельства</h4>
             <ul class="special-list">
@@ -533,7 +514,6 @@ const copyToClipboard = async () => {
           </div>
         </div>
 
-        <!-- Что делать дальше -->
         <div v-if="data.isEligible" class="next-steps">
           <h3 class="steps-title dark-text">Что делать дальше?</h3>
           <ol class="steps-list">
@@ -562,7 +542,6 @@ const copyToClipboard = async () => {
           </ol>
         </div>
 
-        <!-- Рекомендации для отказников -->
         <div v-else class="recommendations">
           <h3 class="steps-title dark-text">Возможные пути решения:</h3>
           <div class="recommendations-grid">
@@ -600,7 +579,6 @@ const copyToClipboard = async () => {
           </div>
         </div>
 
-        <!-- Полезная информация -->
         <div class="info-cards">
           <div class="info-card">
             <h4>📅 Период выплат</h4>
@@ -623,7 +601,6 @@ const copyToClipboard = async () => {
           </div>
         </div>
 
-        <!-- Действия -->
         <div class="actions">
           <button @click="recalculate" class="action-button secondary">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -684,7 +661,6 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Стили для яркой кнопки */
 .recalculate-btn {
   background-color: #008CFF;
   color: white;
@@ -839,25 +815,37 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Стили для рекламного блока */
 .advertisement-section {
   margin: 30px 0;
   text-align: center;
+  position: relative;
   
-  a {
+  .ad-link {
     display: inline-block;
     text-decoration: none;
+    transition: opacity 0.3s ease;
+    
+    &:hover {
+      opacity: 0.95;
+    }
     
     .advertisement-image {
       max-width: 100%;
       height: auto;
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
     }
   }
   
   .advertisement-text {
     margin-top: 15px;
+    animation: fadeInUp 0.6s ease;
     
     .ad-title {
       font-size: 18px;
@@ -874,7 +862,17 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Стили для сценария "положено" */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .result-card.success {
   .advertisement-section {
     .advertisement-text {
@@ -885,7 +883,6 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Смягченный блок причин */
 .consideration-notes {
   padding: 25px;
   background: linear-gradient(135deg, #FFF3E0, #FFECB3);
@@ -1072,7 +1069,6 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Улучшенные рекомендации */
 .recommendations-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1189,7 +1185,6 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Стили для печати */
 @media print {
   .action-panel,
   .actions {
@@ -1220,7 +1215,6 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Мобильная адаптация */
 @media (max-width: 768px) {
   .action-panel {
     justify-content: stretch;
@@ -1314,7 +1308,6 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Для очень маленьких экранов */
 @media (max-width: 480px) {
   .action-panel {
     flex-direction: column;
@@ -1383,7 +1376,6 @@ const copyToClipboard = async () => {
   }
 }
 
-/* Обновленные стили для иконки информации */
 .result-card.neutral .result-icon circle {
   fill: #FFA726;
   fill-opacity: 0.1;
@@ -1393,7 +1385,6 @@ const copyToClipboard = async () => {
   stroke: #FFA726;
 }
 
-/* Цветовые переменные для текста */
 .dark-text {
   color: #1A1D1F;
 }
