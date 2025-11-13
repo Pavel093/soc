@@ -2,10 +2,7 @@
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import html2canvas from 'html2canvas'
 
-import debitCardDesktop from '@/assets/edinoe-posobie/debit_card_design_one_prod.png'
-import debitCardMobile from '@/assets/edinoe-posobie/debit_card_design_one_mobile_prod.png'
-import creditCardDesktop from '@/assets/edinoe-posobie/credit_card_design_one_prod.jpg'
-import creditCardMobile from '@/assets/edinoe-posobie/credit_card_design_one_mobile_prod.jpg'
+import babyCardImage from '@/assets/edinoe-posobie/baby.png'
 
 const props = defineProps({
   calculationData: {
@@ -22,20 +19,11 @@ const isGeneratingImage = ref(false)
 const isMobile = ref(false)
 const promoSection = ref(null)
 
-// Закодированные данные
-const l1 = 'aHR0cHM6Ly90LWNwYS5ydS8zQ3Vqdzg='
-const l2 = 'aHR0cHM6Ly90LWNwYS5ydS8xOW9GVks='
+// Ссылка для детской карты
+const juniorCardUrl = 'https://t-cpa.ru/2APo0z'
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768
-}
-
-const getImagePath = () => {
-  if (data.value.isEligible) {
-    return isMobile.value ? debitCardMobile : debitCardDesktop
-  } else {
-    return isMobile.value ? creditCardMobile : creditCardDesktop
-  }
 }
 
 const createPromoElement = () => {
@@ -44,43 +32,48 @@ const createPromoElement = () => {
   const container = promoSection.value
   container.innerHTML = ''
 
-  // Декодирование ссылки
-  const targetUrl = atob(data.value.isEligible ? l1 : l2)
+  // Создание баннера на всю ширину
+  const bannerWrapper = document.createElement('div')
+  bannerWrapper.style.cssText = 'text-align:center;width:100%'
   
-  // Создание элементов
   const link = document.createElement('a')
-  link.href = targetUrl
+  link.href = juniorCardUrl
   link.target = '_blank'
   link.rel = 'noopener noreferrer'
-  link.style.cssText = 'display:inline-block;text-decoration:none;transition:opacity 0.3s ease'
+  link.style.cssText = 'display:block;text-decoration:none;transition:opacity 0.3s ease;width:100%;margin-bottom:15px'
   
   const img = document.createElement('img')
-  img.src = getImagePath()
-  img.style.cssText = 'max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);transition:transform 0.3s ease,box-shadow 0.3s ease'
+  img.src = babyCardImage
+  img.alt = 'Детская карта Джуниор'
+  img.style.cssText = 'width:100%;height:auto;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);transition:transform 0.3s ease,box-shadow 0.3s ease;display:block'
   img.loading = 'lazy'
   
   link.appendChild(img)
-  container.appendChild(link)
+  bannerWrapper.appendChild(link)
 
-  // Добавление текста только для eligible
-  if (data.value.isEligible) {
-    const textDiv = document.createElement('div')
-    textDiv.style.cssText = 'margin-top:15px;animation:fadeInUp 0.6s ease'
-    
-    const title = document.createElement('p')
-    title.textContent = 'Оформляйте выплаты на удобную карту'
-    title.style.cssText = 'font-size:18px;font-weight:600;color:#1A1D1F;margin-bottom:5px'
-    
-    const subtitle = document.createElement('p')
-    subtitle.textContent = 'Бесплатное обслуживание и кэшбэк за покупки'
-    subtitle.style.cssText = 'font-size:14px;color:#6F767E;margin:0'
-    
-    textDiv.appendChild(title)
-    textDiv.appendChild(subtitle)
-    container.appendChild(textDiv)
-  }
+  // Создание кнопки "Оформить"
+  const buttonLink = document.createElement('a')
+  buttonLink.href = juniorCardUrl
+  buttonLink.target = '_blank'
+  buttonLink.rel = 'noopener noreferrer'
+  buttonLink.style.cssText = 'display:inline-block;text-decoration:none;margin-bottom:10px;width:100%;'
+  
+  const button = document.createElement('button')
+  button.textContent = 'Оформить'
+  button.style.cssText = 'background:#008CFF;color:white;border:none;padding:12px 30px;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;width:100%;height:50px'
+  
+  buttonLink.appendChild(button)
+  bannerWrapper.appendChild(buttonLink)
 
-  // Hover эффекты
+  // Создание текста под кнопкой
+  const text = document.createElement('p')
+  text.textContent = '0 ₽ за оформление и обслуживание навсегда.'
+  text.style.cssText = 'font-size:14px;color:#6F767E;margin:0;font-weight:500'
+  
+  bannerWrapper.appendChild(text)
+  container.appendChild(bannerWrapper)
+
+  // Hover эффекты для баннера
   link.addEventListener('mouseenter', () => {
     link.style.opacity = '0.95'
     img.style.transform = 'translateY(-2px)'
@@ -91,6 +84,17 @@ const createPromoElement = () => {
     link.style.opacity = '1'
     img.style.transform = 'translateY(0)'
     img.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)'
+  })
+
+  // Hover эффекты для кнопки
+  button.addEventListener('mouseenter', () => {
+    button.style.backgroundColor = '#D489C0'
+    button.style.transform = 'translateY(-1px)'
+  })
+  
+  button.addEventListener('mouseleave', () => {
+    button.style.backgroundColor = '#EA9AD0'
+    button.style.transform = 'translateY(0)'
   })
 }
 
@@ -108,6 +112,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 
+// Остальной код остается без изменений...
 const hasPropertyIssues = computed(() => {
   const check = data.value.formData.propertyCheck
   if (!check) return false
@@ -841,6 +846,19 @@ const copyToClipboard = async () => {
   text-align: center;
   position: relative;
   min-height: 50px;
+  
+  a {
+    display: block;
+    width: 100%;
+  }
+  
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
 }
 
 .consideration-notes {
