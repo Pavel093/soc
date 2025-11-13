@@ -34,7 +34,7 @@ const createPromoElement = () => {
 
   // Создание баннера на всю ширину
   const bannerWrapper = document.createElement('div')
-  bannerWrapper.style.cssText = 'text-align:center;width:100%'
+  bannerWrapper.style.cssText = 'text-align:center;width:100%;margin:20px 0'
   
   const link = document.createElement('a')
   link.href = juniorCardUrl
@@ -59,8 +59,8 @@ const createPromoElement = () => {
   buttonLink.style.cssText = 'display:inline-block;text-decoration:none;margin-bottom:10px;width:100%;'
   
   const button = document.createElement('button')
-  button.textContent = 'Оформить'
-  button.style.cssText = 'background:#008CFF;color:white;border:none;padding:12px 30px;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s ease;width:100%;height:50px'
+  button.textContent = 'Оформить карту'
+  button.style.cssText = 'background:#EA9AD0;color:white;border:none;padding:15px 30px;border-radius:8px;font-size:18px;font-weight:600;cursor:pointer;transition:all 0.3s ease;width:100%;height:55px;margin:0px 0'
   
   buttonLink.appendChild(button)
   bannerWrapper.appendChild(buttonLink)
@@ -68,7 +68,7 @@ const createPromoElement = () => {
   // Создание текста под кнопкой
   const text = document.createElement('p')
   text.textContent = '0 ₽ за оформление и обслуживание навсегда.'
-  text.style.cssText = 'font-size:14px;color:#6F767E;margin:0;font-weight:500'
+  text.style.cssText = 'font-size:16px;color:#6F767E;margin:5px 0;font-weight:500'
   
   bannerWrapper.appendChild(text)
   container.appendChild(bannerWrapper)
@@ -89,12 +89,14 @@ const createPromoElement = () => {
   // Hover эффекты для кнопки
   button.addEventListener('mouseenter', () => {
     button.style.backgroundColor = '#D489C0'
-    button.style.transform = 'translateY(-1px)'
+    button.style.transform = 'translateY(-2px)'
+    button.style.boxShadow = '0 4px 12px rgba(234, 154, 208, 0.4)'
   })
   
   button.addEventListener('mouseleave', () => {
     button.style.backgroundColor = '#EA9AD0'
     button.style.transform = 'translateY(0)'
+    button.style.boxShadow = 'none'
   })
 }
 
@@ -430,6 +432,9 @@ const copyToClipboard = async () => {
           </p>
         </div>
 
+        <!-- РЕКЛАМА ПЕРЕМЕЩЕНА СЮДА - СРАЗУ ПОСЛЕ ЗАГОЛОВКА -->
+        <div class="promo-block" ref="promoSection"></div>
+
         <div v-if="data.isEligible" class="benefit-amount">
           <p class="amount-label light-text">Размер ежемесячного пособия:</p>
           <p class="amount-value dark-text">{{ formatAmount(data.benefitAmount) }} ₽</p>
@@ -450,8 +455,6 @@ const copyToClipboard = async () => {
             </div>
           </div>
         </div>
-
-        <div class="promo-block" ref="promoSection"></div>
 
         <div v-if="!data.isEligible" class="consideration-notes">
           <div class="notes-header">
@@ -765,7 +768,7 @@ const copyToClipboard = async () => {
 
 .result-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   
   .result-icon {
     margin-bottom: 20px;
@@ -785,6 +788,26 @@ const copyToClipboard = async () => {
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
+  }
+}
+
+.promo-block {
+  margin: 25px 0;
+  text-align: center;
+  position: relative;
+  min-height: 50px;
+  
+  a {
+    display: block;
+    width: 100%;
+  }
+  
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 }
 
@@ -838,26 +861,6 @@ const copyToClipboard = async () => {
       font-size: 12px;
       font-weight: 500;
     }
-  }
-}
-
-.promo-block {
-  margin: 30px 0;
-  text-align: center;
-  position: relative;
-  min-height: 50px;
-  
-  a {
-    display: block;
-    width: 100%;
-  }
-  
-  img {
-    width: 100%;
-    height: auto;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 }
 
