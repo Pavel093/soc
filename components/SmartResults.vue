@@ -2,8 +2,6 @@
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import html2canvas from 'html2canvas'
 
-import babyCardImage from '@/assets/edinoe-posobie/baby.png'
-
 const props = defineProps({
   calculationData: {
     type: Object,
@@ -18,86 +16,80 @@ const resultsContainer = ref(null)
 const isGeneratingImage = ref(false)
 const isMobile = ref(false)
 const promoSection = ref(null)
+const showCardModal = ref(false) // <-- Добавлено состояние модального окна
 
-// Ссылка для детской карты
-const juniorCardUrl = 'https://t-cpa.ru/2APo0z'
+// Ссылка для дебетовой карты T-Bank Black
+const blackCardUrl = 'https://t-cpa.ru/3Cujw8'
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768
 }
 
+// Функции для управления модальным окном
+const openCardModal = () => {
+  showCardModal.value = true
+}
+
+const closeCardModal = () => {
+  showCardModal.value = false
+}
+
+// Функция для создания рекламного блока
 const createPromoElement = () => {
   if (!promoSection.value) return
 
   const container = promoSection.value
-  container.innerHTML = ''
+  container.innerHTML = '' // Очищаем контейнер
 
-  // Создание баннера на всю ширину
-  const bannerWrapper = document.createElement('div')
-  bannerWrapper.style.cssText = 'text-align:center;width:100%;margin:20px 0'
-  
-  const link = document.createElement('a')
-  link.href = juniorCardUrl
-  link.target = '_blank'
-  link.rel = 'noopener noreferrer'
-  link.style.cssText = 'display:block;text-decoration:none;transition:opacity 0.3s ease;width:100%;margin-bottom:15px'
-  
-  const img = document.createElement('img')
-  img.src = babyCardImage
-  img.alt = 'Детская карта Джуниор'
-  img.style.cssText = 'width:100%;height:auto;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);transition:transform 0.3s ease,box-shadow 0.3s ease;display:block'
-  img.loading = 'lazy'
-  
-  link.appendChild(img)
-  bannerWrapper.appendChild(link)
+  // --- Основной рекламный блок ---
+  const promoWrapper = document.createElement('div')
+  promoWrapper.className = 'promo-wrapper'
 
-  // Создание кнопки "Оформить"
-  const buttonLink = document.createElement('a')
-  buttonLink.href = juniorCardUrl
-  buttonLink.target = '_blank'
-  buttonLink.rel = 'noopener noreferrer'
-  buttonLink.style.cssText = 'display:inline-block;text-decoration:none;margin-bottom:10px;width:100%;'
-  
-  const button = document.createElement('button')
-  button.textContent = 'Оформить карту'
-  button.style.cssText = 'background:#EA9AD0;color:white;border:none;padding:15px 30px;border-radius:8px;font-size:18px;font-weight:600;cursor:pointer;transition:all 0.3s ease;width:100%;height:55px;margin:0px 0'
-  
-  buttonLink.appendChild(button)
-  bannerWrapper.appendChild(buttonLink)
+  // Иконка
+  const iconContainer = document.createElement('div')
+  iconContainer.className = 'promo-icon-container'
+  iconContainer.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #005cbf;">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+      <line x1="1" y1="10" x2="23" y2="10"></line>
+    </svg>
+  `
+  promoWrapper.appendChild(iconContainer)
 
-  // Создание текста под кнопкой
+  // Контентная часть
+  const contentWrapper = document.createElement('div')
+  contentWrapper.className = 'promo-content'
+
+  const title = document.createElement('h4')
+  title.className = 'promo-title'
+  title.textContent = 'Популярный способ получения выплат'
+  contentWrapper.appendChild(title)
+
   const text = document.createElement('p')
-  text.textContent = '0 ₽ за оформление и обслуживание навсегда.'
-  text.style.cssText = 'font-size:16px;color:#6F767E;margin:5px 0;font-weight:500'
-  
-  bannerWrapper.appendChild(text)
-  container.appendChild(bannerWrapper)
+  text.className = 'promo-text'
+  text.textContent = 'Для автоматического зачисления пособия можно привязать социальный счет от Т-Банка. При оформлении на Госуслугах он выбирается из списка, не нужно вводить реквизиты.'
+  contentWrapper.appendChild(text)
 
-  // Hover эффекты для баннера
-  link.addEventListener('mouseenter', () => {
-    link.style.opacity = '0.95'
-    img.style.transform = 'translateY(-2px)'
-    img.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)'
-  })
+  const button = document.createElement('button')
+  button.className = 'promo-button'
+  button.textContent = 'Подробнее про карту'
+  button.addEventListener('click', openCardModal) // <-- Открываем модальное окно
   
-  link.addEventListener('mouseleave', () => {
-    link.style.opacity = '1'
-    img.style.transform = 'translateY(0)'
-    img.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)'
-  })
+  contentWrapper.appendChild(button)
+  
+  const subtext = document.createElement('p')
+  subtext.className = 'promo-subtext'
+  subtext.textContent = 'Обслуживание 0 ₽ при зачислении пособий.'
+  contentWrapper.appendChild(subtext)
 
-  // Hover эффекты для кнопки
-  button.addEventListener('mouseenter', () => {
-    button.style.backgroundColor = '#D489C0'
-    button.style.transform = 'translateY(-2px)'
-    button.style.boxShadow = '0 4px 12px rgba(234, 154, 208, 0.4)'
-  })
-  
-  button.addEventListener('mouseleave', () => {
-    button.style.backgroundColor = '#EA9AD0'
-    button.style.transform = 'translateY(0)'
-    button.style.boxShadow = 'none'
-  })
+  promoWrapper.appendChild(contentWrapper)
+  container.appendChild(promoWrapper)
+
+  // --- Блок с маркировкой рекламы ---
+  const disclaimer = document.createElement('p')
+  disclaimer.className = 'promo-disclaimer'
+  disclaimer.textContent = 'Black - черный. Подробнее на tbank.ru . АО «ТБанк», лицензия № 2673. Реклама. 0+'
+  container.appendChild(disclaimer)
 }
 
 onMounted(async () => {
@@ -378,6 +370,85 @@ const copyToClipboard = async () => {
 
 <template>
   <div class="results-wrapper">
+    <!-- Модальное окно карты -->
+    <div v-if="showCardModal" class="modal-overlay" @click="closeCardModal">
+      <div class="modal-content" @click.stop>
+        <button class="close-button" @click="closeCardModal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        
+        <div class="modal-header">
+          <h2 class="modal-title">T-Банк Black — бесплатная карта для выплат и покупок</h2>
+        </div>
+
+        <div class="modal-body">
+          <div class="benefit-section">
+            <h3 class="benefit-title">Получайте пособия проще</h3>
+            <p class="benefit-description">
+              Оформите карту Black, и её счёт можно будет выбрать на Госуслугах для получения выплат. 
+              Вам не нужно будет вручную вводить реквизиты — просто выберите готовый счёт в списке.
+            </p>
+          </div>
+
+          <div class="advantages-section">
+            <h4 class="advantages-title">Основные преимущества:</h4>
+            <ul class="advantages-list">
+              <li class="advantage-item">
+                <span class="advantage-icon">✓</span>
+                <span class="advantage-text">Карта бесплатная при получении любых соцвыплат</span>
+              </li>
+              <li class="advantage-item">
+                <span class="advantage-icon">✓</span>
+                <span class="advantage-text">Кэшбэк до 30% на повседневные покупки</span>
+              </li>
+              <li class="advantage-item">
+                <span class="advantage-icon">✓</span>
+                <span class="advantage-text">Процент на остаток на средства на счету</span>
+              </li>
+            </ul>
+            
+            <a :href="blackCardUrl" target="_blank" rel="noopener noreferrer" class="apply-button">
+              Оформить карту
+            </a>
+          </div>
+
+          <div class="automation-section">
+            <h3 class="automation-title">Пособия будут приходить автоматически</h3>
+            <p class="automation-description">
+              С 2026 года, после однократной привязки счёта, все положенные вам выплаты будут 
+              начисляться на карту Black автоматически, без лишних заявлений.
+            </p>
+          </div>
+
+          <div class="payments-section">
+            <h4 class="payments-title">Какие выплаты можно получать:</h4>
+            <ul class="payments-list">
+              <li class="payment-item">Единое пособие на детей</li>
+              <li class="payment-item">Пенсия по возрасту, потере кормильца</li>
+              <li class="payment-item">Пособие по уходу за ребёнком до 1,5 лет</li>
+              <li class="payment-item">Выплаты по инвалидности</li>
+            </ul>
+            
+            <p class="convenience-text">
+              Забудьте о регулярном посещении МФЦ и подаче документов.
+            </p>
+            
+            <a :href="blackCardUrl" target="_blank" rel="noopener noreferrer" class="apply-button secondary">
+              Оформить карту
+            </a>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <p class="disclaimer-text">
+            Black - черный. Подробнее на tbank.ru . АО «ТБанк», лицензия № 2673. Реклама. 0+
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div class="action-panel">
       <button @click="recalculate" class="action-btn recalculate-btn">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -432,9 +503,6 @@ const copyToClipboard = async () => {
           </p>
         </div>
 
-        <!-- РЕКЛАМА ПЕРЕМЕЩЕНА СЮДА - СРАЗУ ПОСЛЕ ЗАГОЛОВКА -->
-        <div class="promo-block" ref="promoSection"></div>
-
         <div v-if="data.isEligible" class="benefit-amount">
           <p class="amount-label light-text">Размер ежемесячного пособия:</p>
           <p class="amount-value dark-text">{{ formatAmount(data.benefitAmount) }} ₽</p>
@@ -471,6 +539,10 @@ const copyToClipboard = async () => {
           </ul>
         </div>
 
+        <!-- Рекламный блок -->
+        <div class="promo-block" ref="promoSection"></div>
+
+        <!-- Остальной код компонента без изменений -->
         <div class="summary-section">
           <h3 class="summary-title dark-text">Детали расчета:</h3>
           
@@ -644,6 +716,244 @@ const copyToClipboard = async () => {
 </template>
 
 <style scoped lang="scss">
+// Стили для модального окна
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: slideUp 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  color: #6F767E;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #f5f5f5;
+    color: #1A1D1F;
+  }
+}
+
+.modal-header {
+  padding: 32px 32px 0 32px;
+  
+  .modal-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1A1D1F;
+    margin: 0;
+    line-height: 1.3;
+  }
+}
+
+.modal-body {
+  padding: 24px 32px;
+  
+  .benefit-section,
+  .advantages-section,
+  .automation-section,
+  .payments-section {
+    margin-bottom: 32px;
+  }
+  
+  .benefit-title,
+  .automation-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1A1D1F;
+    margin-bottom: 12px;
+  }
+  
+  .advantages-title,
+  .payments-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1A1D1F;
+    margin-bottom: 16px;
+  }
+  
+  .benefit-description,
+  .automation-description {
+    color: #6F767E;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+.advantages-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  
+  .advantage-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    
+    .advantage-icon {
+      color: #00B93E;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .advantage-text {
+      color: #1A1D1F;
+      line-height: 1.4;
+    }
+  }
+}
+
+.payments-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  
+  .payment-item {
+    padding: 10px 0;
+    padding-left: 20px;
+    position: relative;
+    color: #1A1D1F;
+    
+    &:before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #008CFF;
+      font-weight: bold;
+    }
+  }
+}
+
+.apply-button {
+  display: inline-block;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  
+  &:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+  }
+  
+  &.secondary {
+    background: #00B93E;
+    
+    &:hover {
+      background: #009624;
+    }
+  }
+}
+
+.convenience-text {
+  color: #6F767E;
+  font-style: italic;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.modal-footer {
+  padding: 0 32px 24px 32px;
+  text-align: center;
+  
+  .disclaimer-text {
+    font-size: 12px;
+    color: #94A3B8;
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+  
+  .modal-header {
+    padding: 24px 24px 0 24px;
+    
+    .modal-title {
+      font-size: 20px;
+    }
+  }
+  
+  .modal-body {
+    padding: 20px 24px;
+    
+    .benefit-title,
+    .automation-title {
+      font-size: 18px;
+    }
+    
+    .advantages-title,
+    .payments-title {
+      font-size: 16px;
+    }
+  }
+  
+  .apply-button {
+    width: 100%;
+    padding: 16px 24px;
+  }
+}
+
+// Остальные стили компонента остаются без изменений...
 .results-wrapper {
   width: 100%;
 }
@@ -791,26 +1101,6 @@ const copyToClipboard = async () => {
   }
 }
 
-.promo-block {
-  margin: 25px 0;
-  text-align: center;
-  position: relative;
-  min-height: 50px;
-  
-  a {
-    display: block;
-    width: 100%;
-  }
-  
-  img {
-    width: 100%;
-    height: auto;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-}
-
 .benefit-amount {
   text-align: center;
   padding: 25px;
@@ -914,9 +1204,107 @@ const copyToClipboard = async () => {
   }
 }
 
+// *** ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ РЕКЛАМНОГО БЛОКА С :DEEP() ***
+.promo-block {
+  margin: 30px 0;
+
+  :deep(.promo-wrapper) {
+    background: #eef5ff;
+    border: 1px solid #cce0ff;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    text-align: left;
+  }
+
+  :deep(.promo-icon-container) {
+    flex-shrink: 0;
+    background: #d4e7ff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :deep(.promo-content) {
+    flex-grow: 1;
+  }
+
+  :deep(.promo-title) {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1A1D1F;
+  }
+
+  :deep(.promo-text) {
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    color: #4A5568;
+    line-height: 1.5;
+  }
+
+  :deep(.promo-button) {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+
+  :deep(.promo-subtext) {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #6F767E;
+    margin-bottom: 0;
+  }
+
+  :deep(.promo-disclaimer) {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 15px;
+    line-height: 1.4;
+  }
+}
+
+// Адаптация рекламного блока для мобильных
+@media (max-width: 576px) {
+  .promo-block {
+    :deep(.promo-wrapper) {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+    :deep(.promo-content) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    :deep(.promo-title) {
+      font-size: 17px;
+    }
+    :deep(.promo-text) {
+      font-size: 14px;
+    }
+  }
+}
+
 .summary-section {
-  margin-top: 30px;
-  padding-top: 30px;
+  padding-top: 10px;
   border-top: 1px solid #e0e0e0;
   
   .summary-title {
@@ -1239,10 +1627,6 @@ const copyToClipboard = async () => {
   
   .amount-value {
     font-size: 28px !important;
-  }
-  
-  .promo-block {
-    margin: 20px 0;
   }
   
   .consideration-notes {
